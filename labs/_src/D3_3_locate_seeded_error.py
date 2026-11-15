@@ -19,7 +19,7 @@
 # - [ ] 3 · Ranks for each parameter (5')
 # - [ ] 4 · Find and fix the line (4')
 # - [ ] 5 · Calibrate again (3')
-# - [ ] ✱ Stretch · Calibrate a derived quantity: the rate of an old asbestos-cement district
+# - [ ] ✱ Stretch · Calibrate a derived quantity: the rate of a district whose pipes average 40 years
 
 # %%
 import os, sys, subprocess

@@ -337,7 +337,7 @@ np.quantile(mu, [0.5, 0.05, 0.95])</code></pre>
     <div class="row"><span>Ductile iron</span><div class="bar c-teal" style="--w:61%"></div><span class="val">1.22 (1.13 to 1.31)</span></div>
   </div>
   <p class="caption">Rate ratios against PVC, posterior medians with 90% intervals, complete-pooling Poisson model (quick run).</p>
-  <aside class="notes"><p>The generating values were exp(0.70) = 2.01 for asbestos cement, exp(0.30) = 1.35 per 10 years, exp(0.45) = 1.57 for cast iron, exp(0.15) = 1.16 for ductile iron. Four of five generating values fall inside the 90% intervals. The intervals are too narrow: this model has no district effects and no extra variation. Day 2 adds them.</p></aside>
+  <aside class="notes"><p>The generating values were exp(0.70) = 2.01 for asbestos cement, exp(0.30) = 1.35 per 10 years, exp(0.45) = 1.57 for cast iron, exp(0.15) = 1.16 for ductile iron. Three of the five generating values fall inside the 90% intervals. The intervals are too narrow: this model has no district effects and no extra variation. Day 2 adds them.</p></aside>
 </section>
 
 <section class="slide" id="check-offset" data-lo="LO1">
@@ -439,8 +439,8 @@ pc.savefig("artifacts/rank_fit_C.png")</code></pre>
   <h2>An approximation is fine when the posterior is simple and the question is its centre</h2>
   <table class="t small">
     <tr><th>90% interval of β</th><th>NUTS</th><th>Variational (AutoNormal)</th></tr>
-    <tr><td>Age per 10 years</td><td>0.265 to 0.332</td><td>0.253 to 0.326</td></tr>
-    <tr><td>Asbestos cement</td><td>0.531 to 0.703</td><td>0.551 to 0.698</td></tr>
+    <tr><td>Age per 10 years</td><td>0.265 to 0.334</td><td>0.253 to 0.326</td></tr>
+    <tr><td>Asbestos cement</td><td>0.533 to 0.699</td><td>0.551 to 0.698</td></tr>
   </table>
   <p class="small mt">Five parameters and 700 counts: close enough for a rate ratio. For 140 district effects, skewed spreads and tail decisions, sample.</p>
   <aside class="notes"><p>From the Lab 1.4 stretch, quick run. Variational inference fits a simple distribution to the posterior; it tends to understate uncertainty and cannot represent a funnel. Use it for a quick first look, for very large data, or inside a loop where speed matters; check it against a sampler at least once.</p></aside>

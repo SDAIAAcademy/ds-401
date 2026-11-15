@@ -237,6 +237,299 @@
       "level": "evaluate",
       "pool": "practice",
       "weight": 1
+    },
+    {
+      "id": "q-pooling-choice",
+      "type": "single",
+      "prompt": "An inspectorate has 200 schools; 70 have been inspected once. You must estimate each school's rate of serious findings. Which model lets the data decide how much the schools inspected once borrow from the others?",
+      "options": [
+        "A separate rate for each school",
+        "One rate for all schools",
+        "School rates drawn from a common distribution whose spread is estimated",
+        "A separate rate for each school, with the once-inspected schools removed"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "Partial pooling estimates the spread between schools, and each school's estimate borrows in proportion to how little data it has.",
+      "misconceptions": [
+        "Trusts one inspection as much as five, so once-inspected schools get extreme estimates",
+        "Assumes all schools are alike, which the analyst decides rather than the data",
+        "",
+        "Throws away the schools that most need an estimate"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 1,
+      "slide": "three-poolings",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-shrinkage-who",
+      "type": "single",
+      "prompt": "In a partial-pooling model of 140 districts, which district's estimate moves furthest towards the common rate?",
+      "options": [
+        "A 200 km urban district with 90 bursts in five years",
+        "A 2 km rural district with 2 bursts in five years",
+        "A 50 km suburban district with 20 bursts",
+        "All move by the same amount, set by τ"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Shrinkage depends on how much information a district's own data carry; 2 bursts carry little, so the population dominates.",
+      "misconceptions": [
+        "Thinks large districts are pulled most because they dominate the average",
+        "",
+        "Picks a middle case without reasoning about information",
+        "Believes τ shrinks every district equally regardless of its data"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 1,
+      "slide": "shrinkage-by-kind",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-rural-pull",
+      "type": "single",
+      "prompt": "Your partial-pooling model has no predictors. Rural districts, with old asbestos-cement mains, have few bursts each; most of the network is urban. What should worry you before the estimates feed a re-piping plan?",
+      "options": [
+        "Nothing: partial pooling is the recommended model for unequal groups",
+        "That rural estimates are shrunk towards a mostly urban rate, which may understate their risk",
+        "That urban districts are shrunk too much",
+        "That the sampler will diverge on the rural districts"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Shrinkage pulls small districts towards the population mean; if that mean is dominated by a different kind of district, their risk is understated systematically.",
+      "misconceptions": [
+        "Treats a method's standard status as a defence of its effect on a specific group",
+        "",
+        "Reverses who is shrunk: large districts keep their own estimates",
+        "Confuses a statistical bias with a computational problem"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 1,
+      "slide": "rural-pull",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-group-predictor",
+      "type": "single",
+      "prompt": "Adding pipe material and age to the mean of the district effects reduced τ from 0.56 to 0.41. Which statement follows?",
+      "options": [
+        "Material and age explain about half of the between-district variance, and districts are now shrunk towards a prediction for their pipes",
+        "The districts are now pooled less",
+        "Material and age are proven causes of bursts",
+        "The model fits worse, because τ fell"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "1 - 0.41²/0.56² is about 0.47; with predictors the shrinkage target is the predicted rate for each district.",
+      "misconceptions": [
+        "",
+        "Reads a smaller spread as weaker pooling",
+        "Reads an association in observational data as a proven cause",
+        "Thinks a smaller unexplained spread is a worse fit"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 2,
+      "slide": "shrink-to-prediction",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-proxy-predictor",
+      "type": "tf",
+      "prompt": "Adding an indicator for rural districts to the model of reported bursts will move the rural estimates towards their true burst rates, because it lets rural districts have their own level.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "The indicator learns the low reported counts of rural districts, most without sensors, so it moves the estimates of true rates further down.",
+      "misconceptions": [
+        "Assumes a predictor fitted to recorded data corrects a recording problem",
+        ""
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 2,
+      "slide": "rural-indicator",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-funnel-cause",
+      "type": "single",
+      "prompt": "A centred hierarchical model of 49 small districts reports 59 divergences, all at small values of τ. Why there?",
+      "options": [
+        "Small τ forces every district effect into a narrow region, where the step size tuned for the rest of the posterior is far too large",
+        "The data are wrong for the districts with small τ",
+        "Small τ means the prior is too narrow and must be widened",
+        "The sampler ran out of draws"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "In the centred form the posterior has a funnel: its width shrinks with τ, so a step size suited to the mouth diverges in the neck.",
+      "misconceptions": [
+        "",
+        "Blames the data for a geometry of the parameterisation",
+        "Confuses a property of the posterior's shape with a prior that is too narrow",
+        "Thinks divergences come from too few draws"
+      ],
+      "lo": [
+        "LO1",
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 3,
+      "slide": "the-funnel",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-target-accept",
+      "type": "single",
+      "prompt": "Raising target_accept to 0.99 removed all divergences of a centred hierarchical model, but R-hat is 1.14. What do you conclude?",
+      "options": [
+        "The fit is now trustworthy",
+        "The chains still disagree; rewrite the model in non-centred form",
+        "Run more chains until R-hat falls below 1.01 by chance",
+        "Report the fit with a note about R-hat"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "No divergences is necessary, not sufficient; disagreeing chains show the posterior is still not explored, and the cause is the geometry.",
+      "misconceptions": [
+        "Treats the absence of divergences as proof of a sound fit",
+        "",
+        "Hopes more chains fix a geometry problem",
+        "Publishes numbers from chains that have not converged"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day2",
+      "session": 3,
+      "slide": "target-accept-trap",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-noncentred-same",
+      "type": "tf",
+      "prompt": "The centred and non-centred forms of a hierarchical model describe the same joint distribution of the data and the parameters.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "Only the variables the sampler moves in change: η = μ + τ z with z standard normal has the distribution Normal(μ, τ).",
+      "misconceptions": [
+        "",
+        "Thinks non-centring changes the model's assumptions rather than its coordinates"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 3,
+      "slide": "centred-vs-noncentred",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-identification",
+      "type": "single",
+      "prompt": "In the model with a reporting share for districts without sensors, the posterior of the reporting share is almost identical to its Beta(14, 6) prior. What does that mean?",
+      "options": [
+        "The model failed and must be refitted",
+        "The counts cannot separate the burst rate from the reporting share, so the audit behind the prior carries the correction",
+        "The reporting share is exactly 0.70 in every district",
+        "The prior was too wide"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Only the product of rate and reporting share reaches the counts; the split comes from the prior, so its source must be stated.",
+      "misconceptions": [
+        "Takes a posterior equal to the prior as a computational failure",
+        "",
+        "Confuses the prior's mean with a known value",
+        "Thinks a narrower prior would make the data informative"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 4,
+      "slide": "prior-carries-it",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-measurement-model",
+      "type": "single",
+      "prompt": "Bursts in districts without sensors are reported with probability p. Which likelihood for the reported count y of district j in a year follows?",
+      "options": [
+        "y ~ Poisson(km_j × rate_j)",
+        "y ~ Poisson(km_j × rate_j × p_j)",
+        "y ~ Poisson(km_j × rate_j) × p_j",
+        "y ~ Poisson(km_j × rate_j / p_j)"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Thinning each burst with probability p keeps a Poisson count with its mean multiplied by p.",
+      "misconceptions": [
+        "Ignores the recording process",
+        "",
+        "Multiplies a count by a probability, which gives non-integer counts",
+        "Inverts the thinning"
+      ],
+      "lo": [
+        "LO2"
+      ],
+      "day": "day2",
+      "session": 4,
+      "slide": "measurement-model",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1
     }
   ]
 }

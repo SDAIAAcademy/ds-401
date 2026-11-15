@@ -262,8 +262,8 @@ def sample(model, *, warmup=None, draws=None, chains=4, seed=0, target_accept=0.
     The chains run vectorised in one process (one compilation). idata is an ArviZ DataTree with
     the posterior, sample statistics, observed data and, by default, the pointwise log likelihood.
     """
-    warmup = pick(1000, 400) if warmup is None else warmup
-    draws = pick(1000, 400) if draws is None else draws
+    warmup = pick(1000, 500) if warmup is None else warmup
+    draws = pick(1000, 500) if draws is None else draws
     kernel = NUTS(model, target_accept_prob=target_accept, max_tree_depth=max_tree_depth)
     mcmc = MCMC(kernel, num_warmup=warmup, num_samples=draws, num_chains=chains,
                 chain_method="vectorized", progress_bar=False)
@@ -304,9 +304,16 @@ def diagnose(idata, var_names=None, max_tree_depth=10) -> dict:
 
 
 def trustworthy(diag: dict, n_chains: int = 4) -> bool:
-    """The course's rule: R-hat below 1.01, bulk and tail ESS at least 100 per chain, no divergence."""
-    return (diag["max_rhat"] < 1.01 and diag["min_ess_bulk"] >= 100 * n_chains
-            and diag["min_ess_tail"] >= 100 * n_chains and diag["divergences"] == 0)
+    """The course's rule: R-hat below 1.01, bulk and tail ESS at least 100 per chain, no divergence.
+
+    Quick mode runs chains half as long, so it accepts R-hat below 1.02 and 50 effective draws
+    per chain, and says so. The course's rule is the full-mode one.
+    """
+    limit, per_chain = (1.02, 50) if QUICK else (1.01, 100)
+    if QUICK:
+        print(f"(quick mode: short chains, R-hat accepted below {limit}, ESS from {per_chain * n_chains})")
+    return (diag["max_rhat"] < limit and diag["min_ess_bulk"] >= per_chain * n_chains
+            and diag["min_ess_tail"] >= per_chain * n_chains and diag["divergences"] == 0)
 
 
 def draws(idata, name: str) -> np.ndarray:

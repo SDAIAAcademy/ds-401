@@ -1,0 +1,38 @@
+{
+ "pull": {
+  "__frame__": {
+   "columns": [
+    "true_gap",
+    "estimated_gap",
+    "kept"
+   ],
+   "index": [
+    "rural",
+    "suburban",
+    "urban"
+   ],
+   "data": [
+    [
+     0.7251941214,
+     0.1134150028,
+     0.156392612
+    ],
+    [
+     -0.0742239265,
+     -0.1827887744,
+     2.4626664615
+    ],
+    [
+     -0.0511066637,
+     -0.1077776179,
+     2.1088760285
+    ]
+   ]
+  }
+ },
+ "defence": [
+  "No pooling gives the 51 districts with fewer than five bursts estimates driven by one or two counts; partial pooling borrows strength from the other districts in proportion to how little each one knows (\u03c4 = 0.56).",
+  "Because the districts are shrunk towards one rate dominated by the urban networks, the rural estimates keep only 16% of their true gap above that rate, which understates their risk.",
+  "In Lab 2.2 the districts are shrunk towards a rate predicted from their pipe material and age instead of towards one urban-dominated average."
+ ]
+}

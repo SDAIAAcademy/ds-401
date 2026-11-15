@@ -1,19 +1,20 @@
 <section class="slide title" id="title" data-auto="title">
-  <aside class="notes">Today is theirs: keep your own talking to the opening and the closing. Confirm the running order and the demo setup (screen sharing, accounts, a recorded backup) first.</aside>
+  <aside class="notes"><p>Today is theirs: keep your own talking to the opening and the closing. Confirm the running order, the peer pairs and the screen sharing first. Each participant needs their repository open and a terminal ready to rerun one cell: the oral asks them to change a prior or a cost.</p></aside>
 </section>
 
 <section class="slide" id="agenda" data-label="Agenda">
   <div class="kicker">Capstone</div>
-  <h2>How the presentations run</h2>
+  <h2>How the orals run</h2>
   <div class="agenda">
-    <div class="item now"><div><b>Expectations and final prep</b><small>the rubric, a last rehearsal, then the first presentations</small></div></div>
-    <div class="item"><div><b>Presentations</b><small>each one timed, with questions after it</small></div></div>
-    <div class="item"><div><b>Review and closing</b><small>peer feedback, the trainer's review, what next</small></div></div>
+    <div class="item now"><div><b>Expectations and final prep</b><small>the rubric, the oral's two questions, a last rehearsal</small></div></div>
+    <div class="item"><div><b>Orals</b><small>a presentation, then questions with a changed prior or cost and the peer's review</small></div></div>
+    <div class="item"><div><b>Review and closing</b><small>the trainer's review and the follow-up task</small></div></div>
   </div>
+  <aside class="notes"><p>With 15 participants the orals take about four hours with short breaks; split the room between two assessors if there are more than 16.</p></aside>
 </section>
 
 <section class="slide" id="rubric" data-label="The rubric">
-  <div class="kicker">How presentations are scored</div>
+  <div class="kicker">How the repository is scored</div>
   <h2>The rubric</h2>
   <div class="bars">
     <div class="row"><span>Model and priors</span><div class="bar c-teal" style="--w:80%"></div><span class="val">20%</span></div>
@@ -22,73 +23,87 @@
     <div class="row"><span>Decision</span><div class="bar c-purple" style="--w:100%"></div><span class="val">25%</span></div>
     <div class="row"><span>Reproducibility</span><div class="bar c-amber" style="--w:40%"></div><span class="val">10%</span></div>
   </div>
-  <div class="callout tip mt"><b>Show results from at least two measured runs.</b> A claim without a number is a plan, not a result.</div>
-  <aside class="notes">Walk through each criterion with one example of what full marks look like.</aside>
+  <div class="callout tip mt"><b>Every claim carries a number from the run log.</b> R-hat, divergences, a predictive p-value, an elpd difference with its standard error, an interval on the decision.</div>
+  <aside class="notes"><p>Full marks, one example each. Model: pooling defended by who it moves. Computation: diagnostics with numbers and a calibration that passes. Checking: a statistic chosen for the decision and a comparison with the standard error of the difference. Decision: expected utility, remaining risk, the value of one piece of data. Reproducibility: a fresh clone reruns to the same numbers. The rubric is 60% of the grade; the supervised check and the oral 20% each.</p></aside>
 </section>
 
 <section class="slide" id="format" data-label="Format">
   <div class="kicker">Format</div>
-  <h2>15 minutes for each presentation</h2>
+  <h2>8 minutes to present, 7 to defend</h2>
   <div class="cols cols-3">
-    <div class="card c-teal"><h4>1 · The problem</h4><p class="small mb0">Who, what, why now. One slide.</p></div>
-    <div class="card c-cyan"><h4>2 · What you built</h4><p class="small mb0">Design, decisions, trade-offs. Then the live demo.</p></div>
-    <div class="card c-coral"><h4>3 · What you measured</h4><p class="small mb0">Baseline, improvement, failures found, what comes next.</p></div>
+    <div class="card c-teal"><h4>1 · Brief and model</h4><p class="small mb0">The decision maker's question; the structure and the priors you would defend.</p></div>
+    <div class="card c-cyan"><h4>2 · Evidence</h4><p class="small mb0">Diagnostics, the check that mattered, the comparison of models.</p></div>
+    <div class="card c-coral"><h4>3 · Decision</h4><p class="small mb0">The choice, its interval, the remaining risk, what more data is worth.</p></div>
   </div>
-  <div class="callout note mt"><b>Peer feedback.</b> After each talk, everyone writes one strength, one question and one suggestion.</div>
+  <div class="callout note mt"><b>The questions.</b> The assessor changes one prior or one cost; you predict the effect on the decision, then rerun. Then your peer asks the question from their review of your model.</div>
+  <aside class="notes"><p>The prediction comes before the rerun and is scored on its reasoning, not on being exactly right. Typical changes: a wider prior on the spread, a cost per finding doubled, a budget cut by a third. Write the change and the prediction in your scoring notes: they are the authenticity evidence the catalog asks for.</p></aside>
+</section>
+
+<section class="slide" id="what-good-looks-like" data-label="Good answers">
+  <div class="kicker">What a strong defence sounds like</div>
+  <h2>Predict in words first, then check with the model</h2>
+  <div class="cols cols-2">
+    <div class="card c-teal flat"><h4>Strong</h4><p class="small mb0">"Doubling the value of a serious finding raises the stakes in schools with one visit; I expect three or four of them to enter the 30 visits, at the cost of large schools with known moderate rates." Then the rerun.</p></div>
+    <div class="card c-coral flat"><h4>Weak</h4><p class="small mb0">"The results should be robust." Or: rerunning before saying anything, then describing what changed.</p></div>
+  </div>
+  <aside class="notes"><p>Share this before the first oral so nobody is surprised by the format. The example is for the school inspections brief; adapt it to the brief of the participant in front of you.</p></aside>
 </section>
 
 <section class="slide order" id="running-order" data-label="Running order">
   <div class="kicker">Running order</div>
-  <h2>Who presents when</h2>
+  <h2>Who presents when, and who reviews whom</h2>
   <table class="t small">
-    <tr><th>#</th><th>Presenter</th><th>Project</th></tr>
-    <tr><td>1</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>2</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>3</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>4</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>5</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>6</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>7</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
-    <tr><td>8</td><td><input placeholder="name"></td><td><input placeholder="Project"></td></tr>
+    <tr><th>#</th><th>Presenter</th><th>Brief</th><th>Peer reviewer</th></tr>
+    <tr><td>1</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>2</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>3</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>4</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>5</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>6</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>7</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
+    <tr><td>8</td><td><input placeholder="name"></td><td><input placeholder="brief"></td><td><input placeholder="name"></td></tr>
   </table>
-  <aside class="notes">Type the names in at the start; the fields can be edited live and are not saved, so keep the list in your notes too.</aside>
+  <aside class="notes"><p>Type the names in at the start; the fields can be edited live and are not saved, so keep the list in your notes too. Pair reviewers across briefs where possible, so each peer reads a model they did not build themselves.</p></aside>
 </section>
 
-<section class="slide dark" id="final-prep" data-label="Before the first presentation">
-  <div class="kicker">Before the first presentation</div>
+<section class="slide dark" id="final-prep" data-label="Before the first oral">
+  <div class="kicker">Before the first oral</div>
   <h1>Final prep · 20 minutes</h1>
   <div class="timer" data-minutes="20"></div>
-  <p class="lead">Rehearse once, record a backup, try the demo on this screen.</p>
-  <aside class="notes">Press T to start the timer. Breaks are not slides: press B when the room needs one.</aside>
+  <p class="lead">Rehearse once; check that one cell of your notebook reruns in under two minutes with a changed prior or cost.</p>
+  <aside class="notes"><p>Press T to start the timer. Breaks are not slides: press B when the room needs one. A participant whose full model takes longer to rerun prepares a shorter run (fewer draws) and says so in the oral.</p></aside>
 </section>
 
 <section class="slide dark presenting" id="now-presenting" data-label="Now presenting">
   <div class="kicker center">Now presenting</div>
-  <div class="center"><input placeholder="Presenter · project"></div>
+  <div class="center"><input placeholder="Presenter · brief"></div>
   <div class="timers mt">
-    <div><h3>Talk and demo</h3><div class="timer" data-minutes="15"></div></div>
+    <div><h3>Presentation</h3><div class="timer" data-minutes="8"></div></div>
+    <div><h3>Questions</h3><div class="timer" data-minutes="7"></div></div>
   </div>
-  <aside class="notes">Type the presenter's name and press T to start the timer. Reuse this slide for every presenter.</aside>
+  <aside class="notes"><p>Type the presenter's name, press T for the presentation timer, then the second timer for the questions. Reuse this slide for every presenter. Ask your change of prior or cost first, then give the peer the floor.</p></aside>
 </section>
 
 <section class="slide" id="review" data-label="Trainer review">
   <div class="kicker">Trainer review</div>
-  <h2>What the presentations showed</h2>
+  <h2>What the orals showed</h2>
   <div class="cols cols-3">
-    <div class="card c-teal"><h4>Strongest patterns</h4><p class="small mb0">What several projects got right.</p></div>
-    <div class="card c-coral"><h4>Common gaps</h4><p class="small mb0">What most projects would fix next.</p></div>
-    <div class="card c-purple"><h4>One surprise</h4><p class="small mb0">Something nobody expected.</p></div>
+    <div class="card c-teal"><h4>Strongest patterns</h4><p class="small mb0">What several participants got right.</p></div>
+    <div class="card c-coral"><h4>Common gaps</h4><p class="small mb0">What most repositories would fix next.</p></div>
+    <div class="card c-purple"><h4>One surprise</h4><p class="small mb0">A prediction that the rerun overturned.</p></div>
   </div>
-  <aside class="notes">Fill these in from your scoring notes during the last break. Name projects for strengths; keep gaps anonymous.</aside>
+  <aside class="notes"><p>Fill these in from your scoring notes during the last break. Name participants for strengths; keep gaps anonymous. The usual gaps: a predictive check on a statistic the fit forces, and a decision without the remaining risk.</p></aside>
 </section>
 
 <section class="slide" id="what-next" data-label="After the course">
   <div class="kicker">After the course</div>
-  <h2>Keep going</h2>
+  <h2>The follow-up task, within three weeks</h2>
   <ul class="bullets">
-    <li><b>Your project stays yours:</b> keep it reproducible and add the next improvement you named today</li>
-    <li><b>Next Academy course:</b> REPLACE: the course that follows this one</li>
+    <li><b>Review one real uncertainty analysis</b> from your workplace or a public report, with the checklist of Lab 4.4.</li>
+    <li><b>Submit at most 800 words:</b> the findings, quoting the analysis, ranked by their effect on the decision, and a three-sentence verdict. labs/followup/README.md has the details.</li>
+    <li><b>Keep your capstone repository reproducible:</b> it is the evidence of the course's outcomes.</li>
   </ul>
+  <aside class="notes"><p>The follow-up is tracked: the Academy contacts each participant at three weeks. An analysis from work may contain restricted data: participants submit their findings, not the analysis, and follow their organisation's data classification.</p></aside>
 </section>
 
 <section class="slide dark" id="thanks" data-label="Thank you">

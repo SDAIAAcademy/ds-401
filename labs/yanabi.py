@@ -98,16 +98,23 @@ def _jsonable(v):
     return v
 
 
+def _labels(xs):
+    """Index labels from JSON: lists of lists were tuples of a MultiIndex."""
+    if xs and all(isinstance(x, list) for x in xs):
+        return pd.MultiIndex.from_tuples([tuple(x) for x in xs])
+    return xs
+
+
 def _unjson(v):
     if isinstance(v, dict):
         if "__array__" in v:
             return np.array(v["__array__"])
         if "__frame__" in v:
             f = v["__frame__"]
-            return pd.DataFrame(f["data"], index=f["index"], columns=f["columns"])
+            return pd.DataFrame(f["data"], index=_labels(f["index"]), columns=_labels(f["columns"]))
         if "__series__" in v:
             f = v["__series__"]
-            return pd.Series(f["data"], index=f["index"], name=f.get("name"))
+            return pd.Series(f["data"], index=_labels(f["index"]), name=f.get("name"))
         return {k: _unjson(x) for k, x in v.items()}
     if isinstance(v, list):
         return [_unjson(x) for x in v]

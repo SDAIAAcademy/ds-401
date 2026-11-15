@@ -106,7 +106,7 @@ COSTS = {
         "replace": {"cost_per_km": 400000, "reduction": 0.90, "years": 20,
                     "what": "re-pipe the district's mains"},
     },
-    "capital_budget": 90000000,
+    "capital_budget": 40000000,
     "survey": {
         "offered_by": "an acoustic leak-detection contractor",
         "what": "listens to every main of a district without sensors for one season and returns its true burst-prone rate with about 15% error",

@@ -1,158 +1,280 @@
 <section class="slide title" id="title" data-auto="title">
-  <aside class="notes">REPLACE: welcome; introduce yourself; one question to the room that calibrates the pace; the rhythm of the day</aside>
+  <aside class="notes"><p>Three days built and checked a posterior. Today it becomes a decision Nouran can sign: which districts to repair or re-pipe within SAR 40 million, whether to buy the leak survey, and what to say about a consultant's report that reached a different list. Lab 4.1 is AI-off.</p></aside>
 </section>
 
 <section class="slide" id="agenda" data-auto="agenda"></section>
+
+<section class="slide" id="review-day3" data-lo="LO3">
+  <div class="kicker">Review of Day 3</div>
+  <h2>What the model choice rests on</h2>
+  <div class="quiz" data-type="single" data-lo="LO3">
+    <p class="lead">Day 4 uses the hierarchical negative binomial with the reporting term. Which piece of yesterday's evidence would most change today's plan had it gone the other way?</p>
+    <div class="opts">
+      <div class="opt" data-why="Picks a check the fit forces, which could not have gone the other way">The replicated network total matching 3,894 bursts</div>
+      <div class="opt" data-why="Picks the prior that the data dominate">The power-scaling of the prior on τ</div>
+      <div class="opt" data-ok>The dispersion check: a Poisson would make every district look more certain than it is</div>
+      <div class="opt" data-why="Confuses a check of the code with a check of the model against the world">The calibration of the colleague's model</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The dispersion decides how wide every district's interval is, and today's decisions and the survey's value both depend on that width.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. The calibration in option D tested a different, smaller model; it says the habit of calibrating matters, not that today's model is right.</p></aside>
+</section>
 
 <!-- Session 1 -->
 
 <section class="slide section" id="s1" data-auto="section" data-session="1"></section>
 
-<section class="slide" id="s1-idea" data-lo="LO5">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
-  <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
-    </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
-  </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+<section class="slide" id="decision-table" data-label="Decision table" data-lo="LO5">
+  <div class="kicker">Loss, utility and the decision table</div>
+  <h2>Three actions, one cost each, computed for every posterior draw</h2>
+  <pre class="code s" data-file="Lab 4.1"><code class="language-python">cost(action) = cost_per_km * km + rate * km * 80_000 * (20 - years * reduction)</code></pre>
+  <table class="t small mt">
+    <tr><th>Action</th><th class="num">SAR per km</th><th class="num">Fewer bursts</th><th class="num">For</th></tr>
+    <tr><td>Wait</td><td class="num">0</td><td class="num">0%</td><td class="num">–</td></tr>
+    <tr><td>Repair weak joints, manage pressure</td><td class="num">40,000</td><td class="num">30%</td><td class="num">10 years</td></tr>
+    <tr><td>Re-pipe the mains</td><td class="num">400,000</td><td class="num">90%</td><td class="num">20 years</td></tr>
+  </table>
+  <p class="caption">Synthetic planning numbers (data/costs.json); a burst costs SAR 80,000; horizon 20 years.</p>
+  <aside class="notes"><p>Work one district on the board: 10 km at 0.25 bursts per km-year expects 50 bursts in 20 years. Wait: SAR 4.0 million. Repair: 0.4 million plus 42.5 bursts, 3.8 million. Re-pipe: 4.0 million plus 5 bursts, 4.4 million. Repair wins at this rate. Per kilometre, waiting is cheapest below about 0.17 bursts per km-year and re-piping above 0.30. Expected utility does this for every draw, then averages.</p></aside>
 </section>
 
-<section class="slide" id="s1-steps" data-lo="LO5">
+<section class="slide" id="eu-steps" data-label="Expected utility" data-lo="LO5">
   <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
+  <h2>Average the cost over the posterior, then choose</h2>
   <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+    <div class="step c-navy"><b>1 · Draws</b>2,000 posterior rates for each of 140 districts</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Costs</b>each action's cost in each draw: 3 × 2,000 × 140</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>3 · Choose</b>the action with the lowest expected cost in each district</div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <div class="callout tip mt frag"><b>Result.</b> Wait in 87 districts, repair 38, re-pipe 15.</div>
+  <aside class="notes"><p>Numbers from data/posterior/rates.npz, the posterior of the model chosen on Day 3. Order matters: average the cost, then choose; choosing per draw and taking the most frequent action is a different and worse rule.</p></aside>
+</section>
+
+<section class="slide" id="plug-in" data-label="Plug-in" data-lo="LO5">
+  <div class="kicker">Lab 4.1, tasks 4 and 5</div>
+  <h2>Deciding on the median rate gets three rural districts wrong</h2>
+  <table class="t small">
+    <tr><th>District</th><th>Kind</th><th>Sensors</th><th>Median plug-in</th><th>Expected utility</th><th class="num">Mean / median</th></tr>
+    <tr><td>D045</td><td>rural</td><td>yes</td><td>wait</td><td>repair</td><td class="num">1.05</td></tr>
+    <tr><td>D069</td><td>rural</td><td>no</td><td>repair</td><td>re-pipe</td><td class="num">1.03</td></tr>
+    <tr><td>D091</td><td>rural</td><td>no</td><td>wait</td><td>repair</td><td class="num">1.03</td></tr>
+  </table>
+  <p class="small mt">The mean plug-in agrees everywhere: these costs are straight lines in the rate. The median sits below the mean of a skewed posterior.</p>
+  <aside class="notes"><p>Be honest about the size: with linear costs, deciding on the posterior mean is exactly right, so the Bayesian advantage today is not in this table. It is in the budget, where the interval of the plan matters, and in the survey, where the whole distribution decides the value. A report of medians is the common case, which is why these three districts are worth showing. The stretch's cautious rule (lowest 90th percentile of cost) changes 43 districts and costs SAR 11.6 million more on average: the price of caution, to be chosen knowingly.</p></aside>
+</section>
+
+<section class="slide" id="check-eu" data-lo="LO5">
+  <div class="kicker">Checkpoint</div>
+  <h2>Expected cost or cost at the estimate</h2>
+  <div class="quiz" data-type="single" data-lo="LO5">
+    <p class="lead">An extra cost applies only when a district exceeds 40 bursts in a year: a fine from the regulator. Does deciding on the posterior mean rate still give the expected-utility choice?</p>
+    <div class="opts">
+      <div class="opt" data-why="Generalises from linear costs to all costs">Yes: the mean plug-in is always the same as expected utility</div>
+      <div class="opt" data-ok>Not in general: the fine is not linear in the rate, so its expectation depends on the whole posterior</div>
+      <div class="opt" data-why="Thinks the median fixes non-linearity">No, but the median plug-in would</div>
+      <div class="opt" data-why="Thinks a threshold cost cannot be computed from draws">No decision can be made with a threshold cost</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The expectation of a straight line is the line at the mean; for a threshold, the probability of crossing it comes from the posterior's tail.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. The regulator's fine is invented for the question; the capstone briefs include costs of this shape (a waiting-time target, for example).</p></aside>
 </section>
 
 <section class="slide lab" id="lab-4-1" data-auto="lab" data-lab="4.1">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>AI-off lab. Usual problems: broadcasting km against draws in the wrong axis; taking the argmin per draw and then a vote; mixing millions and riyals. Fallback: none needed; the posterior is supplied.</p></aside>
 </section>
 
 <!-- Session 2 -->
 
 <section class="slide section" id="s2" data-auto="section" data-session="2"></section>
 
-<section class="slide" id="s2-idea" data-lo="LO5">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
+<section class="slide" id="budget-bind" data-label="Budget" data-lo="LO5">
+  <div class="kicker">Choosing under a budget</div>
+  <h2>The best plan for each district costs SAR 61 million; the budget is 40</h2>
   <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
+    <ul class="bullets small">
+      <li>Each district's best action ignores the others; the budget couples them.</li>
+      <li>Rank steps by expected net saving per riyal: wait to repair, repair to re-pipe.</li>
+      <li>Fill the budget in that order; a district's second step comes only after its first.</li>
     </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+    <div class="stack">
+      <div class="stat"><div class="big">61.4</div><div class="lbl">SAR million for the unconstrained plan</div></div>
+      <div class="stat"><div class="big">40.0</div><div class="lbl">SAR million capital budget</div></div>
+    </div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>This is a knapsack problem with two nested items per district. Ranking whole actions by their own ratio, rather than incremental steps, gives a plan worth about half as much (SAR 9 million of saving against 18): the incremental steps matter. The stretch solves it exactly by dynamic programming in units of SAR 4,000 and reaches the same saving.</p></aside>
 </section>
 
-<section class="slide" id="s2-steps" data-lo="LO5">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="the-plan" data-label="The plan" data-lo="LO5">
+  <div class="kicker">Lab 4.2, tasks 3 and 4</div>
+  <h2>43 districts within the budget, with an interval on what they avoid</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">34 + 9</div><div class="lbl">repairs and re-pipings, SAR 40.0 million</div></div>
+    <div class="stat"><div class="big">18.2</div><div class="lbl">SAR million expected net saving over 20 years</div></div>
+    <div class="stat"><div class="big">719</div><div class="lbl">bursts avoided, 90% interval 607 to 870</div></div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <div class="callout tip small mt"><b>The interval is part of the plan.</b> A board that hears "719" will remember it; a board that hears "between 600 and 870" can plan for both.</div>
+  <aside class="notes"><p>The interval is computed by applying the same plan in every posterior draw: a plan's outcome is a distribution, not a number. Part of that width comes from the districts without sensors, whose reporting share rests on the audit.</p></aside>
+</section>
+
+<section class="slide" id="remaining-risk" data-label="Remaining risk" data-lo="LO5">
+  <div class="kicker">Responsible use: Lab 4.2, task 5</div>
+  <h2>Name who carries the risk the plan leaves, and where the model knows least</h2>
+  <div class="cols cols-2">
+    <div class="card c-coral flat"><h4>Largest unfunded risks</h4><p class="small mb0">Large urban districts with sensors (D116, D087, D014): many bursts expected, but each kilometre is cheap to leave. Their residents and crews carry the bursts the plan does not prevent.</p></div>
+    <div class="card c-purple flat"><h4>Least known</h4><p class="small mb0">Mostly rural districts without sensors: their rates rest on the audit prior. The memo names them, and session 3 prices finding out.</p></div>
+  </div>
+  <aside class="notes"><p>This is the check the catalog entry names for responsible use on Day 4. The capstone memo has the same two paragraphs. A plan that reports only the funded list hides a choice about who waits.</p></aside>
+</section>
+
+<section class="slide" id="check-budget" data-lo="LO5">
+  <div class="kicker">Checkpoint</div>
+  <h2>Filling a budget</h2>
+  <div class="quiz" data-type="single" data-lo="LO5">
+    <p class="lead">District A: repair costs 1 million and saves 1.5 million; re-piping costs 10 million and saves 4 million in all. Funds are short. Which step is ranked by which ratio?</p>
+    <div class="opts">
+      <div class="opt" data-why="Ranks the whole re-pipe by its total ratio, mixing in the repair's cheap saving">Re-pipe at 0.4 per riyal, as one step</div>
+      <div class="opt" data-why="Ignores the second step altogether">Only the repair is ever considered</div>
+      <div class="opt" data-why="Ranks by total saving, ignoring cost">Re-pipe first because it saves the most</div>
+      <div class="opt" data-ok>Repair at 1.5 per riyal; then the upgrade to re-pipe at 2.5 / 9 ≈ 0.28 per riyal</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The upgrade's value is what it adds over the repair: 2.5 million more saving for 9 million more cost.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. The numbers are invented for the question; Lab 4.2 builds the same steps for 140 districts.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-4-2" data-auto="lab" data-lab="4.2">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain; it writes no plan code. Usual problems: ranking whole actions instead of increments; allowing an upgrade before its repair; reporting avoided bursts from the posterior mean only. The exact stretch is a short loop over 140 districts.</p></aside>
 </section>
 
 <!-- Session 3 -->
 
 <section class="slide section" id="s3" data-auto="section" data-session="3"></section>
 
-<section class="slide" id="s3-idea" data-lo="LO5">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
-  <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
-    </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+<section class="slide" id="voi-idea" data-label="Value of information" data-lo="LO5">
+  <div class="kicker">What more data is worth</div>
+  <h2>Information is worth what it would change in the decision</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Perfect information</b>Decide in each draw knowing the true rate; average; subtract today's best</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-amber frag" data-frag="b"><b>The real survey</b>Simulate its result (15% error), update, decide, average</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>Against its price</b>Buy where the value exceeds SAR 45,000 per district</div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <div class="callout tip mt frag"><b>No change, no value.</b> A district whose best action holds across its whole posterior gains nothing from a survey.</div>
+  <aside class="notes"><p>EVPI is an upper bound; EVSI, by preposterior analysis, values the actual survey. The update in Lab 4.3 reweights the posterior draws by the survey's likelihood, which needs no new fit.</p><p>Source: Raiffa and Schlaifer (1961), Applied Statistical Decision Theory, for the preposterior analysis.</p></aside>
 </section>
 
-<section class="slide" id="s3-steps" data-lo="LO5">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="survey-numbers" data-label="The survey" data-lo="LO5">
+  <div class="kicker">Lab 4.3, tasks 2 to 4</div>
+  <h2>Decline the full survey; propose 16 districts</h2>
+  <table class="t small">
+    <tr><th></th><th class="num">Price, SAR million</th><th class="num">Value, SAR million</th></tr>
+    <tr><td>Perfect information, 76 districts</td><td class="num">–</td><td class="num">2.38</td></tr>
+    <tr><td>Full survey as offered, 76 districts</td><td class="num">3.42</td><td class="num">1.81</td></tr>
+    <tr class="hl"><td>Targeted survey, 16 districts</td><td class="num">0.72</td><td class="num">1.21</td></tr>
+  </table>
+  <p class="small mt">The 16 are mostly rural districts close to a decision threshold, with uncertain rates.</p>
+  <aside class="notes"><p>Even perfect information on all 76 is worth less than the full price, which settles the offer before any simulation. The targeted survey buys two thirds of the value for a fifth of the price. The stretch asks whether a survey that changes no funded decision under a binding budget can still be worth its price: within this budget, only changes that move money between districts count.</p></aside>
+</section>
+
+<section class="slide" id="check-voi" data-lo="LO5">
+  <div class="kicker">Checkpoint</div>
+  <h2>Which district to survey</h2>
+  <div class="quiz" data-type="single" data-lo="LO5">
+    <p class="lead">Two districts without sensors. X: rate very uncertain, but re-piping is best in every draw. Y: rate moderately uncertain, and repair or wait each wins in about half the draws. Where is a survey worth more?</p>
+    <div class="opts">
+      <div class="opt" data-ok>Y: the survey can change its decision; X's decision is already settled</div>
+      <div class="opt" data-why="Equates value of information with uncertainty alone">X: it is the more uncertain</div>
+      <div class="opt" data-why="Thinks information always has the same value">Both the same: a survey costs the same in each</div>
+      <div class="opt" data-why="Thinks a settled decision needs confirming">Neither: surveys only confirm a model</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Information is valuable where it can change the action; uncertainty that cannot change the choice is worth nothing to this decision.</div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>Answer: A. X's uncertainty may still matter for the memo's interval of avoided bursts; it does not matter for the choice.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-4-3" data-auto="lab" data-lab="4.3">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain; the verdict is the participant's. Usual problems: computing EVPI as the variance of the cost; updating the posterior with the survey's error on the rate scale instead of the log scale; comparing value with price for the whole survey only. Small negative EVSI values are simulation noise.</p></aside>
 </section>
 
 <!-- Session 4 -->
 
 <section class="slide section" id="s4" data-auto="section" data-session="4"></section>
 
-<section class="slide" id="s4-idea" data-lo="LO6">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
-  <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
-    </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+<section class="slide" id="review-checklist" data-label="Checklist" data-lo="LO6">
+  <div class="kicker">Reviewing a Bayesian analysis</div>
+  <h2>Six questions, in the order of the workflow</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Priors</h4><p class="small mb0">Stated, justified, checked by prior predictive simulation?</p></div>
+    <div class="card c-cyan"><h4>Computation</h4><p class="small mb0">Four chains, R-hat under 1.01, ESS, divergences explained?</p></div>
+    <div class="card c-navy"><h4>Structure</h4><p class="small mb0">Pooling suited to unequal groups, and defended?</p></div>
+    <div class="card c-amber"><h4>Measurement</h4><p class="small mb0">Is what was recorded what happened?</p></div>
+    <div class="card c-purple"><h4>Checking</h4><p class="small mb0">Predictive checks and a comparison of models?</p></div>
+    <div class="card c-coral"><h4>Decision</h4><p class="small mb0">Costs, uncertainty, remaining risk, value of data?</p></div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>Each card is a day of the course. A review that finds a flaw quotes the report and says what it does to the decision; "the priors could be better" is not a finding.</p><p>Source: Gelman et al. (2020), Bayesian Workflow; the WAMBS checklist of Depaoli and van de Schoot (2017) for priors and computation.</p></aside>
 </section>
 
-<section class="slide" id="s4-steps" data-lo="LO6">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="consultant-top" data-label="The evidence" data-lo="LO6">
+  <div class="kicker">Lab 4.4, task 3</div>
+  <h2>The consultant's top six, raw and pooled</h2>
+  <table class="t small">
+    <tr><th>District</th><th>Kind</th><th>Sensors</th><th class="num">Raw rate</th><th class="num">Posterior median (90%)</th></tr>
+    <tr><td>D010</td><td>rural</td><td>no</td><td class="num">0.51</td><td class="num">0.39 (0.26 to 0.60)</td></tr>
+    <tr class="hl"><td>D017</td><td>suburban</td><td>yes</td><td class="num">0.50</td><td class="num">0.40 (0.30 to 0.54)</td></tr>
+    <tr class="hl"><td>D073</td><td>rural</td><td>yes</td><td class="num">0.50</td><td class="num">0.25 (0.15 to 0.39)</td></tr>
+    <tr><td>D113</td><td>rural</td><td>no</td><td class="num">0.42</td><td class="num">0.32 (0.19 to 0.53)</td></tr>
+    <tr><td>D067</td><td>rural</td><td>no</td><td class="num">0.41</td><td class="num">0.38 (0.23 to 0.60)</td></tr>
+    <tr><td>D118</td><td>rural</td><td>no</td><td class="num">0.40</td><td class="num">0.41 (0.25 to 0.67)</td></tr>
+  </table>
+  <aside class="notes"><p>D073 halves under pooling: a few bursts on a short network. D017's raw rate includes the trunk-main year; re-piping its 58 km would cost SAR 23 million, more than half the budget, on one unusual year. The districts without sensors hold their place because the reporting term lifts them back.</p></aside>
+</section>
+
+<section class="slide" id="rank-flaws" data-label="Ranking" data-lo="LO6">
+  <div class="kicker">Lab 4.4, task 3</div>
+  <h2>Rank the flaws by what they do to the decision, not by how wrong they look</h2>
+  <ol class="bullets small">
+    <li><b>Structure.</b> No pooling: small districts top the list on noise; 13 zero-burst districts are declared safe.</li>
+    <li><b>Measurement.</b> Unrecorded bursts read as low risk in 76 districts.</li>
+    <li><b>Decision.</b> A ranking of means taken as the plan: no costs, intervals, remaining risk or survey price.</li>
+    <li><b>Computation.</b> Two chains, R-hat against 1.1, 37 divergences dismissed.</li>
+    <li><b>Priors</b> and <b>checking</b>: Normal(0, 100) called uninformative; R² as fit.</li>
+  </ol>
+  <aside class="notes"><p>Computation looks worst to a statistician and changes the list least here: a correct fit of a no-pooling model still ranks D073 high. Other rankings pass if argued by effect on the decision. LO6 asks for at least four of the six found.</p></aside>
+</section>
+
+<section class="slide" id="check-review" data-lo="LO6">
+  <div class="kicker">Checkpoint</div>
+  <h2>Writing one finding</h2>
+  <div class="quiz" data-type="single" data-lo="LO6">
+    <p class="lead">Which sentence is a usable review finding?</p>
+    <div class="opts">
+      <div class="opt" data-why="States an opinion without the evidence or the consequence">The priors are not good enough</div>
+      <div class="opt" data-why="Names the evidence but not what it does to the decision">The report uses Normal(0, 100)</div>
+      <div class="opt" data-ok>Each district is estimated alone, so D073 (a few bursts on a short network) ranks third; pooled, its rate halves and it leaves the list</div>
+      <div class="opt" data-why="Prescribes a tool instead of identifying a flaw">The analysis should have used NumPyro</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A finding quotes what the report did, shows the evidence, and says how it changes the decision.</div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>Answer: C. Participants write six of these in Lab 4.4 and the peer review of the oral uses the same form.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-4-4" data-auto="lab" data-lab="4.4">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain a checklist item; the review is the participant's. Usual problems: listing flaws without evidence; ranking computation first by habit; forgetting to choose a capstone brief (task 4). The stretch reruns one of the consultant's claims.</p></aside>
 </section>
 
 <section class="slide" id="wrap-up">
   <div class="kicker">Day 4 · wrap-up</div>
   <h2>Three things to keep</h2>
   <div class="cols cols-3">
-    <div class="card c-teal"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
-    <div class="card c-coral"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
-    <div class="card c-purple"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
+    <div class="card c-teal"><h4>Average the cost, then choose</h4><p class="small mb0">And report the plan's outcome as an interval, with who carries the risk it leaves.</p></div>
+    <div class="card c-coral"><h4>Price information by the decision</h4><p class="small mb0">Data are worth buying only where they can change what you do.</p></div>
+    <div class="card c-purple"><h4>Review by effect</h4><p class="small mb0">Quote, show the evidence, say what changes.</p></div>
   </div>
+  <aside class="notes"><p>Close the teaching days by returning to Nouran: she now has a plan of 43 districts, an interval, a counter-offer for the survey and a reply to the consultant. Ask what she would still need before the board.</p></aside>
 </section>
 
 <section class="slide dark" id="next" data-label="Next">
   <div class="kicker">Next</div>
-  <h2>Capstone: Capstone project presentations</h2>
-  <p class="lead">REPLACE: what participants prepare before then; unfinished labs can be finished at home</p>
-  <aside class="notes">REPLACE: accounts, installs or reading participants need before the next unit</aside>
+  <h2>Capstone: your own model and decision memo</h2>
+  <p class="lead">Start your capstone repository on the brief you chose in Lab 4.4. Read labs/capstone/README.md for the structure and the rubric.</p>
+  <aside class="notes"><p>Each participant is also assigned a peer whose model they will review in the oral: announce the pairs before participants leave.</p></aside>
 </section>

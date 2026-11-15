@@ -1,0 +1,18 @@
+{
+ "obs": {
+  "zeros_busy": 0.047619047619047616,
+  "dispersion": 2.323349288955447
+ },
+ "p_po": {
+  "zeros_busy": 0.1205,
+  "dispersion": 0.0
+ },
+ "p_nb": {
+  "zeros_busy": 0.482,
+  "dispersion": 0.3355
+ },
+ "verdict": [
+  "The Poisson model cannot reproduce the observed dispersion (2.32 against replicates near 1, p = 0.000); the quiet years of districts over 10 km sit at the edge of its range (p = 0.12). The negative binomial reproduces both.",
+  "A model that understates year-to-year variation is too sure of every district's rate, so the Day 4 plan would look less risky than it is."
+ ]
+}

@@ -1,0 +1,60 @@
+{
+ "power_scaling": {
+  "__frame__": {
+   "columns": [
+    "prior^0.8",
+    "prior^1.25"
+   ],
+   "index": [
+    "tau",
+    "rural rate"
+   ],
+   "data": [
+    [
+     0.0106587671,
+     -0.0114641771
+    ],
+    [
+     0.0247359249,
+     -0.030521696
+    ]
+   ]
+  }
+ },
+ "changes": {
+  "__frame__": {
+   "columns": [
+    "tau",
+    "rural_no_sensor_rate",
+    "top15_shared"
+   ],
+   "index": [
+    "HalfNormal(0.2)",
+    "HalfNormal(0.5)",
+    "HalfNormal(2.0)"
+   ],
+   "data": [
+    [
+     0.3075852096,
+     0.2353615463,
+     15.0
+    ],
+    [
+     0.3168510199,
+     0.232183814,
+     15.0
+    ],
+    [
+     0.3195152879,
+     0.2291758209,
+     15.0
+    ]
+   ]
+  }
+ },
+ "summary": [
+  "Across three defensible priors on how much districts differ, the spread \u03c4 ranges from 0.31 to 0.32, and the typical rate of rural districts without sensors from 0.229 to 0.235 bursts per km-year.",
+  "15 of the 15 highest-rate districts are the same under every prior, and weakening or strengthening the priors moves no key quantity by more than 0.03 posterior standard deviations.",
+  "The plan's choice of districts does not hinge on the prior on \u03c4; the audit prior on reporting (Lab 2.4) matters more and is the one to improve."
+ ]
+}

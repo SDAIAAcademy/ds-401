@@ -1,158 +1,327 @@
 <section class="slide title" id="title" data-auto="title">
-  <aside class="notes">REPLACE: welcome; introduce yourself; one question to the room that calibrates the pace; the rhythm of the day</aside>
+  <aside class="notes"><p>Yesterday ended with a model that pools districts, predicts from pipes and corrects for under-reporting. Today asks whether to believe it: does it reproduce the data, does it beat its rivals on data it has not seen, is its code right, and how much do the priors matter. Lab 3.1 is AI-off.</p></aside>
 </section>
 
 <section class="slide" id="agenda" data-auto="agenda"></section>
+
+<section class="slide" id="review-day2" data-lo="LO2">
+  <div class="kicker">Review of Day 2</div>
+  <h2>What a pooled estimate rests on</h2>
+  <div class="quiz" data-type="single" data-lo="LO2">
+    <p class="lead">A rural district of 1.5 km recorded one burst in five years. Its posterior rate under the Lab 2.4 model is 0.21. What contributes most to that number?</p>
+    <div class="opts">
+      <div class="opt" data-why="Overweights a single recorded burst over the population it is pooled with">Its own record: 1 burst over 7.5 km-years</div>
+      <div class="opt" data-ok>The rate predicted for its material and age, plus the audit prior on reporting</div>
+      <div class="opt" data-why="Thinks the sampler, not the model, chooses the estimate">The sampler's starting values</div>
+      <div class="opt" data-why="Thinks the common rate is still the pooling target after predictors were added">The common rate of all 140 districts</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> With so little data the district borrows almost everything: from the prediction for its pipes (Lab 2.2) and, without sensors, from the reporting prior (Lab 2.4).</div>
+  </div>
+  <aside class="notes"><p>Answer: B. Its own record alone would say 0.13, which is noise at this size. The question sets up today: if the estimate rests on the model, the model has to be checked.</p></aside>
+</section>
 
 <!-- Session 1 -->
 
 <section class="slide section" id="s1" data-auto="section" data-session="1"></section>
 
-<section class="slide" id="s1-idea" data-lo="LO3">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
-  <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
-    </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+<section class="slide" id="ppc-idea" data-label="The idea" data-lo="LO3">
+  <div class="kicker">Posterior predictive checks</div>
+  <h2>A model that fits should be able to produce data like yours</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>1 · Draw</b>parameters from the posterior</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Replicate</b>700 district-years from the model with those parameters</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>3 · Compare</b>a statistic of the replicates with the same statistic of the data</div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <div class="callout tip mt frag"><b>Choose the statistic for the decision.</b> The total number of bursts fits almost any model; the variation from year to year decides how sure Day 4 can be.</div>
+  <aside class="notes"><p>Press once per step. Ask the room which statistic a Poisson model would always get right: the total, because the rate is fitted to it (Lab 3.1: observed 3,894, replicated median 3,889). A check on a statistic the model was fitted to proves nothing.</p></aside>
 </section>
 
-<section class="slide" id="s1-steps" data-lo="LO3">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="two-statistics" data-label="Two statistics" data-lo="LO3">
+  <div class="kicker">Lab 3.1, task 2</div>
+  <h2>The Poisson model cannot produce the year-to-year variation Yanabi records</h2>
+  <table class="t small">
+    <tr><th>Districts over 10 km</th><th class="num">Observed</th><th class="num">Poisson replicates, 90%</th><th class="num">p</th></tr>
+    <tr class="hl"><td>Dispersion: variance of the five yearly counts over their mean</td><td class="num">2.32</td><td class="num">0.87 to 1.13</td><td class="num">0.000</td></tr>
+    <tr><td>Share of district-years with no burst</td><td class="num">0.048</td><td class="num">0.021 to 0.050</td><td class="num">0.12</td></tr>
+  </table>
+  <p class="small mt">The dispersion fails outright. The quiet years sit at the edge of the Poisson range without leaving it: not every statistic exposes a misfit.</p>
+  <aside class="notes"><p>Numbers from the course's quick run. The p-value is the share of replicates at least as extreme as the data; near 0 or 1 is a warning, not a test with a threshold. Point out that one useful statistic was enough here; in the capstone, participants choose their statistics before they look, so they are not chosen to pass.</p></aside>
+</section>
+
+<section class="slide" id="negbin" data-label="Negative binomial" data-lo="LO3">
+  <div class="kicker">Lab 3.1, task 3</div>
+  <h2>A negative binomial lets each year vary more than a Poisson</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.1"><code class="language-python">phi = numpyro.sample("phi", dist.Gamma(2.0, 0.2))
+numpyro.sample("y", dist.NegativeBinomial2(mean, phi), obs=y)
+# variance = mean + mean**2 / phi</code></pre>
+    <ul class="bullets small">
+      <li>φ = 7.0, 90% interval 5.6 to 9.0 (the generating value was 6).</li>
+      <li>Both statistics now sit inside the replicates: p = 0.34 and 0.48.</li>
+      <li>Weather, pressure surges and repair campaigns move a district's year; the Poisson has no room for them.</li>
+    </ul>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>The Gamma(2, 0.2) prior has mean 10: mild extra variation expected, large values (close to Poisson) allowed. A participant who writes NegativeBinomial with (total_count, probs) instead of NegativeBinomial2 gets a different parameterisation: the lab's check catches the wrong mean.</p></aside>
+</section>
+
+<section class="slide" id="rootogram" data-label="Rootogram" data-lo="LO3" data-read="scaled">
+  <div class="kicker">What participants plot</div>
+  <h2>The Poisson replicates are too narrow at both ends</h2>
+  <div class="figure">
+    <svg viewBox="0 0 640 280" role="img" aria-label="Sketch of a rootogram: observed counts of district-years by number of bursts as bars; the Poisson curve is too high in the middle and too low at zero and in the tail; the negative binomial curve follows the bars">
+      <title>Observed counts against two models</title>
+      <line x1="50" y1="240" x2="610" y2="240" stroke="currentColor" stroke-width="2"/>
+      <g fill="currentColor" opacity="0.25">
+        <rect x="70" y="120" width="40" height="120"/><rect x="120" y="70" width="40" height="170"/><rect x="170" y="80" width="40" height="160"/><rect x="220" y="120" width="40" height="120"/><rect x="270" y="160" width="40" height="80"/><rect x="320" y="190" width="40" height="50"/><rect x="370" y="210" width="40" height="30"/><rect x="420" y="222" width="40" height="18"/><rect x="470" y="228" width="40" height="12"/>
+      </g>
+      <polyline points="90,150 140,60 190,60 240,110 290,175 340,215 390,232 440,238 490,240" fill="none" stroke="#e4572e" stroke-width="3"/>
+      <polyline points="90,122 140,72 190,80 240,118 290,158 340,188 390,208 440,221 490,227" fill="none" stroke="#2a9d8f" stroke-width="3"/>
+      <text x="520" y="60" font-size="16" fill="#e4572e">Poisson</text>
+      <text x="520" y="85" font-size="16" fill="#2a9d8f">negative binomial</text>
+      <text x="330" y="270" font-size="16" text-anchor="middle" fill="currentColor">bursts in a district-year</text>
+    </svg>
+    <div class="caption">Sketch of the figure Lab 3.1 saves; the participants' own plot uses the real replicates.</div>
+  </div>
+  <aside class="notes"><p>The shape to recognise: too many replicates in the middle, too few zeros and too few large counts. That is overdispersion seen as a picture. The lab's figure plots the square root of the counts so the tail is visible.</p></aside>
+</section>
+
+<section class="slide" id="check-ppc" data-lo="LO3">
+  <div class="kicker">Checkpoint</div>
+  <h2>Choosing a test statistic</h2>
+  <div class="quiz" data-type="single" data-lo="LO3">
+    <p class="lead">Shabib proposes checking the Poisson model on the total number of bursts per year across the network. What do you tell him?</p>
+    <div class="opts">
+      <div class="opt" data-ok>The model was fitted to reproduce totals; check the variation within districts from year to year instead</div>
+      <div class="opt" data-why="Assumes any check that passes shows the model fits">A good check: if the totals match, the model fits</div>
+      <div class="opt" data-why="Thinks checks must use held-out data, confusing them with cross-validation">Checks are only valid on data the model has not seen</div>
+      <div class="opt" data-why="Treats a p-value near 0.5 as proof rather than as no evidence against">If p is near 0.5 the model is proven correct</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A statistic the fit already matches cannot fail; choose one that the decision depends on and the fit does not force.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. The network total per year also hides the overdispersion within districts because it adds 140 districts together.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-3-1" data-auto="lab" data-lab="3.1">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>AI-off lab. Usual problems: computing dispersion over all districts, where small ones with mean near zero give noise; replicating from the prior instead of the posterior; using NegativeBinomial with probs. Fallback: if the negative binomial is not written, the lab uses U.burst_model(family="negbin").</p></aside>
 </section>
 
 <!-- Session 2 -->
 
 <section class="slide section" id="s2" data-auto="section" data-session="2"></section>
 
-<section class="slide" id="s2-idea" data-lo="LO3">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
+<section class="slide" id="loo-idea" data-label="Leave-one-out" data-lo="LO3">
+  <div class="kicker">Comparing models by predictive accuracy</div>
+  <h2>Score each model on the district-years it did not see</h2>
   <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
+    <ul class="bullets small">
+      <li><b>elpd</b>: the expected log predictive density of a new district-year; higher is better.</li>
+      <li>Leave-one-out refits 700 times; PSIS-LOO approximates all of them from one fit by importance sampling.</li>
+      <li><b>Pareto k</b> says, for each point, whether the approximation can be trusted (below about 0.7).</li>
     </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+    <div class="card c-teal flat"><h4>Why not R² or the fit to the data</h4><p class="small mb0">Any model with more parameters fits the data it saw better. Predicting what it did not see is the fair contest.</p></div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>The consultant's report on Day 4 offers R² of observed against fitted as evidence of fit; this slide is the answer to it. p_loo, the effective number of parameters, is a useful aside: the hierarchical Poisson spends 158 of them because it explains extra variation with district effects.</p><p>Source: Vehtari, Gelman and Gabry (2017), Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.</p></aside>
 </section>
 
-<section class="slide" id="s2-steps" data-lo="LO3">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="loo-table" data-label="Comparison" data-lo="LO3">
+  <div class="kicker">Lab 3.2, tasks 2 and 3</div>
+  <h2>The negative binomial hierarchy predicts best, by far more than its error</h2>
+  <table class="t small">
+    <tr><th>Model</th><th class="num">elpd</th><th class="num">p_loo</th><th class="num">Difference from best</th><th class="num">SE of difference</th></tr>
+    <tr class="hl"><td>Hierarchical negative binomial</td><td class="num">-1,393</td><td class="num">66</td><td class="num">0</td><td class="num">–</td></tr>
+    <tr><td>Hierarchical Poisson</td><td class="num">-1,503</td><td class="num">158</td><td class="num">-110</td><td class="num">23</td></tr>
+    <tr><td>Complete pooling, Poisson</td><td class="num">-1,710</td><td class="num">22</td><td class="num">-317</td><td class="num">54</td></tr>
+  </table>
+  <p class="small mt">Read the difference against its own standard error, not against the elpd's: about 5 standard errors here.</p>
+  <aside class="notes"><p>Quick-run numbers. The standard errors of each elpd (34 to 74) are larger than they look useful: they share most of their noise, so compare the difference with the standard error of the difference. ArviZ 1.x prints a worse model's difference as negative; the lab asks for round_to="none" to get unrounded numbers.</p></aside>
+</section>
+
+<section class="slide" id="pareto-k" data-label="Pareto k" data-lo="LO3">
+  <div class="kicker">Lab 3.2, task 4</div>
+  <h2>D017's 2023 is the year a trunk main failed: keep it, choose a model it does not overturn</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>The Poisson hierarchy flags six district-years above 0.7, D017 in 2023 among them: 54 bursts against 18 to 27 in its other years.</li>
+      <li>The negative binomial expects some unusual years: it flags one, at 0.71.</li>
+      <li>Shabib confirms the failure. The year is real; deleting it would understate risk.</li>
+    </ul>
+    <div class="card c-coral flat"><h4>A flagged point is a question</h4><p class="small mb0">Ask what happened before deciding what to do. An error is corrected; an event is modelled.</p></div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>Quick-run numbers; the count of flagged points varies a little with the seed, and the lab checks only that D017 2023 is among them and that the negative binomial has fewer. The stretch leaves out whole districts: there 43 to 59 districts exceed 0.7 under the hierarchies, so importance sampling cannot be trusted and K-fold refits are the honest tool. The consultant's raw rate for D017 on Day 4 includes the 2023 year.</p></aside>
+</section>
+
+<section class="slide" id="check-loo" data-lo="LO3">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reading a model comparison</h2>
+  <div class="quiz" data-type="single" data-lo="LO3">
+    <p class="lead">Model A has elpd -1,402 (SE 35) and model B -1,408 (SE 36). The difference is 6 with a standard error of 5. Juhaina asks which to use.</p>
+    <div class="opts">
+      <div class="opt" data-why="Treats any positive difference as a meaningful win">A: it has the higher elpd</div>
+      <div class="opt" data-why="Compares the difference with each model's own SE instead of the SE of the difference">Neither can be told apart because 6 is small next to 35</div>
+      <div class="opt" data-ok>No clear winner on prediction: choose by the checks, simplicity and what the decision needs</div>
+      <div class="opt" data-why="Thinks more parameters always means a better model">The one with more parameters</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A difference within about two of its own standard errors is not decisive; other evidence has to choose.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. Option B reaches the right conclusion for the wrong reason, which matters: with a difference of 60 and the same SEs it would still say "too small".</p></aside>
 </section>
 
 <section class="slide lab" id="lab-3-2" data-auto="lab" data-lab="3.2">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain the output; the choice is the participant's. Usual problems: fitting without log_likelihood=True (az.loo then fails; U.sample keeps it); reading az.compare's rounded table; deleting D017 2023 to make the warning go away. Three fits take about four minutes on a laptop.</p></aside>
 </section>
 
 <!-- Session 3 -->
 
 <section class="slide section" id="s3" data-auto="section" data-session="3"></section>
 
-<section class="slide" id="s3-idea" data-lo="LO4">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
+<section class="slide" id="one-run-proves-little" data-label="One run" data-lo="LO4">
+  <div class="kicker">Is the code right</div>
+  <h2>One successful recovery proves little</h2>
   <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
+    <ul class="bullets small">
+      <li>A colleague simulated one dataset and recovered both parameters: α and β inside their 90% intervals.</li>
+      <li>The model still has an error. One run passes by luck as easily as by being right.</li>
+      <li>A correct model misses the truth 10% of the time; a wrong one can cover it often.</li>
     </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+    <div class="card c-purple flat"><h4>Lab 3.3's starting point</h4><p class="small mb0">20 northern districts, 445 km, a Poisson rate with an age effect. The simulator is right; one line of the model is not.</p></div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>Do not reveal the line. Ask the room how they test their own model code today; most will say "it ran and the numbers looked sensible". That is what the colleague did.</p></aside>
 </section>
 
-<section class="slide" id="s3-steps" data-lo="LO4">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
+<section class="slide" id="sbc-steps" data-label="Calibration" data-lo="LO4">
+  <div class="kicker">Simulation-based calibration</div>
+  <h2>If the code is right, the truth's rank among the draws is uniform</h2>
   <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+    <div class="step c-navy"><b>1 · Simulate</b>parameters from the prior, then data</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Fit</b>the model to those data: 99 draws</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-amber frag" data-frag="c"><b>3 · Rank</b>count draws below the true value: 0 to 99</div>
+    <div class="arrow frag" data-frag="d">→</div><div class="step c-teal frag" data-frag="d"><b>4 · Repeat</b>100 or 200 times; plot each parameter's ranks</div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <div class="callout tip mt frag"><b>Shapes to read.</b> Flat: right. U: posterior too narrow. Hump: too wide. Slope: biased.</div>
+  <aside class="notes"><p>The argument in one sentence: averaged over the prior, the posterior is the prior, so a true value drawn from the prior is just another draw from the posterior and its rank is uniform. Any departure is a mismatch between the simulator and the fitted model, in code or in maths.</p><p>Source: Talts, Betancourt, Simpson, Vehtari and Gelman (2018), Validating Bayesian Inference Algorithms with Simulation-Based Calibration.</p></aside>
+</section>
+
+<section class="slide" id="sbc-result" data-label="Found" data-lo="LO4">
+  <div class="kicker">Lab 3.3, tasks 3 to 5</div>
+  <h2>β's ranks pile up at both ends: its prior is five times too narrow</h2>
+  <table class="t small">
+    <tr><th>Share of ranks in the outer fifth (expected 20%)</th><th class="num">α</th><th class="num">β</th></tr>
+    <tr class="hl"><td>Colleague's model</td><td class="num">33% (p = 0.09)</td><td class="num">69% (p &lt; 0.001)</td></tr>
+    <tr><td>Fixed model</td><td class="num">23% (p = 0.44)</td><td class="num">25% (p = 0.66)</td></tr>
+  </table>
+  <pre class="code s mt" data-file="the line"><code class="language-python">beta = numpyro.sample("beta", dist.Normal(0.3, 0.2 ** 2))   # a variance where the scale belongs</code></pre>
+  <aside class="notes"><p>Quick run, 100 simulations. α is pulled a little too (33%, not significant at 100 simulations) because a wrong β pushes the intercept to compensate: look first at the parameter with the strongest signal. NumPyro, like Stan and SciPy, takes a standard deviation; some textbooks write the normal with a variance. This is one of the most common real errors in hand-written models.</p></aside>
+</section>
+
+<section class="slide" id="sbc-limits" data-label="Limits" data-lo="LO4">
+  <div class="kicker">What calibration does not do</div>
+  <h2>Calibration tests the code against the simulator, not the model against the world</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>It finds</h4><p class="small mb0">Coding errors, wrong parameterisations, a sampler that cannot fit the model.</p></div>
+    <div class="card c-coral"><h4>It misses</h4><p class="small mb0">The same mistake in both the simulator and the model; a model that is wrong about Yanabi.</p></div>
+    <div class="card c-purple"><h4>It costs</h4><p class="small mb0">100 fits. Small models and short chains make it a few minutes on a laptop.</p></div>
+  </div>
+  <aside class="notes"><p>Session 1's checks test the model against the data; this session tests the code against its own assumptions. The capstone asks for both. The stretch item calibrates a derived quantity, the rate at age 40, which participants report to Nouran.</p></aside>
+</section>
+
+<section class="slide" id="check-sbc" data-lo="LO4">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reading rank histograms</h2>
+  <div class="quiz" data-type="single" data-lo="LO4">
+    <p class="lead">In a calibration of 200 simulations, a parameter's ranks form a hump: few near 0 or 99, many in the middle. What does it say?</p>
+    <div class="opts">
+      <div class="opt" data-why="Reads the hump as the shape of a posterior, not of a rank histogram">The posterior is approximately normal, as expected</div>
+      <div class="opt" data-why="Confuses the hump with the U shape">The posterior is too narrow</div>
+      <div class="opt" data-ok>The posterior is too wide: the truth sits near its middle too often</div>
+      <div class="opt" data-why="Thinks calibration measures the sampler's speed">The sampler needs more warm-up</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A right posterior puts the truth anywhere among its draws equally often; a too-wide one rarely puts it in the tails.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. A typical cause is a prior in the model wider than the simulator's, the mirror image of today's error.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-3-3" data-auto="lab" data-lab="3.3">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain ranks; it does not point at the line. The calibration loop takes a few minutes; start it, then read the code while it runs. Usual problems: ranking against the prior instead of the posterior; refitting with a new compiled sampler per simulation (slow; the lab gives make_fitter); fixing alpha's prior too, which changes nothing.</p></aside>
 </section>
 
 <!-- Session 4 -->
 
 <section class="slide section" id="s4" data-auto="section" data-session="4"></section>
 
-<section class="slide" id="s4-idea" data-lo="LO3">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
+<section class="slide" id="power-scaling" data-label="Power-scaling" data-lo="LO3">
+  <div class="kicker">How much the priors matter</div>
+  <h2>Make the priors a little weaker and a little stronger, and see what moves</h2>
   <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
+    <ul class="bullets small">
+      <li>Raise the prior density to a power: 0.8 weakens it, 1.25 strengthens it.</li>
+      <li>Reweight the existing draws by importance sampling: no refit needed.</li>
+      <li>Report the shift of each decision quantity in posterior standard deviations.</li>
     </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+    <div class="stack">
+      <div class="stat"><div class="big">0.03</div><div class="lbl">largest shift, in posterior sd (rural rate)</div></div>
+    </div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>Quick-run number. Shifts below about 0.1 sd say the data dominate these priors. Lab 3.4 writes the reweighting by hand in about ten lines, over the priors on α, β, τ and φ; the reporting prior is left out on purpose, because Lab 2.4 already showed it carries its answer. ArviZ 1.x offers the same diagnostic as az.psense_summary, and R users meet it as the priorsense package.</p><p>Source: Kallioinen, Paananen, Bürkner and Vehtari (2024), Detecting and diagnosing prior and likelihood sensitivity with power-scaling.</p></aside>
 </section>
 
-<section class="slide" id="s4-steps" data-lo="LO3">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="three-priors" data-label="Three priors" data-lo="LO3">
+  <div class="kicker">Lab 3.4, tasks 2 and 3</div>
+  <h2>Three priors on the spread, one list of districts</h2>
+  <table class="t small">
+    <tr><th>Prior on τ</th><th class="num">τ (median)</th><th class="num">Rural, no sensors, rate</th><th class="num">Top 15 shared with base</th></tr>
+    <tr><td>HalfNormal(0.2)</td><td class="num">0.31</td><td class="num">0.235</td><td class="num">15</td></tr>
+    <tr class="hl"><td>HalfNormal(0.5), base</td><td class="num">0.32</td><td class="num">0.232</td><td class="num">15</td></tr>
+    <tr><td>HalfNormal(2.0)</td><td class="num">0.32</td><td class="num">0.229</td><td class="num">15</td></tr>
+  </table>
+  <p class="small mt">With 140 districts, the data pin τ; the prior on the spread does not change the plan.</p>
+  <aside class="notes"><p>Contrast with Lab 2.4: there the counts taught the model almost nothing about reporting, so the audit prior carried the answer. Sensitivity is a property of each prior and each question, not of the model as a whole. The stretch tries a Gamma(2, 1) prior on φ: φ moves from 7.0 to 6.3, the rural rate does not move.</p></aside>
+</section>
+
+<section class="slide" id="which-prior-matters" data-label="What matters" data-lo="LO3">
+  <div class="kicker">The summary for Nouran</div>
+  <h2>The prior that matters is the one on reporting, and it rests on one audit</h2>
+  <ol class="bullets small">
+    <li>The priors on spread and shape barely move the decision quantities.</li>
+    <li>The reporting prior moves the rural no-sensor rates almost one for one (Lab 2.4's stretch).</li>
+    <li>So the money for better information goes to reporting, not to refining the model: Day 4, session 3.</li>
+  </ol>
+  <aside class="notes"><p>This is the three-sentence summary Lab 3.4 asks for, written for a director. A summary that says "the model is robust to the priors" without naming the one prior that matters fails the LO3 standard.</p></aside>
+</section>
+
+<section class="slide" id="check-sensitivity" data-lo="LO3">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reporting sensitivity</h2>
+  <div class="quiz" data-type="single" data-lo="LO3">
+    <p class="lead">Power-scaling shows that no quantity shifts by more than 0.03 posterior sd. Nouran asks whether the priors can now be ignored in the memo.</p>
+    <div class="opts">
+      <div class="opt" data-why="Generalises from the priors that were tested to all of them">Yes: the analysis is insensitive to its priors</div>
+      <div class="opt" data-why="Treats robustness as a reason to drop the Bayesian analysis">Yes, and the analysis could have used maximum likelihood instead</div>
+      <div class="opt" data-why="Assumes sensitivity can only be shown with new data">No: sensitivity cannot be known until new data arrive</div>
+      <div class="opt" data-ok>No: state the priors tested, and name the reporting prior, which the data cannot check</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Robustness holds for the priors the data inform; a prior the data cannot check carries its answer and must be stated with its source.</div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>Answer: D. Option B is a fair question from the room: without the reporting prior and the pooling, maximum likelihood would not give the same rural estimates.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-3-4" data-auto="lab" data-lab="3.4">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain power-scaling; the summary is the participant's. Usual problems: forgetting that the log prior of a vector is a sum; dividing weights without subtracting the maximum (overflow); comparing τ across priors without checking each fit. Three fits take about five minutes.</p></aside>
 </section>
 
 <section class="slide" id="wrap-up">
   <div class="kicker">Day 3 · wrap-up</div>
   <h2>Three things to keep</h2>
   <div class="cols cols-3">
-    <div class="card c-teal"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
-    <div class="card c-coral"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
-    <div class="card c-purple"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
+    <div class="card c-teal"><h4>Check what the decision needs</h4><p class="small mb0">Choose statistics the fit does not force; the variation from year to year sank the Poisson.</p></div>
+    <div class="card c-coral"><h4>Test the code, not one run</h4><p class="small mb0">Calibration over many simulations found a line that one recovery missed.</p></div>
+    <div class="card c-purple"><h4>Name the prior that matters</h4><p class="small mb0">Spread and shape priors barely move the plan; the reporting prior does.</p></div>
   </div>
+  <aside class="notes"><p>Ask each table for the one row of today's comparison table that would change Nouran's decision if it had gone the other way. Usually: the dispersion check, because it widens every district's interval.</p></aside>
 </section>
 
 <section class="slide dark" id="next" data-label="Next">
   <div class="kicker">Next</div>
   <h2>Day 4: From posterior to decision</h2>
-  <p class="lead">REPLACE: what participants prepare before then; unfinished labs can be finished at home</p>
-  <aside class="notes">REPLACE: accounts, installs or reading participants need before the next unit</aside>
+  <p class="lead">Tomorrow turns the posterior into a capital plan. Read the consultant's report in labs/data/review before you come: Lab 4.4 reviews it.</p>
+  <aside class="notes"><p>Day 4 uses a supplied posterior, data/posterior/rates.npz, from the model chosen today, so a participant who did not finish Day 3 starts level. Bring a calculator or a notebook for the decision table on the first slide.</p></aside>
 </section>

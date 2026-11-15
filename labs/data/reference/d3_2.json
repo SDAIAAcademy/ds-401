@@ -1,0 +1,105 @@
+{
+ "compare": {
+  "__frame__": {
+   "columns": [
+    "elpd",
+    "elpd_diff",
+    "dse"
+   ],
+   "index": [
+    "hierarchical negative binomial",
+    "hierarchical Poisson",
+    "complete Poisson"
+   ],
+   "data": [
+    [
+     -1393.01783485,
+     0.0,
+     0.0
+    ],
+    [
+     -1503.4265461616,
+     -110.4087113116,
+     22.9136226253
+    ],
+    [
+     -1710.4228352511,
+     -317.4050004011,
+     53.8266663149
+    ]
+   ]
+  }
+ },
+ "influential": {
+  "__frame__": {
+   "columns": [
+    "model",
+    "district_id",
+    "year",
+    "bursts",
+    "k"
+   ],
+   "index": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "data": [
+    [
+     "hierarchical Poisson",
+     "D009",
+     2022,
+     10,
+     0.7261449405
+    ],
+    [
+     "hierarchical Poisson",
+     "D011",
+     2021,
+     32,
+     0.836014906
+    ],
+    [
+     "hierarchical Poisson",
+     "D017",
+     2023,
+     54,
+     0.8375546577
+    ],
+    [
+     "hierarchical Poisson",
+     "D034",
+     2024,
+     24,
+     0.8527491797
+    ],
+    [
+     "hierarchical Poisson",
+     "D062",
+     2022,
+     16,
+     0.8471401779
+    ],
+    [
+     "hierarchical Poisson",
+     "D094",
+     2024,
+     30,
+     0.849296494
+    ],
+    [
+     "hierarchical negative binomial",
+     "D094",
+     2024,
+     30,
+     0.7119728874
+    ]
+   ]
+  }
+ },
+ "choice": "Chosen: the hierarchical negative binomial with the reporting term. It passed the zeros and dispersion checks of Lab 3.1 and predicts held-out district-years better than the next model by 110 points of elpd (standard error 23); the trunk-main year of D017 does not overturn it. This does not show it predicts a district it has never seen, nor that the audit prior on reporting is right."
+}

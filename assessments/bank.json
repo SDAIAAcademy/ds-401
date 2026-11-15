@@ -530,6 +530,336 @@
       "level": "apply",
       "pool": "practice",
       "weight": 1
+    },
+    {
+      "id": "q-ppc-statistic",
+      "type": "single",
+      "prompt": "A Poisson model of daily ambulance calls per station is fitted. Which posterior predictive check is most likely to reveal a problem the fit itself could hide?",
+      "options": [
+        "The total number of calls over the year",
+        "The mean number of calls per station",
+        "The variance of each station's daily calls divided by their mean",
+        "The number of stations"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "The rates are fitted to reproduce totals and means; the ratio of variance to mean is not forced by the fit, and a Poisson fixes it at 1.",
+      "misconceptions": [
+        "Checks a statistic the fitted rates reproduce by construction",
+        "Checks a statistic the fitted rates reproduce by construction",
+        "",
+        "Confuses a property of the design with a property of the data"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 1,
+      "slide": "ppc-idea",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-ppc-pvalue",
+      "type": "single",
+      "prompt": "A posterior predictive check of the share of zero counts gives p = 0.12. What does this say?",
+      "options": [
+        "The model is wrong with 88% probability",
+        "The observed share sits within the range the model produces, towards its edge",
+        "The model is right with 12% probability",
+        "The check failed and must be repeated with more draws"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "The p-value is the share of replicates at least as extreme as the data; 0.12 means the data are not unusual under the model, though near the edge of what it produces.",
+      "misconceptions": [
+        "Reads a predictive p-value as the probability that the model is wrong",
+        "",
+        "Reads a predictive p-value as the probability that the model is right",
+        "Treats a moderate p-value as a computational failure"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 1,
+      "slide": "two-statistics",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-negbin-variance",
+      "type": "single",
+      "prompt": "A negative binomial with mean 4 and shape φ = 8 replaces a Poisson with mean 4. What is the variance of each?",
+      "options": [
+        "Poisson 4, negative binomial 6",
+        "Both 4",
+        "Poisson 4, negative binomial 32",
+        "Poisson 16, negative binomial 6"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "A Poisson's variance equals its mean; the negative binomial's is mean + mean²/φ = 4 + 16/8 = 6.",
+      "misconceptions": [
+        "",
+        "Thinks the same mean implies the same variance",
+        "Multiplies the mean by the shape instead of dividing its square",
+        "Squares the Poisson's mean"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 1,
+      "slide": "negbin",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-loo-difference",
+      "type": "single",
+      "prompt": "Two models of clinic waiting times: elpd -2,150 (SE 40) and -2,180 (SE 42); the difference is 30 with a standard error of 8. Which reading is right?",
+      "options": [
+        "No clear difference, because 30 is smaller than either SE",
+        "The first predicts held-out patients clearly better: the difference is almost four of its own standard errors",
+        "The second is better because its SE is larger",
+        "The comparison is invalid unless both have the same number of parameters"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "The models share most of their noise, so the difference is judged against the standard error of the difference, not against each model's own SE.",
+      "misconceptions": [
+        "Compares the difference with each model's own SE",
+        "",
+        "Reads a larger SE as better",
+        "Thinks leave-one-out needs models of equal size; it already accounts for complexity"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 2,
+      "slide": "loo-table",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-pareto-k",
+      "type": "single",
+      "prompt": "Leave-one-out flags one school-year with Pareto k = 1.1: a fire closed the school for a term and inspections found many problems. What should the analyst do first?",
+      "options": [
+        "Delete the school-year so the warning disappears",
+        "Ignore it: one point cannot matter among 800",
+        "Confirm what happened, keep the real event, and prefer a model that is not overturned by such years",
+        "Raise the number of draws until k falls below 0.7"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "A high k says one point moves the posterior a lot; a real event is kept and modelled, while an error would be corrected.",
+      "misconceptions": [
+        "Removes inconvenient real data and understates risk",
+        "Thinks one influential point cannot change the conclusions",
+        "",
+        "Treats k as a sampling problem that more draws fix"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 2,
+      "slide": "pareto-k",
+      "level": "apply",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-why-not-r2",
+      "type": "single",
+      "prompt": "A report justifies a model by an R² of 0.91 between observed and fitted counts. Why is this weak evidence?",
+      "options": [
+        "R² cannot be computed for counts",
+        "It rewards fitting the data already seen; a model with more parameters always scores higher",
+        "0.91 is too low for count data",
+        "R² is a frequentist measure and cannot be used with a Bayesian model"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Agreement with the data used to fit says little about prediction; leave-one-out scores each point by a model that did not see it.",
+      "misconceptions": [
+        "Thinks R² is undefined for counts",
+        "",
+        "Thinks a higher threshold would make in-sample fit convincing",
+        "Rejects a measure because of its school rather than what it measures"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 2,
+      "slide": "loo-idea",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-sbc-shape",
+      "type": "single",
+      "prompt": "In a simulation-based calibration, a parameter's rank histogram rises steadily from left to right. What does it indicate?",
+      "options": [
+        "The posterior is too wide",
+        "The code is correct",
+        "The sampler needs more chains",
+        "The posterior is systematically below the true value: the truth's rank is usually high"
+      ],
+      "correct": [
+        3
+      ],
+      "explanation": "A rank counts the draws below the truth; many high ranks mean most draws are below it, so the posterior is biased downwards.",
+      "misconceptions": [
+        "Confuses a slope with a hump",
+        "Reads any smooth histogram as uniform",
+        "Treats a bias in the model as a sampler setting",
+        ""
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 3,
+      "slide": "sbc-steps",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-sbc-single-run",
+      "type": "single",
+      "prompt": "A colleague simulated one dataset from known parameters, fitted her model and recovered both inside their 90% intervals. She says the code is verified. What is the best reply?",
+      "options": [
+        "Agreed: recovering both parameters is the standard test",
+        "Repeat with a larger dataset and the code is verified",
+        "One run can pass by luck; rank the truth over many simulated datasets and check the ranks are uniform",
+        "Verification is impossible for Bayesian models"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "A wrong model can cover the truth on one dataset and a right one misses 10% of the time; only the distribution of ranks over many runs tests the code.",
+      "misconceptions": [
+        "Treats one recovery as proof",
+        "Thinks more data per run replaces more runs",
+        "",
+        "Believes Bayesian code cannot be tested"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 3,
+      "slide": "one-run-proves-little",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-sbc-limit",
+      "type": "single",
+      "prompt": "A model passes simulation-based calibration. Which error could it still contain?",
+      "options": [
+        "A prior written with a variance where the scale belongs, in the model only",
+        "A likelihood that assumes Poisson counts when the real data are overdispersed",
+        "A wrong parameterisation of the negative binomial in the model only",
+        "A sampler that cannot reach part of the posterior"
+      ],
+      "correct": [
+        1
+      ],
+      "explanation": "Calibration tests the model against its own simulator; a wrong assumption about the world, made in both, passes. Predictive checks against real data find it.",
+      "misconceptions": [
+        "Misses that a mismatch between model and simulator is exactly what calibration finds",
+        "",
+        "Misses that a mismatch between model and simulator is exactly what calibration finds",
+        "Misses that a sampler failing to explore distorts the ranks"
+      ],
+      "lo": [
+        "LO4"
+      ],
+      "day": "day3",
+      "session": 3,
+      "slide": "sbc-limits",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-power-scaling",
+      "type": "single",
+      "prompt": "Power-scaling the priors by 0.8 and 1.25 moves the posterior mean of a district's rate by 0.6 posterior standard deviations. What does that suggest?",
+      "options": [
+        "The prior is doing a large share of the work for this quantity; report it and test alternatives",
+        "The data dominate the priors for this quantity",
+        "The sampler has not converged",
+        "The rate must be removed from the report"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "A shift of more than a fraction of a posterior sd when the prior is slightly weakened or strengthened means the answer depends on the prior.",
+      "misconceptions": [
+        "",
+        "Reads a large shift as a small one",
+        "Confuses prior sensitivity with a convergence problem",
+        "Thinks a prior-sensitive quantity cannot be reported"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 4,
+      "slide": "power-scaling",
+      "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-which-prior",
+      "type": "single",
+      "prompt": "Three priors on the spread between districts give the same 15 riskiest districts, but the reporting share of districts without sensors comes only from an audit-based prior. What belongs in the memo?",
+      "options": [
+        "The results are robust to the priors",
+        "Nothing about priors: the manager does not need them",
+        "The spread prior does not change the plan; the reporting prior carries the rural estimates and rests on one audit",
+        "Replace the reporting prior with a flat one to be objective"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "Sensitivity is a property of each prior and question; the prior the data cannot check must be named with its source.",
+      "misconceptions": [
+        "Generalises from the priors tested to all of them",
+        "Hides the assumption that drives part of the answer",
+        "",
+        "Thinks a flat prior is neutral when the data cannot identify the quantity"
+      ],
+      "lo": [
+        "LO3"
+      ],
+      "day": "day3",
+      "session": 4,
+      "slide": "which-prior-matters",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1
     }
   ]
 }

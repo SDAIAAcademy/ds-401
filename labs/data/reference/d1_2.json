@@ -1,0 +1,78 @@
+{
+ "pct": {
+  "__frame__": {
+   "columns": [
+    "p05",
+    "p50",
+    "p95"
+   ],
+   "index": [
+    "flat-looking N(0, 10)",
+    "weakly informative N(log 0.1, 1)",
+    "tight N(log 0.5, 0.05)"
+   ],
+   "data": [
+    [
+     1.274e-07,
+     0.783320652,
+     16882838.224947516
+    ],
+    [
+     0.0184694108,
+     0.1003727411,
+     0.5173782826
+    ],
+    [
+     0.460054955,
+     0.5001251873,
+     0.5418862926
+    ]
+   ]
+  }
+ },
+ "cmp": {
+  "__frame__": {
+   "columns": [
+    "share_over_500",
+    "share_total_plausible"
+   ],
+   "index": [
+    "flat-looking N(0, 10)",
+    "weakly informative N(log 0.1, 1)",
+    "tight N(log 0.5, 0.05)"
+   ],
+   "data": [
+    [
+     0.3663,
+     0.099
+    ],
+    [
+     0.0,
+     0.73
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ]
+  }
+ },
+ "decision": {
+  "flat-looking N(0, 10)": [
+   "reject",
+   "37% of simulated district-years exceed 500 bursts, which statement A rules out"
+  ],
+  "weakly informative N(log 0.1, 1)": [
+   "keep",
+   "73% of network totals fall within 300 to 3,000 and almost no district-year exceeds 500"
+  ],
+  "tight N(log 0.5, 0.05)": [
+   "reject",
+   "only 0% of network totals fall within 300 to 3,000: it is sure of a rate nobody measured"
+  ]
+ },
+ "age_prior": [
+  0.0,
+  0.5
+ ]
+}

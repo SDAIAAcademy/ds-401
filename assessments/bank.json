@@ -3,146 +3,159 @@
   "version": 1,
   "questions": [
     {
-      "id": "q-example-1",
+      "id": "q-grid-width",
       "type": "single",
-      "prompt": "REPLACE: a practice question on LO1, as a short scenario",
+      "prompt": "Shabib asks why the posterior of a 2 km rural district spans rates from 0.06 to 0.5 bursts per km-year, while a 180 km urban district's spans 0.07 to 0.10, although both used the same prior and five years of data. What is the reason?",
       "options": [
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: the right answer",
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: a wrong option that a common misconception makes tempting"
+        "The rural district's few bursts give a flat likelihood, so the prior shapes much of its posterior",
+        "The rural district's prior was wider because it is rural",
+        "The sampler mixed worse for the rural district",
+        "Rural rates are more variable by nature, whatever the data say"
       ],
       "correct": [
-        1
+        0
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "Exposure of 10 km-years holds a handful of bursts, which constrains the rate weakly; 900 km-years constrain it sharply.",
       "misconceptions": [
-        "REPLACE: the misconception behind this option",
         "",
-        "REPLACE: the misconception behind this option",
-        "REPLACE: the misconception behind this option"
+        "Thinks different widths require different priors, when the same prior was used",
+        "Blames the computation for what is a property of the data",
+        "Confuses uncertainty about a rate with variability of the process"
       ],
       "lo": [
         "LO1"
       ],
       "day": "day1",
       "session": 1,
-      "level": "apply",
-      "pool": "practice",
-      "weight": 1
-    },
-    {
-      "id": "q-example-2",
-      "type": "tf",
-      "prompt": "REPLACE: a statement on LO2 that is true",
-      "options": [
-        "True",
-        "False"
-      ],
-      "correct": [
-        0
-      ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
-      "misconceptions": [
-        "",
-        "REPLACE: the misconception behind this option"
-      ],
-      "lo": [
-        "LO2"
-      ],
-      "day": "day1",
-      "session": 1,
+      "slide": "small-and-large",
       "level": "understand",
       "pool": "practice",
       "weight": 1
     },
     {
-      "id": "q-example-3",
+      "id": "q-generative-exposure",
       "type": "single",
-      "prompt": "REPLACE: a practice question on LO3, as a short scenario",
+      "prompt": "You simulate a year of bursts for a district with a rate of 0.2 bursts per km-year and 15 km of mains. Which line simulates one year?",
       "options": [
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: the right answer",
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: a wrong option that a common misconception makes tempting"
+        "rng.poisson(0.2)",
+        "rng.poisson(0.2 * 15)",
+        "rng.poisson(0.2) * 15",
+        "rng.normal(0.2 * 15, 1)"
       ],
       "correct": [
         1
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "The expected count is the rate times the exposure, 3 bursts, and the count is a Poisson draw with that mean.",
       "misconceptions": [
-        "REPLACE: the misconception behind this option",
+        "Forgets the exposure: the rate is per kilometre",
         "",
-        "REPLACE: the misconception behind this option",
-        "REPLACE: the misconception behind this option"
+        "Scales a count drawn for one kilometre, which gives only multiples of 15",
+        "Uses a continuous distribution for a count that cannot be negative or fractional"
       ],
       "lo": [
-        "LO3"
+        "LO1"
       ],
       "day": "day1",
       "session": 1,
+      "slide": "generative-story",
       "level": "apply",
       "pool": "practice",
       "weight": 1
     },
     {
-      "id": "q-example-4",
-      "type": "tf",
-      "prompt": "REPLACE: a statement on LO4 that is true",
+      "id": "q-flat-prior",
+      "type": "single",
+      "prompt": "A contractor uses Normal(0, 10) on the log burst rate \"to let the data speak\". Its prior predictive simulation puts 37% of district-years above 500 bursts. What do you conclude?",
       "options": [
-        "True",
-        "False"
+        "The prior is harmless because the data will overwhelm it",
+        "The prior should be widened further to be safe",
+        "The prior is informative in an absurd direction and should be replaced by one that rules out impossible rates",
+        "The simulation is wrong because priors cannot predict data"
       ],
       "correct": [
-        0
+        2
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "A prior that predicts impossible data carries strong, wrong information; with little data, as in small districts, it moves the posterior.",
       "misconceptions": [
+        "Assumes data always dominate, which fails for districts with few bursts",
+        "Believes wider is always more neutral",
         "",
-        "REPLACE: the misconception behind this option"
+        "Does not know that a prior and a likelihood together imply a distribution of data"
       ],
       "lo": [
-        "LO4"
+        "LO1"
       ],
       "day": "day1",
-      "session": 1,
-      "level": "understand",
+      "session": 2,
+      "slide": "flat-not-harmless",
+      "level": "analyze",
       "pool": "practice",
       "weight": 1
     },
     {
-      "id": "q-example-5",
+      "id": "q-prior-reason",
       "type": "single",
-      "prompt": "REPLACE: a practice question on LO5, as a short scenario",
+      "prompt": "Which reason for the prior α ~ Normal(log 0.1, 1) on the log burst rate meets the course's standard?",
       "options": [
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: the right answer",
-        "REPLACE: a wrong option that a common misconception makes tempting",
-        "REPLACE: a wrong option that a common misconception makes tempting"
+        "It is weakly informative",
+        "It is the default of the library",
+        "It is centred on the engineers' one burst per 10 km a year, and 73% of the network totals it simulates fall in their plausible range of 300 to 3,000",
+        "It gave the best fit to the five years of counts"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "A reason quotes the knowledge the prior encodes and a check of what it predicts.",
+      "misconceptions": [
+        "Gives a label in place of a reason",
+        "Defers to software defaults that know nothing of pipes",
+        "",
+        "Tunes the prior to the same data the model will fit, using the data twice"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 2,
+      "slide": "reason-per-prior",
+      "level": "evaluate",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-hmc-gradient",
+      "type": "single",
+      "prompt": "Why can Hamiltonian Monte Carlo explore a posterior with 150 parameters where a random-walk sampler stalls?",
+      "options": [
+        "It evaluates the posterior on a fine grid",
+        "It uses the gradient of the log posterior to make long moves that stay in regions of high density",
+        "It discards most draws so that the rest are independent",
+        "It assumes the posterior is normal"
       ],
       "correct": [
         1
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "Momentum and the gradient carry the sampler far in one iteration along the shape of the posterior, so proposals are accepted often even in many dimensions.",
       "misconceptions": [
-        "REPLACE: the misconception behind this option",
+        "Confuses sampling with grid evaluation, which is impossible in 150 dimensions",
         "",
-        "REPLACE: the misconception behind this option",
-        "REPLACE: the misconception behind this option"
+        "Mistakes thinning for what makes a sampler efficient",
+        "Confuses HMC with a normal approximation"
       ],
       "lo": [
-        "LO5"
+        "LO1"
       ],
       "day": "day1",
-      "session": 1,
-      "level": "apply",
+      "session": 3,
+      "slide": "hmc-intuition",
+      "level": "understand",
       "pool": "practice",
       "weight": 1
     },
     {
-      "id": "q-example-6",
+      "id": "q-offset-meaning",
       "type": "tf",
-      "prompt": "REPLACE: a statement on LO6 that is true",
+      "prompt": "In log E[bursts] = log km + α + Xβ, the coefficient of log km is fixed at 1, so exp(β) for asbestos cement is a ratio of burst rates per kilometre-year.",
       "options": [
         "True",
         "False"
@@ -150,17 +163,78 @@
       "correct": [
         0
       ],
-      "explanation": "REPLACE: why the right answer is right, in one sentence",
+      "explanation": "With the offset, the other terms model the rate per unit of exposure.",
       "misconceptions": [
         "",
-        "REPLACE: the misconception behind this option"
+        "Thinks the material coefficient compares total counts, which would mix material with network length"
       ],
       "lo": [
-        "LO6"
+        "LO1"
       ],
       "day": "day1",
-      "session": 1,
+      "session": 3,
+      "slide": "check-offset",
       "level": "understand",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-rhat-no-divergence",
+      "type": "single",
+      "prompt": "A fit of four chains shows no divergences, bulk ESS of 7 for α and R-hat of 1.60. Three chains have a mean α near -2.41 and the fourth near -1.23. What do you do?",
+      "options": [
+        "Report the pooled mean of the four chains",
+        "Drop the fourth chain and report the other three",
+        "Treat the fit as untrustworthy, rerun four chains with full warm-up from dispersed starts, and check again",
+        "Accept it, since there are no divergences"
+      ],
+      "correct": [
+        2
+      ],
+      "explanation": "Chains that disagree have not converged to one distribution; only a fresh run that passes the checks can be read.",
+      "misconceptions": [
+        "Averages over chains that sample different things",
+        "Discards evidence of a problem without knowing which chains are right",
+        "",
+        "Treats the absence of divergences as proof of convergence"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 4,
+      "slide": "rhat-story",
+      "level": "analyze",
+      "pool": "practice",
+      "weight": 1
+    },
+    {
+      "id": "q-capped-trees",
+      "type": "single",
+      "prompt": "Zaina's fit hit the maximum tree depth in a third of its draws, with R-hat 1.002, bulk ESS above 1,400 and no divergences. Juhaina asks whether the numbers can be used. What do you answer?",
+      "options": [
+        "Yes: capped trees cost sampling time, and the mixing diagnostics show the draws are sound",
+        "No: any warning invalidates a fit",
+        "No: the tree depth must never be capped",
+        "Only after converting the fit to a variational approximation"
+      ],
+      "correct": [
+        0
+      ],
+      "explanation": "Tree depth is an efficiency diagnostic; validity is judged by R-hat, ESS, divergences and E-BFMI, which all pass.",
+      "misconceptions": [
+        "",
+        "Treats every warning as a validity failure",
+        "Confuses a slow setting with a wrong one",
+        "Thinks an approximation is more reliable than a sound sampler"
+      ],
+      "lo": [
+        "LO1"
+      ],
+      "day": "day1",
+      "session": 4,
+      "slide": "efficiency-validity",
+      "level": "evaluate",
       "pool": "practice",
       "weight": 1
     }

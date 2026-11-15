@@ -1,0 +1,94 @@
+{
+ "mix": {
+  "__frame__": {
+   "columns": [
+    "max_rhat",
+    "min_ess_bulk",
+    "min_ess_tail"
+   ],
+   "index": [
+    "fit_A",
+    "fit_B",
+    "fit_C",
+    "fit_D"
+   ],
+   "data": [
+    [
+     1.0024091907,
+     968.990761197,
+     1623.1092443928
+    ],
+    [
+     1.368892108,
+     9.6097523626,
+     7.6708860713
+    ],
+    [
+     1.5989353901,
+     6.7649520047,
+     4.5871989864
+    ],
+    [
+     1.002163821,
+     1452.2579100094,
+     1878.7320708614
+    ]
+   ]
+  }
+ },
+ "health": {
+  "__frame__": {
+   "columns": [
+    "divergences",
+    "share_capped",
+    "min_ebfmi"
+   ],
+   "index": [
+    "fit_A",
+    "fit_B",
+    "fit_C",
+    "fit_D"
+   ],
+   "data": [
+    [
+     0.0,
+     0.0,
+     0.6440660954
+    ],
+    [
+     741.0,
+     0.0,
+     0.0489241593
+    ],
+    [
+     0.0,
+     0.0,
+     7.29363e-05
+    ],
+    [
+     0.0,
+     0.32575,
+     0.9774699211
+    ]
+   ]
+  }
+ },
+ "verdict": {
+  "fit_A": [
+   "trust",
+   "R-hat 1.002, tail ESS 1623, no divergence"
+  ],
+  "fit_B": [
+   "do not trust",
+   "741 divergences: the centred model cannot reach the narrow neck of the posterior for small districts"
+  ],
+  "fit_C": [
+   "do not trust",
+   "R-hat 1.60: one chain never left its starting region, although no divergence was reported"
+  ],
+  "fit_D": [
+   "trust",
+   "33% of trees hit the depth cap of 4, which costs efficiency, but R-hat 1.002 and ESS 1452 are sound"
+  ]
+ }
+}

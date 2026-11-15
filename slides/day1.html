@@ -1,158 +1,485 @@
 <section class="slide title" id="title" data-auto="title">
-  <aside class="notes">REPLACE: welcome; introduce yourself; one question to the room that calibrates the pace; the rhythm of the day</aside>
+  <aside class="notes"><p>Welcome. Ask the room one calibration question: who has fitted a model with a sampler before, and who has read R-hat in someone else's output? The answers set how fast session 3 goes. The rhythm of each day: four sessions of about 50 minutes, each ending with a 25-minute lab. Breaks are on the B key, not on slides.</p></aside>
 </section>
 
 <section class="slide" id="agenda" data-auto="agenda"></section>
+
+<section class="slide" id="the-decision" data-label="The decision" data-lo="LO1 LO5">
+  <div class="kicker">Yanabi Water Authority</div>
+  <h2>Every model this week ends in one decision about pipes</h2>
+  <div class="cols cols-3">
+    <div class="card c-navy"><h4>The question</h4><p class="small mb0">Dr. Nouran Al-Ateeq, director of asset management, must choose which of 140 districts to re-pipe or repair within a capital budget.</p></div>
+    <div class="card c-teal"><h4>The data</h4><p class="small mb0">Five years of reported bursts, 2021 to 2025, from networks of 1.2 km to 198 km. Synthetic, with known generating values.</p></div>
+    <div class="card c-coral"><h4>The difficulty</h4><p class="small mb0">A third of the districts recorded fewer than five bursts in five years, and most rural districts have no sensors.</p></div>
+  </div>
+  <p class="small mt">Day 1 builds the workflow on one model. Day 2 pools districts, Day 3 checks the models, Day 4 decides.</p>
+  <aside class="notes"><p>Introduce the cast once: Nouran owns the decision; Shabib Al-Ruqaish, the pipe network engineer, owns the burst records; Juhaina Al-Zahim owns the costs and the budget; Ouda Al-Shahwan brings an acoustic survey offer on Day 4; Wurud Al-Samhan is the data protection officer. Participants play Zaina Al-Habdan, the senior data scientist.</p><p>Everything is synthetic: labs/prepare_data.py writes the files with seed 401, and data/truth.json holds the values that generated them. Real data never has that file, which is why the course keeps asking "how would you know without it?"</p></aside>
+</section>
+
+<section class="slide" id="prework-classification" data-label="Pre-work" data-lo="LO1">
+  <div class="kicker">From the pre-work</div>
+  <h2>Real asset and customer records stay out of a hosted notebook until classified</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>The pre-work asked you to classify Yanabi's real burst and customer files under the national data classification levels.</li>
+      <li>Burst counts per district: an internal record. Customer addresses on a burst ticket: personal data under the Personal Data Protection Law.</li>
+      <li>This course uses only synthetic files, so Colab is allowed here. At work, the classification decides where a notebook may run.</li>
+    </ul>
+    <div class="card c-purple flat"><h4>Ask Wurud first</h4><p class="small mb0">Wurud Al-Samhan, the data protection officer, signs off before a real extract leaves Yanabi's systems.</p></div>
+  </div>
+  <aside class="notes"><p>Take two answers from the pre-work's entry quiz on this point. The usual mistake is treating burst counts as harmless while the ticket text holds names and addresses.</p><p>Sources: NDMO Data Classification Policy; Personal Data Protection Law and its implementing regulation (addresses in the README). Do not quote clauses from memory.</p></aside>
+</section>
+
+<section class="slide" id="setup-check" data-label="Setup" data-lo="LO1">
+  <div class="kicker">Before the first lab</div>
+  <h2>One notebook proves your setup: run it now</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="terminal"><code class="language-bash">cd ds-401/labs
+uv sync
+uv run jupyter execute 00_setup_check.ipynb</code></pre>
+    <ul class="bullets small">
+      <li>Or open <code>00_setup_check.ipynb</code> in Colab and run all cells.</li>
+      <li>It imports NumPyro, JAX and ArviZ, fits a tiny model and prints the versions.</li>
+      <li>Everything runs on a laptop processor. No model is downloaded and no key is needed.</li>
+    </ul>
+  </div>
+  <div class="callout note small mt"><b>AI policy.</b> The first model of each day (Labs 1.1, 2.1, 3.1, 4.1) is written without AI. In the other labs the tutor Mirsad explains diagnostics and errors; it writes no model code.</div>
+  <aside class="notes"><p>The first fit compiles: half a minute is normal. On Windows with a deep folder, set UV_PROJECT_ENVIRONMENT to a short path before uv sync (labs/README.md). Mirsad is a set of instructions in labs/tutor_instruction.md that participants paste into an approved assistant; it runs on no service of its own.</p></aside>
+</section>
 
 <!-- Session 1 -->
 
 <section class="slide section" id="s1" data-auto="section" data-session="1"></section>
 
-<section class="slide" id="s1-idea" data-lo="LO1">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
+<section class="slide" id="recap-glm" data-label="Recap" data-lo="LO1">
+  <div class="kicker">Recap from DS-301</div>
+  <h2>You have fitted this count model before, by maximum likelihood</h2>
   <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
+    <ul class="bullets small">
+      <li>Counts with an exposure: log E[bursts] = log km + α + Xβ.</li>
+      <li>The offset fixes the coefficient of log km at 1, so β describes a rate.</li>
+      <li>Overdispersion and the negative binomial: Day 3 returns to them.</li>
     </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+    <div class="card c-teal flat"><h4>What changes this week</h4><p class="small mb0">Each unknown gets a distribution, not one best value. The decision on Day 4 uses the whole distribution.</p></div>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>This is a pointer, not a lesson: DS-301 Day 2 sessions 3 and 4 teach exposure and dispersion. If several participants have not taken DS-301, point them to its Lab 2.3 for the evening.</p></aside>
 </section>
 
-<section class="slide" id="s1-steps" data-lo="LO1">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
+<section class="slide" id="generative-story" data-label="Generative story" data-lo="LO1">
+  <div class="kicker">A model is a simulator</div>
+  <h2>Write the story that produces the bursts, then run it forwards</h2>
   <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+    <div class="step c-navy"><b>1 · Rate</b>bursts per km of main per year</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>2 · Exposure</b>times the district's km, for one year</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>3 · Count</b>a Poisson draw with that mean</div>
+    <div class="arrow">→</div>
+    <div class="step c-coral"><b>4 · Record</b>what was reported (Day 2)</div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <p class="small mt">If you can simulate the data, you can test every later step against a truth you chose.</p>
+  <aside class="notes"><p>Ask: which step is missing for districts without sensors? The record step: not every burst is reported. Leave it open; session 2.4 models it. Lab 1.1 task 1 is this flow in one line of NumPy.</p></aside>
+</section>
+
+<section class="slide" id="bayes-rule" data-label="Bayes' rule" data-lo="LO1">
+  <div class="kicker">Prior times likelihood</div>
+  <h2>The posterior weighs every candidate rate by prior and data</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 1.1, task 3"><code class="language-python">lp = log_prior(grid) + log_lik(grid, counts, km)
+w = np.exp(lp - lp.max())
+w = w / w.sum()   # posterior weights on the grid</code></pre>
+    <ul class="bullets small">
+      <li>Work on the log scale: products of many probabilities underflow.</li>
+      <li>Subtract the maximum before exponentiating.</li>
+      <li>The normalising constant is the sum of the weights.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Write p(rate | data) ∝ p(rate) × p(data | rate) on the board and point at each term in the code. The prior is a lognormal centred on 0.10 bursts per km-year with a log-scale spread of 1: Shabib's "about one burst per 10 km a year". Session 2 tests that prior.</p></aside>
+</section>
+
+<section class="slide" id="small-and-large" data-label="Small and large" data-lo="LO1 LO2">
+  <div class="kicker">Lab 1.1, task 4</div>
+  <h2>Five years say little about a 1.2 km district</h2>
+  <table class="t small">
+    <tr><th>District</th><th class="num">km</th><th class="num">Bursts, 5 years</th><th class="num">Median rate</th><th class="num">90% interval</th></tr>
+    <tr><td>D043, rural</td><td class="num">1.2</td><td class="num">2</td><td class="num">0.194</td><td class="num">0.058 to 0.523</td></tr>
+    <tr><td>D011, urban</td><td class="num">198.0</td><td class="num">87</td><td class="num">0.087</td><td class="num">0.073 to 0.104</td></tr>
+  </table>
+  <p class="small mt">Same prior, same five years: the small district's interval is 15 times wider, and its median still leans on the prior's centre.</p>
+  <aside class="notes"><p>Numbers from the course's run of Lab 1.1. The true rates, known because the data are synthetic, are 0.413 for D043 and 0.071 for D011: D043's posterior is pulled towards the prior's 0.10. Day 2's question is what to do for the 51 districts like D043.</p></aside>
+</section>
+
+<section class="slide" id="grid-limit" data-label="Grid limit" data-lo="LO1">
+  <div class="kicker">Why we need a sampler</div>
+  <h2>A grid works for one rate and fails for 140</h2>
+  <div class="cols cols-2 mid">
+    <div class="stat center"><div class="big">10^280</div><div class="lbl">grid points for 140 rates at 100 points each</div></div>
+    <ul class="bullets small">
+      <li>The grid grows exponentially with the number of unknowns.</li>
+      <li>Almost all of its points have negligible posterior weight.</li>
+      <li>A sampler spends its effort where the weight is: session 3.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Lab 1.1 task 5 computes the exponent. Ask for a guess before showing it. The point is not the number but the idea of "typical set": in high dimension the posterior mass sits in a thin shell, which is why Hamiltonian Monte Carlo follows the geometry instead of guessing.</p></aside>
+</section>
+
+<section class="slide" id="workflow-map" data-label="Workflow" data-lo="LO1 LO3">
+  <div class="kicker">The week as a workflow</div>
+  <h2>A Bayesian workflow is a loop, not a fit</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Prior predictive</b>Day 1</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>Fit and diagnose</b>Days 1 and 2</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>Check and compare</b>Day 3</div>
+    <div class="arrow">→</div>
+    <div class="step c-purple"><b>Calibrate the code</b>Day 3</div>
+    <div class="arrow">→</div>
+    <div class="step c-coral"><b>Decide</b>Day 4</div>
+  </div>
+  <div class="callout tip small mt"><b>A failed check sends you back.</b> A model is expanded or replaced, and every step runs again.</div>
+  <aside class="notes"><p>Sources: Gelman et al. (2020), Bayesian Workflow. The capstone README is graded on this loop: prior reasons, diagnostics, checks, comparison and the decision (rubric: model and priors 20, computation 20, checking 25, decision 25, reproducibility 10).</p></aside>
+</section>
+
+<section class="slide" id="check-grid" data-lo="LO1">
+  <div class="kicker">Checkpoint</div>
+  <h2>A narrow posterior</h2>
+  <div class="quiz" data-type="single" data-lo="LO1">
+    <p class="lead">Two districts share the prior. District P has 200 km and 90 bursts in five years; district Q has 2 km and 3 bursts. Which statement about their posteriors holds?</p>
+    <div class="opts">
+      <div class="opt" data-why="Thinks the prior dominates when data are plentiful, the reverse of what happens">P's posterior depends more on the prior than Q's</div>
+      <div class="opt" data-ok>Q's posterior is wider and closer to the prior's centre</div>
+      <div class="opt" data-why="Reads the interval width as a property of the prior alone, ignoring the data">Both have the same width because the prior is the same</div>
+      <div class="opt" data-why="Confuses a small count with a known rate: few bursts leave the rate uncertain">Q's posterior is narrow because 3 bursts is a small number</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Q's likelihood is flat over a wide range of rates, so the prior shapes its posterior; P's likelihood is sharp and overwhelms the prior.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. If the room picks D, return to the table of D043 and D011: 2 bursts gave an interval from 0.058 to 0.523.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-1-1" data-auto="lab" data-lab="1.1">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>AI-off lab: no assistant, the tutor included. Walk the room. Usual problems: forgetting the exposure in the Poisson mean; exponentiating without subtracting the maximum (all weights become zero); a grid that starts at 0 (log of zero in the prior). The stretch shows that ignoring year-to-year variation makes intervals too narrow: about 85% coverage in the course's run instead of 90%.</p></aside>
 </section>
 
 <!-- Session 2 -->
 
 <section class="slide section" id="s2" data-auto="section" data-session="2"></section>
 
-<section class="slide" id="s2-idea" data-lo="LO1">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
-  <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
-    </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
-  </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+<section class="slide" id="log-scale" data-label="Log scale" data-lo="LO1">
+  <div class="kicker">Reading a prior</div>
+  <h2>A prior on the log rate means something only on the rate scale</h2>
+  <table class="t small">
+    <tr><th>Prior on the log rate</th><th class="num">5th percentile</th><th class="num">Median</th><th class="num">95th percentile</th></tr>
+    <tr><td>N(0, 10), "flat-looking"</td><td class="num">0.00000013</td><td class="num">0.78</td><td class="num">17,000,000</td></tr>
+    <tr class="hl"><td>N(log 0.1, 1), weakly informative</td><td class="num">0.019</td><td class="num">0.10</td><td class="num">0.52</td></tr>
+    <tr><td>N(log 0.5, 0.05), tight</td><td class="num">0.46</td><td class="num">0.50</td><td class="num">0.54</td></tr>
+  </table>
+  <p class="caption">Bursts per km of main per year, from 1,000 prior draws (Lab 1.2, task 1, quick run).</p>
+  <aside class="notes"><p>Ask the room to read the first row aloud in words: a 5% chance that the rate exceeds 17 million bursts per kilometre per year. A prior that looks vague on one scale is extreme on another.</p></aside>
 </section>
 
-<section class="slide" id="s2-steps" data-lo="LO1">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="flat-not-harmless" data-label="Flat priors" data-lo="LO1">
+  <div class="kicker">Lab 1.2, tasks 2 and 3</div>
+  <h2>The "harmless" flat prior predicts impossible district-years</h2>
+  <div class="cols cols-2 mid">
+    <div class="stat center"><div class="big">37%</div><div class="lbl">of simulated district-years above 500 bursts under N(0, 10)</div></div>
+    <ul class="bullets small">
+      <li>No district in the region has ever had 500 bursts in a year.</li>
+      <li>With little data, such a prior pulls small districts towards absurd values.</li>
+      <li>With a lot of data it hardly matters, which is how it hides.</li>
+    </ul>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>From the course's run: share over 500 is 0.366 for the flat prior and 0.000 for the weakly informative one. Link back to D043: with 2 bursts, the prior decides much of the answer.</p></aside>
+</section>
+
+<section class="slide" id="prior-predictive" data-label="Prior predictive" data-lo="LO1">
+  <div class="kicker">Prior predictive simulation</div>
+  <h2>Simulate data from the prior alone, then ask an engineer</h2>
+  <div class="flow">
+    <div class="step c-teal"><b>1 · Draw</b>parameters from the prior</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Simulate</b>a year in all 140 districts</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · Compare</b>with statements written before the data</div>
+  </div>
+  <div class="callout warn small mt frag"><b>Not the burst counts.</b> Tuning a prior to the observed data uses the data twice and makes the posterior too sure.</div>
+  <aside class="notes"><p>Press once per step. The statements in Lab 1.2 are Shabib's: no district-year above 500 bursts; between 300 and 3,000 bursts a year across the network is plausible. They were written down before anyone opened bursts.csv.</p><p>Sources: Gabry et al. (2017), Visualization in Bayesian workflow.</p></aside>
+</section>
+
+<section class="slide" id="too-tight" data-label="Too tight" data-lo="LO1">
+  <div class="kicker">The other failure</div>
+  <h2>A prior can also be wrong by being too sure</h2>
+  <table class="t small">
+    <tr><th>Prior</th><th class="num">District-years above 500</th><th class="num">Network totals in 300 to 3,000</th></tr>
+    <tr><td>N(0, 10)</td><td class="num">37%</td><td class="num">10%</td></tr>
+    <tr class="hl"><td>N(log 0.1, 1)</td><td class="num">0%</td><td class="num">73%</td></tr>
+    <tr><td>N(log 0.5, 0.05)</td><td class="num">0%</td><td class="num">0%</td></tr>
+  </table>
+  <p class="small mt">The vendor's tight prior never breaks the first statement, yet it rules out every network total the engineers call plausible.</p>
+  <aside class="notes"><p>From Lab 1.2 task 3, quick run. The tight prior came with a vendor template "calibrated on another utility". Ask: what would you need to see before borrowing another utility's rate this precisely? Evidence that the networks are alike, which nobody has.</p></aside>
+</section>
+
+<section class="slide" id="reason-per-prior" data-label="Reasons" data-lo="LO1">
+  <div class="kicker">The evidence LO1 asks for</div>
+  <h2>Every prior in the notebook carries one sentence of reason</h2>
+  <div class="cols cols-2">
+    <div class="card c-teal"><h4>α ~ Normal(log 0.1, 1)</h4><p class="small mb0">Centred on the engineers' "one burst per 10 km a year"; 73% of simulated network totals within their plausible range.</p></div>
+    <div class="card c-cyan"><h4>β age ~ Normal(0, 0.5)</h4><p class="small mb0">Median rate ratio 1.0 per 10 years, 95th percentile 2.3: "might double, never five times".</p></div>
+  </div>
+  <div class="callout tip small mt"><b>A reason quotes a number or a statement.</b> "Weakly informative" alone is a label, not a reason.</div>
+  <aside class="notes"><p>Lab 1.2 task 5 asks for the age prior. Some will pick Normal(0.3, 0.2) from what they expect; that is defensible if they write why, but it uses a belief about the direction that the engineers did not state. Discuss both.</p></aside>
+</section>
+
+<section class="slide" id="weakly-informative" data-label="Weakly informative" data-lo="LO1">
+  <div class="kicker">A working definition</div>
+  <h2>Weakly informative: rules out the impossible, stays open on the plausible</h2>
+  <div class="cols cols-3">
+    <div class="card c-coral flat"><h4>Too vague</h4><p class="small mb0">Puts weight on rates no pipe ever had. Harms small districts.</p></div>
+    <div class="card c-teal flat"><h4>Weakly informative</h4><p class="small mb0">Spans every rate an engineer would accept, and little beyond.</p></div>
+    <div class="card c-purple flat"><h4>Informative</h4><p class="small mb0">Carries a measurement: an audit, an earlier study. Day 2 uses one for reporting.</p></div>
+  </div>
+  <aside class="notes"><p>Point forward: Lab 2.4 uses an informative prior on the share of bursts reported, from a 2024 audit, because the data cannot identify it. That prior must be defended by the audit, not by convenience.</p></aside>
+</section>
+
+<section class="slide" id="check-prior" data-lo="LO1">
+  <div class="kicker">Checkpoint</div>
+  <h2>Choosing the prior</h2>
+  <div class="quiz" data-type="single" data-lo="LO1">
+    <p class="lead">A colleague sets the prior on the log burst rate by fitting it to the five years of observed counts, then fits the model to the same counts. What is the problem?</p>
+    <div class="opts">
+      <div class="opt" data-why="Thinks any data-based prior is invalid, which would also rule out an independent audit">Priors may never use data of any kind</div>
+      <div class="opt" data-why="Believes the prior has no effect once there are 700 counts, which fails for small districts">Nothing: with 700 counts the prior does not matter</div>
+      <div class="opt" data-ok>The data are used twice, so the posterior is too sure</div>
+      <div class="opt" data-why="Mistakes the issue for a computational one">The sampler cannot handle a prior estimated from data</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The same counts enter through the prior and through the likelihood, so the posterior counts them twice and its intervals are too narrow.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. Data independent of the likelihood (an audit, another period, an engineer's prior statement) may inform a prior; the same counts may not.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-1-2" data-auto="lab" data-lab="1.2">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain. Usual problems: forgetting to clip the Poisson mean (NumPy overflows under the flat prior); sharing one rate across districts and then wondering why totals are so variable (that is right here: no district effects yet). Ask two participants to read their reason for the age prior.</p></aside>
 </section>
 
 <!-- Session 3 -->
 
 <section class="slide section" id="s3" data-auto="section" data-session="3"></section>
 
-<section class="slide" id="s3-idea" data-lo="LO1">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
+<section class="slide" id="draws-not-formulas" data-label="Draws" data-lo="LO1">
+  <div class="kicker">Monte Carlo</div>
+  <h2>A pile of posterior draws answers any question you can compute</h2>
   <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
+    <ul class="bullets small">
+      <li>A median, an interval, a probability: functions of the draws.</li>
+      <li>A derived quantity, such as next year's bursts in D017, is computed draw by draw.</li>
+      <li>The decision on Day 4 is a cost computed in every draw, then averaged.</li>
     </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
+    <pre class="code s" data-file="Lab 1.3, task 5"><code class="language-python">mu = np.exp(a + b @ X[j]) * km[j]   # one value per draw
+np.quantile(mu, [0.5, 0.05, 0.95])</code></pre>
   </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+  <aside class="notes"><p>Stress the habit: never summarise early. Compute the quantity in each draw, then summarise. Averaging the rate first and then computing costs gives the wrong expected cost when the cost is not linear (Day 4).</p></aside>
 </section>
 
-<section class="slide" id="s3-steps" data-lo="LO1">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="hmc-intuition" data-label="HMC" data-lo="LO1">
+  <div class="kicker">Hamiltonian Monte Carlo</div>
+  <h2>HMC rolls a particle across the posterior using its gradient</h2>
+  <div class="cols cols-3">
+    <div class="card c-navy"><h4>Position</h4><p class="small mb0">The current values of all parameters.</p></div>
+    <div class="card c-teal"><h4>Momentum</h4><p class="small mb0">A random push, drawn fresh at each iteration.</p></div>
+    <div class="card c-coral"><h4>Gradient</h4><p class="small mb0">The slope of the log posterior steers the path towards high density.</p></div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <p class="small mt">The path is followed in small leapfrog steps; the end point is accepted or rejected so that the draws come from the posterior.</p>
+  <aside class="notes"><p>The physics analogy: a frictionless puck on a surface whose height is minus the log posterior. Momentum carries it far in one iteration, which is why HMC explores many dimensions where random-walk samplers stall. The gradient comes from automatic differentiation (JAX in NumPyro, Stan's own in Stan).</p><p>Sources: Betancourt (2017), A Conceptual Introduction to Hamiltonian Monte Carlo.</p></aside>
+</section>
+
+<section class="slide" id="nuts" data-label="NUTS" data-lo="LO1">
+  <div class="kicker">The No-U-Turn sampler</div>
+  <h2>NUTS chooses the path length; warm-up chooses the step size</h2>
+  <table class="t small">
+    <tr><th>Setting</th><th>Who sets it</th><th>What goes wrong</th></tr>
+    <tr><td>Path length</td><td>NUTS: doubles the path until it turns back</td><td>Paths that hit the maximum tree depth: slow</td></tr>
+    <tr><td>Step size</td><td>Warm-up: tuned to a target acceptance rate</td><td>Too large for a curved region: divergences</td></tr>
+    <tr><td>Mass matrix</td><td>Warm-up: the scale of each parameter</td><td>Very different scales: slow mixing</td></tr>
+  </table>
+  <aside class="notes"><p>Warm-up draws are discarded: they are tuning, not samples. NumPyro's default target acceptance is 0.8; raising it shrinks the step size, which sometimes hides a geometry problem without fixing it (Lab 2.3 stretch).</p></aside>
+</section>
+
+<section class="slide" id="numpyro-model" data-label="The model" data-lo="LO1">
+  <div class="kicker">Lab 1.3, task 1</div>
+  <h2>The model is the generative story, written as code</h2>
+  <pre class="code s" data-file="Lab 1.3"><code class="language-python">def pooled_model(d, log_km, X, y=None):
+    alpha = numpyro.sample("alpha", dist.Normal(np.log(0.10), 1.0))
+    beta = numpyro.sample("beta", dist.Normal(0.0, 0.5).expand([4]).to_event(1))
+    eta = alpha + X @ beta                      # log rate per district
+    numpyro.sample("y", dist.Poisson(jnp.exp(log_km + eta[d])), obs=y)</code></pre>
+  <p class="small mt">The same function simulates data when <code>y</code> is missing and conditions on it when <code>y</code> is given.</p>
+  <aside class="notes"><p>Walk the lines in order of the story: prior on the base rate, prior on the effects, the log rate, the exposure as an offset, the count. The other probabilistic programming languages (Stan, PyMC, brms) write the same five lines in their own syntax; the tool slot on the next slide lists them as interchangeable.</p></aside>
+</section>
+
+<section class="slide" id="tool-slot" data-label="Tools" data-lo="LO1">
+  <div class="kicker">Probabilistic programming: interchangeable examples</div>
+  <h2>The labs use NumPyro; the workflow is the same in every tool</h2>
+  <div class="cols cols-4 gap-s">
+    <div class="card c-teal"><h4>Stan</h4><p class="small mb0">Through CmdStanPy or CmdStanR; compiles a model to C++.</p></div>
+    <div class="card c-cyan"><h4>PyMC</h4><p class="small mb0">With Bambi for formula-style models.</p></div>
+    <div class="card c-navy"><h4>NumPyro</h4><p class="small mb0">On JAX; installs without a compiler, runs on a laptop or Colab.</p></div>
+    <div class="card c-purple"><h4>brms</h4><p class="small mb0">Formula models in R, fitted by Stan.</p></div>
+  </div>
+  <p class="small mt">Diagnostics and comparison: ArviZ in Python; loo and bayesplot in R. Your capstone may use any of them.</p>
+  <aside class="notes"><p>Tool names are examples, not endorsements. The labs chose NumPyro because it installs through uv on Windows, macOS and Linux and in Colab with no C++ toolchain. Versions used to build the course: NumPyro 0.22 on JAX 0.12, ArviZ 1.3. ArviZ 1.x returns DataTree objects; older tutorials show the 0.x interface.</p></aside>
+</section>
+
+<section class="slide" id="pooled-result" data-label="Result" data-lo="LO1">
+  <div class="kicker">Lab 1.3, task 3</div>
+  <h2>Asbestos cement bursts nearly twice as often as PVC of the same age</h2>
+  <div class="bars">
+    <div class="row"><span>Asbestos cement</span><div class="bar c-coral" style="--w:92%"></div><span class="val">1.85 (1.70 to 2.02)</span></div>
+    <div class="row"><span>Age, per 10 years</span><div class="bar c-amber" style="--w:67%"></div><span class="val">1.35 (1.30 to 1.39)</span></div>
+    <div class="row"><span>Cast iron</span><div class="bar c-cyan" style="--w:66%"></div><span class="val">1.33 (1.23 to 1.44)</span></div>
+    <div class="row"><span>Ductile iron</span><div class="bar c-teal" style="--w:61%"></div><span class="val">1.22 (1.13 to 1.31)</span></div>
+  </div>
+  <p class="caption">Rate ratios against PVC, posterior medians with 90% intervals, complete-pooling Poisson model (quick run).</p>
+  <aside class="notes"><p>The generating values were exp(0.70) = 2.01 for asbestos cement, exp(0.30) = 1.35 per 10 years, exp(0.45) = 1.57 for cast iron, exp(0.15) = 1.16 for ductile iron. Four of five generating values fall inside the 90% intervals. The intervals are too narrow: this model has no district effects and no extra variation. Day 2 adds them.</p></aside>
+</section>
+
+<section class="slide" id="check-offset" data-lo="LO1">
+  <div class="kicker">Checkpoint</div>
+  <h2>The offset</h2>
+  <div class="quiz" data-type="single" data-lo="LO1">
+    <p class="lead">Juhaina asks why the model does not estimate a coefficient for log km, as it does for age. What do you answer?</p>
+    <div class="opts">
+      <div class="opt" data-ok>Because bursts are assumed proportional to length, so its coefficient is fixed at 1</div>
+      <div class="opt" data-why="Believes length has no effect on bursts, which the stretch item disproves">Because network length does not affect the number of bursts</div>
+      <div class="opt" data-why="Mistakes an offset for a computational shortcut">Because the sampler cannot estimate a coefficient on a logarithm</div>
+      <div class="opt" data-why="Confuses a fixed coefficient with a prior centred on 1">Because its prior is centred on 1 and the data agree</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Twice the kilometres at the same rate gives twice the expected bursts; the other coefficients then describe a rate per kilometre-year.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. The stretch item fits the model without the offset: the asbestos-cement ratio falls from 1.85 to 0.64, because short rural networks are often asbestos cement and the model reads material through length.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-1-3" data-auto="lab" data-lab="1.3">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain NumPyro errors; it writes no model code. Usual problems: the shape error from a beta prior without to_event; passing km instead of log km; reading the posterior before the diagnostics. The first run compiles for about half a minute; a second run is faster.</p></aside>
 </section>
 
 <!-- Session 4 -->
 
 <section class="slide section" id="s4" data-auto="section" data-session="4"></section>
 
-<section class="slide" id="s4-idea" data-lo="LO1">
-  <div class="kicker">REPLACE: the question this slide answers</div>
-  <h2>REPLACE: one idea, stated as a sentence</h2>
-  <div class="cols cols-2">
-    <ul class="bullets">
-      <li>REPLACE: at most six bullets, each a complete thought</li>
-      <li>REPLACE: bold the key phrase; numbers come from the lab run, not from memory</li>
-    </ul>
-    <div class="card c-teal"><h4>In the case study</h4><p class="small mb0">REPLACE: tie the idea to the case study and its data</p></div>
-  </div>
-  <div class="callout warn mt"><b>What goes wrong.</b> REPLACE: the failure participants will hit, and how to recognise it</div>
-  <aside class="notes">REPLACE: what to say, the demo to run, the question to ask the room, the common failure and its fix</aside>
+<section class="slide" id="four-checks" data-label="Four checks" data-lo="LO1">
+  <div class="kicker">Before reading any posterior</div>
+  <h2>Four numbers decide whether a fit can be read</h2>
+  <table class="t small">
+    <tr><th>Diagnostic</th><th>Course threshold, four chains</th><th>What it detects</th></tr>
+    <tr><td>Rank-normalised R-hat</td><td>below 1.01</td><td>chains that disagree</td></tr>
+    <tr><td>Bulk and tail ESS</td><td>at least 400</td><td>too few independent draws for the centre or the tails</td></tr>
+    <tr><td>Divergences</td><td>zero, or explained</td><td>regions the integrator could not follow</td></tr>
+    <tr><td>E-BFMI</td><td>above 0.3</td><td>momentum that cannot cross energy levels</td></tr>
+  </table>
+  <aside class="notes"><p>Thresholds from Vehtari et al. (2019) for R-hat and ESS, and the Stan User's Guide for the others. They are conventions, not laws; a refresh of this course re-checks the defaults of the current ArviZ release. Sources: Vehtari et al. (2019), Rank-normalization, folding, and localization.</p></aside>
 </section>
 
-<section class="slide" id="s4-steps" data-lo="LO1">
-  <div class="kicker">Step by step</div>
-  <h2>REPLACE: a process, shown one step per key press</h2>
-  <div class="flow">
-    <div class="step c-teal"><b>1 · REPLACE: name</b>REPLACE: what happens first</div>
-    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · REPLACE: name</b>REPLACE: the next piece</div>
-    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · REPLACE: name</b>REPLACE: the result</div>
+<section class="slide" id="rhat-story" data-label="R-hat" data-lo="LO1">
+  <div class="kicker">Fit C</div>
+  <h2>No divergence, and still one chain is somewhere else</h2>
+  <div class="cols cols-2 mid">
+    <table class="t small">
+      <tr><th>Chain</th><th class="num">Mean of α</th></tr>
+      <tr><td>1</td><td class="num">-2.417</td></tr>
+      <tr><td>2</td><td class="num">-2.411</td></tr>
+      <tr><td>3</td><td class="num">-2.403</td></tr>
+      <tr class="hl"><td>4</td><td class="num">-1.229</td></tr>
+    </table>
+    <div class="stat center"><div class="big">1.60</div><div class="lbl">R-hat of fit C</div></div>
   </div>
-  <div class="callout tip mt frag"><b>Takeaway.</b> REPLACE: the one sentence to remember</div>
-  <aside class="notes">Press once per step and say what each step adds before the next one appears. REPLACE: the example to walk through</aside>
+  <aside class="notes"><p>From Lab 1.4. The contractor restarted chain 4 "from a saved state" without warm-up; the chain barely moved. Ask: if you had run one chain only, what would you have seen? Nothing wrong. That is why four chains from different starts are the default.</p></aside>
+</section>
+
+<section class="slide" id="divergences" data-label="Divergences" data-lo="LO1 LO2">
+  <div class="kicker">Fit B</div>
+  <h2>741 divergences: the sampler could not reach part of the posterior</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>A divergence is a path whose energy blew up: the step size was too large for the curvature there.</li>
+      <li>The draws then miss that region, and every summary is biased.</li>
+      <li>Fit B is the centred hierarchical model on the small districts: a funnel.</li>
+    </ul>
+    <div class="callout warn small"><b>Do not just raise target_accept.</b> It shrinks the step size, often leaving fewer divergences and the same bias. Lab 2.3 changes the model instead.</div>
+  </div>
+  <aside class="notes"><p>Fit B: 741 divergences in 4,000 draws, R-hat 1.37, tail ESS 8, E-BFMI 0.05. Every warning at once. Keep the funnel picture for Day 2 session 3; today the point is only that divergences invalidate a fit.</p></aside>
+</section>
+
+<section class="slide" id="efficiency-validity" data-label="Efficiency" data-lo="LO1">
+  <div class="kicker">Fit D</div>
+  <h2>A capped tree costs time; it does not make the draws wrong</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">33%</div><div class="lbl">of draws hit the tree-depth cap of 4</div></div>
+    <div class="stat"><div class="big">1.002</div><div class="lbl">R-hat</div></div>
+    <div class="stat"><div class="big">1,452</div><div class="lbl">smallest bulk ESS</div></div>
+  </div>
+  <p class="small mt">Zaina capped the tree depth to save time. The chains still mixed, so fit D can be read.</p>
+  <aside class="notes"><p>Validity failures: chains that disagree, divergences, low E-BFMI. Efficiency warnings: capped trees, a long run time. An efficiency warning becomes a validity problem only when it leaves too few effective draws, which the ESS shows.</p></aside>
+</section>
+
+<section class="slide" id="rank-plots" data-label="Rank plots" data-lo="LO1">
+  <div class="kicker">Looking at chains</div>
+  <h2>Rank plots show chains that disagree better than trace plots do</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Rank all draws of a parameter together, then plot each chain's ranks as a histogram.</li>
+      <li>Chains from the same distribution: flat, similar histograms.</li>
+      <li>A chain stuck high or low: a histogram piled at one end.</li>
+    </ul>
+    <pre class="code s" data-file="Lab 1.4, task 4"><code class="language-python">pc = az.plot_rank(fits["fit_C"], var_names=["alpha", "tau"])
+pc.savefig("artifacts/rank_fit_C.png")</code></pre>
+  </div>
+  <aside class="notes"><p>Show the two saved rank plots from a participant's run. In fit C, chain 4's ranks pile at the top for alpha. In ArviZ 1.x plotting functions return a PlotCollection; savefig writes it.</p></aside>
+</section>
+
+<section class="slide" id="approximate-inference" data-label="Approximation" data-lo="LO1">
+  <div class="kicker">When approximate inference suffices</div>
+  <h2>An approximation is fine when the posterior is simple and the question is its centre</h2>
+  <table class="t small">
+    <tr><th>90% interval of β</th><th>NUTS</th><th>Variational (AutoNormal)</th></tr>
+    <tr><td>Age per 10 years</td><td>0.265 to 0.332</td><td>0.253 to 0.326</td></tr>
+    <tr><td>Asbestos cement</td><td>0.531 to 0.703</td><td>0.551 to 0.698</td></tr>
+  </table>
+  <p class="small mt">Five parameters and 700 counts: close enough for a rate ratio. For 140 district effects, skewed spreads and tail decisions, sample.</p>
+  <aside class="notes"><p>From the Lab 1.4 stretch, quick run. Variational inference fits a simple distribution to the posterior; it tends to understate uncertainty and cannot represent a funnel. Use it for a quick first look, for very large data, or inside a loop where speed matters; check it against a sampler at least once.</p></aside>
+</section>
+
+<section class="slide" id="check-diagnostics" data-lo="LO1">
+  <div class="kicker">Checkpoint</div>
+  <h2>Which fit to send back</h2>
+  <div class="quiz" data-type="single" data-lo="LO1">
+    <p class="lead">A fit reports R-hat 1.003, bulk ESS 2,100, no divergences, and 40% of draws at the maximum tree depth. Another reports no divergences and R-hat 1.21. Which do you send back?</p>
+    <div class="opts">
+      <div class="opt" data-why="Treats an efficiency warning as a validity failure">The first, because 40% of trees are capped</div>
+      <div class="opt" data-why="Assumes a fit is sound whenever no divergence is reported">Neither, because neither has divergences</div>
+      <div class="opt" data-why="Lets one warning disqualify a fit whose mixing is sound">Both, because each has a warning</div>
+      <div class="opt" data-ok>The second, because its chains disagree</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> An R-hat of 1.21 means the chains explore different distributions; capped trees in the first fit cost time but its chains mixed.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. This is the shape of the supervised check: read diagnostics without AI and decide. Ask the room what they would request from the second fit's author: more warm-up and four fresh starts, then the four checks again.</p></aside>
 </section>
 
 <section class="slide lab" id="lab-1-4" data-auto="lab" data-lab="1.4">
-  <aside class="notes">REPLACE: what to watch for while participants work, the typical problems, and the fallback for anyone who did not finish an earlier lab</aside>
+  <aside class="notes"><p>Mirsad may explain diagnostics; the verdicts are the participant's. Usual problems: reading the 0.x ArviZ tutorials (ess with a different signature); calling fit D untrustworthy because of the capped trees; missing fit C because they only looked at divergences. Collect the verdicts by show of hands: most rooms split on D, which is the discussion you want.</p></aside>
 </section>
 
 <section class="slide" id="wrap-up">
   <div class="kicker">Day 1 · wrap-up</div>
   <h2>Three things to keep</h2>
   <div class="cols cols-3">
-    <div class="card c-teal"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
-    <div class="card c-coral"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
-    <div class="card c-purple"><h4>Remember</h4><p class="small mb0">REPLACE: one idea participants keep</p></div>
+    <div class="card c-teal"><h4>Simulate first</h4><p class="small mb0">A model you can run forwards can be tested against a truth you chose, and its priors against what engineers know.</p></div>
+    <div class="card c-coral"><h4>Diagnose before reading</h4><p class="small mb0">R-hat, ESS, divergences and E-BFMI, every fit, before any number leaves the notebook.</p></div>
+    <div class="card c-purple"><h4>Small districts lean on the prior</h4><p class="small mb0">Five years of 2 bursts say little; tomorrow they borrow from the other districts.</p></div>
   </div>
+  <aside class="notes"><p>Ask each table for the one diagnostic they will check first in someone else's notebook. Then point to tomorrow: 51 districts recorded fewer than five bursts in five years.</p></aside>
 </section>
 
 <section class="slide dark" id="next" data-label="Next">
   <div class="kicker">Next</div>
   <h2>Day 2: Pooling across districts</h2>
-  <p class="lead">REPLACE: what participants prepare before then; unfinished labs can be finished at home</p>
-  <aside class="notes">REPLACE: accounts, installs or reading participants need before the next unit</aside>
+  <p class="lead">Finish any lab you did not complete; each one starts from the supplied files. Read the run log of fit B again: tomorrow you repair it.</p>
+  <aside class="notes"><p>Nothing to install. Participants who struggled with NumPyro syntax can read U.burst_model in labs/yanabi.py: every Day 2 model is a keyword of that function.</p></aside>
 </section>

@@ -1,0 +1,18 @@
+[project]
+name = "ds-401-labs"
+version = "2027.1.0"
+description = "Lab notebooks for the SDAIA Academy course DS-401 Bayesian Modelling and Decisions under Uncertainty"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scipy>=1.14",
+    "matplotlib>=3.9",
+    "jax>=0.7",
+    "numpyro>=0.19",
+    "arviz>=1.0",
+    "jupyterlab>=4.4",
+]
+
+[tool.uv]
+package = false

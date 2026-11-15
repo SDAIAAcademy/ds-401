@@ -1,0 +1,7 @@
+{
+  "note": "Four fits sent to the analytics team for the same question: the burst rate of Yanabi's districts. Each line is what the analyst wrote in the run log.",
+  "fit_A": {"analyst": "Zaina", "model": "partial pooling, Poisson, material and age, non-centred", "districts": 140, "chains": 4, "warmup": 1000, "draws": 1000, "max_tree_depth": 10},
+  "fit_B": {"analyst": "a contractor", "model": "partial pooling, Poisson, material and age, centred, small districts only", "districts": "the districts under 4 km", "chains": 4, "warmup": 300, "draws": 1000, "max_tree_depth": 10},
+  "fit_C": {"analyst": "a contractor", "model": "partial pooling, Poisson, material and age, non-centred", "districts": 140, "chains": 4, "warmup": "1000 (chains 1 to 3); chain 4 restarted from a saved state", "draws": 1000, "max_tree_depth": "10 (chains 1 to 3)"},
+  "fit_D": {"analyst": "Zaina", "model": "complete pooling, Poisson, material and age", "districts": 140, "chains": 4, "warmup": 1000, "draws": 1000, "max_tree_depth": 4}
+}

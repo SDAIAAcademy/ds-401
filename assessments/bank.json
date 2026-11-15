@@ -7,10 +7,10 @@
       "type": "single",
       "prompt": "Shabib asks why the posterior of a 2 km rural district spans rates from 0.06 to 0.5 bursts per km-year, while a 180 km urban district's spans 0.07 to 0.10, although both used the same prior and five years of data. What is the reason?",
       "options": [
-        "The rural district's few bursts give a flat likelihood, so the prior shapes much of its posterior",
-        "The rural district's prior was wider because it is rural",
-        "The sampler mixed worse for the rural district",
-        "Rural rates are more variable by nature, whatever the data say"
+        "Its few bursts give a flat likelihood, so the prior shapes much of its posterior",
+        "The rural district's prior was set wider, because rural rates are known to vary more",
+        "The sampler mixed worse for the rural district, which widens its interval",
+        "Rural rates vary more from year to year by nature, whatever the data say"
       ],
       "correct": [
         0
@@ -67,10 +67,10 @@
       "type": "single",
       "prompt": "A contractor uses Normal(0, 10) on the log burst rate \"to let the data speak\". Its prior predictive simulation puts 37% of district-years above 500 bursts. What do you conclude?",
       "options": [
-        "The prior is harmless because the data will overwhelm it",
-        "The prior should be widened further to be safe",
-        "The prior is informative in an absurd direction and should be replaced by one that rules out impossible rates",
-        "The simulation is wrong because priors cannot predict data"
+        "It is harmless: with 700 counts the data will overwhelm any prior",
+        "It should be widened further, so that the data alone decide the rates",
+        "It puts weight on absurd rates; replace it with one that rules them out",
+        "The simulation is wrong, because a prior cannot predict any data"
       ],
       "correct": [
         2
@@ -97,10 +97,10 @@
       "type": "single",
       "prompt": "Which reason for the prior α ~ Normal(log 0.1, 1) on the log burst rate meets the course's standard?",
       "options": [
-        "It is weakly informative",
-        "It is the default of the library",
-        "It is centred on the engineers' one burst per 10 km a year, and 73% of the network totals it simulates fall in their plausible range of 300 to 3,000",
-        "It gave the best fit to the five years of counts"
+        "It is weakly informative, so the data rather than the analyst decide the posterior",
+        "It is the library's default prior, which its authors have tested on many count models",
+        "It matches the engineers' one burst per 10 km a year, and 73% of its simulated network totals fall in their range",
+        "It gave the best fit to the five years of observed counts, so the data themselves support it"
       ],
       "correct": [
         2
@@ -127,20 +127,20 @@
       "type": "single",
       "prompt": "Why can Hamiltonian Monte Carlo explore a posterior with 150 parameters where a random-walk sampler stalls?",
       "options": [
-        "It evaluates the posterior on a fine grid",
-        "It uses the gradient of the log posterior to make long moves that stay in regions of high density",
-        "It discards most draws so that the rest are independent",
-        "It assumes the posterior is normal"
+        "It evaluates the posterior on a fine grid, so no region of high density is missed",
+        "It assumes the posterior is normal, which makes 150 parameters as easy as one",
+        "It discards most of its draws, so that the remaining ones are independent of each other",
+        "It uses the gradient of the log posterior to make long moves that stay in regions of high density"
       ],
       "correct": [
-        1
+        3
       ],
       "explanation": "Momentum and the gradient carry the sampler far in one iteration along the shape of the posterior, so proposals are accepted often even in many dimensions.",
       "misconceptions": [
         "Confuses sampling with grid evaluation, which is impossible in 150 dimensions",
-        "",
+        "Confuses HMC with a normal approximation",
         "Mistakes thinning for what makes a sampler efficient",
-        "Confuses HMC with a normal approximation"
+        ""
       ],
       "lo": [
         "LO1"
@@ -183,10 +183,10 @@
       "type": "single",
       "prompt": "A fit of four chains shows no divergences, bulk ESS of 7 for α and R-hat of 1.60. Three chains have a mean α near -2.41 and the fourth near -1.23. What do you do?",
       "options": [
-        "Report the pooled mean of the four chains",
-        "Drop the fourth chain and report the other three",
-        "Treat the fit as untrustworthy, rerun four chains with full warm-up from dispersed starts, and check again",
-        "Accept it, since there are no divergences"
+        "Report the pooled mean of the four chains, since averaging cancels the odd chain out",
+        "Drop the fourth chain as a failed run and report the other three, which agree",
+        "Treat it as untrustworthy: rerun four chains with full warm-up from dispersed starts, then check again",
+        "Accept it: with no divergences, the sampler reached every part of the posterior"
       ],
       "correct": [
         2
@@ -214,9 +214,9 @@
       "prompt": "Zaina's fit hit the maximum tree depth in a third of its draws, with R-hat 1.002, bulk ESS above 1,400 and no divergences. Juhaina asks whether the numbers can be used. What do you answer?",
       "options": [
         "Yes: capped trees cost sampling time, and the mixing diagnostics show the draws are sound",
-        "No: any warning invalidates a fit",
-        "No: the tree depth must never be capped",
-        "Only after converting the fit to a variational approximation"
+        "No: any warning from the sampler invalidates the fit until it is rerun without one",
+        "No: capping the tree depth biases the draws, so the fit must be rerun uncapped",
+        "Only after checking it against a variational approximation of the same model"
       ],
       "correct": [
         0
@@ -274,19 +274,19 @@
       "prompt": "In a partial-pooling model of 140 districts, which district's estimate moves furthest towards the common rate?",
       "options": [
         "A 200 km urban district with 90 bursts in five years",
-        "A 2 km rural district with 2 bursts in five years",
+        "All move by the same amount, set by τ",
         "A 50 km suburban district with 20 bursts",
-        "All move by the same amount, set by τ"
+        "A 2 km rural district with 2 bursts in five years"
       ],
       "correct": [
-        1
+        3
       ],
       "explanation": "Shrinkage depends on how much information a district's own data carry; 2 bursts carry little, so the population dominates.",
       "misconceptions": [
         "Thinks large districts are pulled most because they dominate the average",
-        "",
+        "Believes τ shrinks every district equally regardless of its data",
         "Picks a middle case without reasoning about information",
-        "Believes τ shrinks every district equally regardless of its data"
+        ""
       ],
       "lo": [
         "LO2"
@@ -333,10 +333,10 @@
       "type": "single",
       "prompt": "Adding pipe material and age to the mean of the district effects reduced τ from 0.56 to 0.41. Which statement follows?",
       "options": [
-        "Material and age explain about half of the between-district variance, and districts are now shrunk towards a prediction for their pipes",
-        "The districts are now pooled less",
-        "Material and age are proven causes of bursts",
-        "The model fits worse, because τ fell"
+        "They explain about half the between-district variance; districts now shrink towards what their pipes predict",
+        "The districts are now pooled less, because the model knows more about each of them",
+        "Material and age are now shown to be causes of bursts, since they reduced the spread",
+        "The model fits worse, because a smaller τ leaves less room for the districts to differ"
       ],
       "correct": [
         0
@@ -389,10 +389,10 @@
       "type": "single",
       "prompt": "A centred hierarchical model of 49 small districts reports 59 divergences, all at small values of τ. Why there?",
       "options": [
-        "Small τ forces every district effect into a narrow region, where the step size tuned for the rest of the posterior is far too large",
-        "The data are wrong for the districts with small τ",
-        "Small τ means the prior is too narrow and must be widened",
-        "The sampler ran out of draws"
+        "Small τ squeezes every district effect into a narrow region, where the tuned step size is far too large",
+        "The burst records of the districts with small τ contain errors that the sampler cannot fit",
+        "Small τ shows the prior on τ is too narrow; widening it would remove the divergences",
+        "The sampler ran out of draws before it could explore the small values of τ"
       ],
       "correct": [
         0
@@ -421,19 +421,19 @@
       "prompt": "Raising target_accept to 0.99 removed all divergences of a centred hierarchical model, but R-hat is 1.14. What do you conclude?",
       "options": [
         "The fit is now trustworthy",
-        "The chains still disagree; rewrite the model in non-centred form",
+        "Report the fit with a note about R-hat",
         "Run more chains until R-hat falls below 1.01 by chance",
-        "Report the fit with a note about R-hat"
+        "The chains still disagree; rewrite the model in non-centred form"
       ],
       "correct": [
-        1
+        3
       ],
       "explanation": "No divergences is necessary, not sufficient; disagreeing chains show the posterior is still not explored, and the cause is the geometry.",
       "misconceptions": [
         "Treats the absence of divergences as proof of a sound fit",
-        "",
+        "Publishes numbers from chains that have not converged",
         "Hopes more chains fix a geometry problem",
-        "Publishes numbers from chains that have not converged"
+        ""
       ],
       "lo": [
         "LO1"
@@ -476,20 +476,20 @@
       "type": "single",
       "prompt": "In the model with a reporting share for districts without sensors, the posterior of the reporting share is almost identical to its Beta(14, 6) prior. What does that mean?",
       "options": [
-        "The model failed and must be refitted",
-        "The counts cannot separate the burst rate from the reporting share, so the audit behind the prior carries the correction",
-        "The reporting share is exactly 0.70 in every district",
-        "The prior was too wide"
+        "The model failed to converge for the reporting share and must be refitted with more draws",
+        "The prior was too wide for the data to move it, and a narrower prior would fix this",
+        "The reporting share is now known to be exactly 0.70 in every district without sensors",
+        "The counts cannot separate rate from reporting share, so the audit behind the prior carries the correction"
       ],
       "correct": [
-        1
+        3
       ],
       "explanation": "Only the product of rate and reporting share reaches the counts; the split comes from the prior, so its source must be stated.",
       "misconceptions": [
         "Takes a posterior equal to the prior as a computational failure",
-        "",
+        "Thinks a narrower prior would make the data informative",
         "Confuses the prior's mean with a known value",
-        "Thinks a narrower prior would make the data informative"
+        ""
       ],
       "lo": [
         "LO2"
@@ -536,10 +536,10 @@
       "type": "single",
       "prompt": "A Poisson model of daily ambulance calls per station is fitted. Which posterior predictive check is most likely to reveal a problem the fit itself could hide?",
       "options": [
-        "The total number of calls over the year",
-        "The mean number of calls per station",
+        "The total number of calls over the year, across all stations together",
+        "The mean number of calls per station, compared station by station",
         "The variance of each station's daily calls divided by their mean",
-        "The number of stations"
+        "The number of stations that received at least one call in the year"
       ],
       "correct": [
         2
@@ -566,20 +566,20 @@
       "type": "single",
       "prompt": "A posterior predictive check of the share of zero counts gives p = 0.12. What does this say?",
       "options": [
-        "The model is wrong with 88% probability",
-        "The observed share sits within the range the model produces, towards its edge",
-        "The model is right with 12% probability",
-        "The check failed and must be repeated with more draws"
+        "The model is wrong with 88% probability, so it should be replaced",
+        "The check failed and must be repeated with more posterior draws",
+        "The model is right with 12% probability, which is too low to use it",
+        "The observed share sits within the range the model produces, towards its edge"
       ],
       "correct": [
-        1
+        3
       ],
       "explanation": "The p-value is the share of replicates at least as extreme as the data; 0.12 means the data are not unusual under the model, though near the edge of what it produces.",
       "misconceptions": [
         "Reads a predictive p-value as the probability that the model is wrong",
-        "",
+        "Treats a moderate p-value as a computational failure",
         "Reads a predictive p-value as the probability that the model is right",
-        "Treats a moderate p-value as a computational failure"
+        ""
       ],
       "lo": [
         "LO3"
@@ -626,20 +626,20 @@
       "type": "single",
       "prompt": "Two models of clinic waiting times: elpd -2,150 (SE 40) and -2,180 (SE 42); the difference is 30 with a standard error of 8. Which reading is right?",
       "options": [
-        "No clear difference, because 30 is smaller than either SE",
-        "The first predicts held-out patients clearly better: the difference is almost four of its own standard errors",
-        "The second is better because its SE is larger",
-        "The comparison is invalid unless both have the same number of parameters"
+        "No clear difference, because 30 is smaller than either model's own SE",
+        "The comparison is invalid unless both models have the same number of parameters",
+        "The second predicts better, because its larger SE means it captures more variation",
+        "The first predicts held-out patients better: the difference is almost four of its own standard errors"
       ],
       "correct": [
-        1
+        3
       ],
       "explanation": "The models share most of their noise, so the difference is judged against the standard error of the difference, not against each model's own SE.",
       "misconceptions": [
         "Compares the difference with each model's own SE",
-        "",
+        "Thinks leave-one-out needs models of equal size; it already accounts for complexity",
         "Reads a larger SE as better",
-        "Thinks leave-one-out needs models of equal size; it already accounts for complexity"
+        ""
       ],
       "lo": [
         "LO3"
@@ -656,19 +656,19 @@
       "type": "single",
       "prompt": "Leave-one-out flags one school-year with Pareto k = 1.1: a fire closed the school for a term and inspections found many problems. What should the analyst do first?",
       "options": [
-        "Delete the school-year so the warning disappears",
-        "Ignore it: one point cannot matter among 800",
-        "Confirm what happened, keep the real event, and prefer a model that is not overturned by such years",
-        "Raise the number of draws until k falls below 0.7"
+        "Delete the school-year: an event that rare should not drive the model's choice",
+        "Confirm what happened, keep the real event, and prefer a model that such years do not overturn",
+        "Ignore it: one school-year cannot matter much among 800 observations",
+        "Raise the number of posterior draws until the Pareto k falls below 0.7"
       ],
       "correct": [
-        2
+        1
       ],
       "explanation": "A high k says one point moves the posterior a lot; a real event is kept and modelled, while an error would be corrected.",
       "misconceptions": [
         "Removes inconvenient real data and understates risk",
-        "Thinks one influential point cannot change the conclusions",
         "",
+        "Thinks one influential point cannot change the conclusions",
         "Treats k as a sampling problem that more draws fix"
       ],
       "lo": [
@@ -716,10 +716,10 @@
       "type": "single",
       "prompt": "In a simulation-based calibration, a parameter's rank histogram rises steadily from left to right. What does it indicate?",
       "options": [
-        "The posterior is too wide",
-        "The code is correct",
-        "The sampler needs more chains",
-        "The posterior is systematically below the true value: the truth's rank is usually high"
+        "The posterior is too wide, so the truth sits near its middle too often",
+        "The code is correct, since the ranks cover the whole range from 0 to 99",
+        "The sampler needs more chains, because the ranks have not yet mixed",
+        "The posterior sits below the truth: the truth's rank is usually high"
       ],
       "correct": [
         3
@@ -746,10 +746,10 @@
       "type": "single",
       "prompt": "A colleague simulated one dataset from known parameters, fitted her model and recovered both inside their 90% intervals. She says the code is verified. What is the best reply?",
       "options": [
-        "Agreed: recovering both parameters is the standard test",
-        "Repeat with a larger dataset and the code is verified",
+        "Agreed: recovering both parameters from known values is the standard test",
+        "Not yet: repeat it with a larger dataset, and then the code is verified",
         "One run can pass by luck; rank the truth over many simulated datasets and check the ranks are uniform",
-        "Verification is impossible for Bayesian models"
+        "Verification is impossible for Bayesian models, so a plausible fit must do"
       ],
       "correct": [
         2
@@ -806,10 +806,10 @@
       "type": "single",
       "prompt": "Power-scaling the priors by 0.8 and 1.25 moves the posterior mean of a district's rate by 0.6 posterior standard deviations. What does that suggest?",
       "options": [
-        "The prior is doing a large share of the work for this quantity; report it and test alternatives",
-        "The data dominate the priors for this quantity",
-        "The sampler has not converged",
-        "The rate must be removed from the report"
+        "The prior does much of the work for this quantity: report it and test alternative priors",
+        "The data dominate the priors for this quantity, since the shift is below one sd",
+        "The sampler has not converged, because the mean moves when the prior changes",
+        "The rate is unreliable and must be removed from the report to Nouran"
       ],
       "correct": [
         0
@@ -836,10 +836,10 @@
       "type": "single",
       "prompt": "Three priors on the spread between districts give the same 15 riskiest districts, but the reporting share of districts without sensors comes only from an audit-based prior. What belongs in the memo?",
       "options": [
-        "The results are robust to the priors",
-        "Nothing about priors: the manager does not need them",
+        "That the results are robust to the priors, as the three spread priors showed",
+        "Nothing about priors: the director needs the plan, not the modelling choices",
         "The spread prior does not change the plan; the reporting prior carries the rural estimates and rests on one audit",
-        "Replace the reporting prior with a flat one to be objective"
+        "Replace the reporting prior with a flat one, so that the memo is objective"
       ],
       "correct": [
         2
@@ -956,10 +956,10 @@
       "type": "single",
       "prompt": "A school can get a short visit (SAR 9,000, value 20,000) or a full audit (SAR 30,000, value 35,000 in all). Under a tight budget, how should the audit be ranked against other schools' options?",
       "options": [
-        "By 35,000 / 30,000 ≈ 1.17 per riyal",
-        "By its total value of 35,000",
-        "By the extra 15,000 of value for the extra 21,000 of cost: about 0.71 per riyal, after the visit",
-        "It should never be considered under a budget"
+        "By its whole ratio, 35,000 / 30,000 ≈ 1.17 per riyal, like any other option",
+        "By its total value of 35,000, since the audit gives the most value of the two",
+        "By the extra 15,000 for the extra 21,000: about 0.71 per riyal, after the visit",
+        "It should never be considered, because a tight budget allows only short visits"
       ],
       "correct": [
         2
@@ -1016,10 +1016,10 @@
       "type": "single",
       "prompt": "A capital plan funds 43 districts. What else should the decision memo state about the districts it does not fund?",
       "options": [
-        "Nothing: unfunded districts are outside the plan",
-        "Their names only, for completeness",
-        "The bursts they are still expected to have, who bears them, and which districts the model knows least about",
-        "That they are safe until the next budget"
+        "Nothing: districts outside the plan are outside the memo's question",
+        "Their names only, listed in an annex for completeness",
+        "Their expected bursts, who bears them, and which districts the model knows least about",
+        "That they are safe until the next budget, as their expected costs are lower"
       ],
       "correct": [
         2
@@ -1106,9 +1106,9 @@
       "type": "single",
       "prompt": "In a preposterior analysis of a survey with 15% error, what is simulated for each posterior draw?",
       "options": [
-        "A new model fit with more chains",
-        "The survey's price under different budgets",
-        "A replicated dataset of past bursts",
+        "A new model fit with more chains, to see how the posterior would move",
+        "The survey's price under different budgets, to find the affordable size",
+        "A replicated dataset of past bursts, as in a posterior predictive check",
         "The survey's report if that draw's rate were true, the updated choice, and its cost under that truth"
       ],
       "correct": [
@@ -1136,10 +1136,10 @@
       "type": "single",
       "prompt": "Which is the most useful finding in a review of a Bayesian analysis?",
       "options": [
-        "R-hat was judged against 1.1 instead of 1.01 with two chains, so the fit is not shown to be trustworthy and its ranking cannot be used yet",
-        "The model is too simple",
-        "The author should have used a different software package",
-        "The priors look arbitrary"
+        "Two chains and R-hat judged against 1.1: the fit is not shown trustworthy, so its ranking cannot be used yet",
+        "The model is too simple for a network of 140 districts and should be extended",
+        "The author should have used Stan or NumPyro instead of the package they chose",
+        "The priors look arbitrary and are not explained anywhere in the report"
       ],
       "correct": [
         0
@@ -1196,10 +1196,10 @@
       "type": "single",
       "prompt": "A consultant declares 13 districts with no recorded burst in five years safe. Which two checklist items does the reviewer cite?",
       "options": [
-        "Priors and computation",
-        "Checking and decision",
-        "Computation and checking",
-        "Structure (no pooling) and measurement (no sensors, unrecorded bursts)"
+        "Priors and computation: a flat prior and too few chains",
+        "Checking and decision: no predictive check and no costs",
+        "Computation and checking: divergences and R² taken as fit",
+        "Structure (no pooling) and measurement (unrecorded bursts)"
       ],
       "correct": [
         3

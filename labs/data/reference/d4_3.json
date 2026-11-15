@@ -945,7 +945,7 @@
   }
  },
  "verdict": [
-  "The full survey of 76 districts costs SAR 3.42 million and could save at most SAR 1.81 million in better decisions: decline it as offered.",
+  "The full survey of 76 districts costs SAR 3.42 million and is expected to save SAR 1.81 million in better decisions (perfect information at most SAR 2.38 million): decline it as offered.",
   "A survey of the 16 districts where it is worth more than its price (mostly rural) is expected to save SAR 1.21 million for SAR 0.72 million: propose it.",
   "The value comes from districts close to a decision threshold with uncertain rates; it would fall if the audit prior on reporting were sharpened first, and it assumes the contractor's 15% error."
  ]

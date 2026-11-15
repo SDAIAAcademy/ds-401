@@ -129,7 +129,7 @@ U.check(all(lo <= t <= hi for t, lo, hi in rec.values()), "one recovery run look
 # ✏️ **Exercise** · Write `sbc(fit, n)` that returns a DataFrame with one row per simulation and one column of ranks per parameter. Seed simulation i with `U.rng(100 + i)` and the fit with `i`.
 
 # %%
-N_SIM = U.pick(200, 100)
+N_SIM = 100  # in both modes: two calibrations of 100 fits fit the lab's 25 minutes; 200 would not
 
 
 def sbc(fit, n):

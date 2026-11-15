@@ -58,7 +58,7 @@ with numpyro.plate("district", J):
     eta = numpyro.sample("eta", dist.Normal(alpha, tau))   # the population
 numpyro.sample("y", dist.Poisson(jnp.exp(log_km + eta[d])), obs=y)</code></pre>
   <p class="small mt">τ near 0 is complete pooling; τ very large is no pooling. The posterior of τ chooses between them.</p>
-  <aside class="notes"><p>The prior on τ, HalfNormal(0.5), says districts' rates rarely differ by more than a factor of e (2.7) beyond what the mean explains. Lab 3.4 tests how much that choice matters. This is the centred form; it samples well on all 140 districts, and session 3 shows where it does not.</p></aside>
+  <aside class="notes"><p>The prior on τ, HalfNormal(0.5), puts 95% of its weight on τ below about 1: the typical district (one standard deviation) rarely sits more than a factor of e (2.7) away from what the mean predicts. Lab 3.4 tests how much that choice matters. This is the centred form; it samples well on all 140 districts, and session 3 shows where it does not.</p></aside>
 </section>
 
 <section class="slide" id="shrinkage-by-kind" data-label="Shrinkage" data-lo="LO2">

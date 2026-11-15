@@ -33,7 +33,7 @@
     <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>3 · Compare</b>a statistic of the replicates with the same statistic of the data</div>
   </div>
   <div class="callout tip mt frag"><b>Choose the statistic for the decision.</b> The total number of bursts fits almost any model; the variation from year to year decides how sure Day 4 can be.</div>
-  <aside class="notes"><p>Press once per step. Ask the room which statistic a Poisson model would always get right: the total, because the rate is fitted to it (Lab 3.1: observed 3,894, replicated median 3,889). A check on a statistic the model was fitted to proves nothing.</p></aside>
+  <aside class="notes"><p>Press once per step. Ask the room which statistic a Poisson model would always get right: the total, because the rate is fitted to it (Lab 3.1: observed 3,894, replicated median 3,889). A check on a statistic the model was fitted to proves nothing.</p><p>Handover from DS-301: its Lab 3.3 simulated the share of zeros from a fitted count model and its Lab 2.4 fitted a negative binomial, both by maximum likelihood. Do not teach either again; what is new here is replicating from the whole posterior and choosing the statistic for the decision.</p></aside>
 </section>
 
 <section class="slide" id="two-statistics" data-label="Two statistics" data-lo="LO3">
@@ -65,24 +65,24 @@ numpyro.sample("y", dist.NegativeBinomial2(mean, phi), obs=y)
 </section>
 
 <section class="slide" id="rootogram" data-label="Rootogram" data-lo="LO3" data-read="scaled">
-  <div class="kicker">What participants plot</div>
-  <h2>The Poisson replicates are too narrow at both ends</h2>
+  <div class="kicker">Lab 3.1, stretch</div>
+  <h2>A histogram of all district-years cannot tell the two models apart</h2>
   <div class="figure">
-    <svg viewBox="0 0 640 280" role="img" aria-label="Sketch of a rootogram: observed counts of district-years by number of bursts as bars; the Poisson curve is too high in the middle and too low at zero and in the tail; the negative binomial curve follows the bars">
+    <svg viewBox="0 0 640 280" role="img" aria-label="Rootogram from the course's run: square roots of the observed frequencies of district-years with 0 to 10 bursts as bars; the Poisson and the negative binomial curves lie almost on top of each other and both follow the bars">
       <title>Observed counts against two models</title>
       <line x1="50" y1="240" x2="610" y2="240" stroke="currentColor" stroke-width="2"/>
       <g fill="currentColor" opacity="0.25">
-        <rect x="70" y="120" width="40" height="120"/><rect x="120" y="70" width="40" height="170"/><rect x="170" y="80" width="40" height="160"/><rect x="220" y="120" width="40" height="120"/><rect x="270" y="160" width="40" height="80"/><rect x="320" y="190" width="40" height="50"/><rect x="370" y="210" width="40" height="30"/><rect x="420" y="222" width="40" height="18"/><rect x="470" y="228" width="40" height="12"/>
+        <rect x="70" y="68" width="40" height="172"/><rect x="120" y="119" width="40" height="121"/><rect x="170" y="149" width="40" height="91"/><rect x="220" y="166" width="40" height="74"/><rect x="270" y="166" width="40" height="74"/><rect x="320" y="175" width="40" height="65"/><rect x="370" y="186" width="40" height="54"/><rect x="420" y="176" width="40" height="64"/><rect x="470" y="179" width="40" height="61"/><rect x="520" y="188" width="40" height="52"/><rect x="570" y="196" width="40" height="44"/>
       </g>
-      <polyline points="90,150 140,60 190,60 240,110 290,175 340,215 390,232 440,238 490,240" fill="none" stroke="#e4572e" stroke-width="3"/>
-      <polyline points="90,122 140,72 190,80 240,118 290,158 340,188 390,208 440,221 490,227" fill="none" stroke="#2a9d8f" stroke-width="3"/>
-      <text x="520" y="60" font-size="16" fill="#e4572e">Poisson</text>
-      <text x="520" y="85" font-size="16" fill="#2a9d8f">negative binomial</text>
-      <text x="330" y="270" font-size="16" text-anchor="middle" fill="currentColor">bursts in a district-year</text>
+      <polyline points="90,71 140,120 190,152 240,164 290,170 340,173 390,176 440,180 490,184 540,187 590,190" fill="none" stroke="#e4572e" stroke-width="3"/>
+      <polyline points="90,68 140,119 190,150 240,163 290,170 340,174 390,178 440,182 490,185 540,188 590,192" fill="none" stroke="#2a9d8f" stroke-width="3" stroke-dasharray="8 5"/>
+      <text x="430" y="60" font-size="16" fill="#e4572e">Poisson</text>
+      <text x="430" y="85" font-size="16" fill="#2a9d8f">negative binomial</text>
+      <text x="330" y="270" font-size="16" text-anchor="middle" fill="currentColor">bursts in a district-year (0 to 10)</text>
     </svg>
-    <div class="caption">Sketch of the figure Lab 3.1 saves; the participants' own plot uses the real replicates.</div>
+    <div class="caption">Square root of the frequencies, from the course's quick run. The dispersion within each district, 2.32 against Poisson replicates of 0.87 to 1.13, separates the same two models at once.</div>
   </div>
-  <aside class="notes"><p>The shape to recognise: too many replicates in the middle, too few zeros and too few large counts. That is overdispersion seen as a picture. The lab's figure plots the square root of the counts so the tail is visible.</p></aside>
+  <aside class="notes"><p>Ask the room to predict the stretch's picture before showing it: most expect the Poisson to miss. It does not, because the district effects already spread the counts across districts; the extra variation is within each district from year to year, and a histogram of all 700 district-years mixes it with the differences between districts. The lesson is the session's: a check exposes a misfit only if its statistic looks where the misfit is. The quiet years tell the same story (p = 0.12): district effects already give small districts their zeros.</p></aside>
 </section>
 
 <section class="slide" id="check-ppc" data-lo="LO3">
@@ -133,7 +133,7 @@ numpyro.sample("y", dist.NegativeBinomial2(mean, phi), obs=y)
     <tr><td>Complete pooling, Poisson</td><td class="num">-1,710</td><td class="num">22</td><td class="num">-317</td><td class="num">54</td></tr>
   </table>
   <p class="small mt">Read the difference against its own standard error, not against the elpd's: about 5 standard errors here.</p>
-  <aside class="notes"><p>Quick-run numbers. The standard errors of each elpd (34 to 74) are larger than they look useful: they share most of their noise, so compare the difference with the standard error of the difference. ArviZ 1.x prints a worse model's difference as negative; the lab asks for round_to="none" to get unrounded numbers.</p></aside>
+  <aside class="notes"><p>Quick-run numbers. The standard error of each model's own elpd (34 to 74) is much larger than that of the difference: the models' errors share most of their noise, so compare the difference with the standard error of the difference. ArviZ 1.x prints a worse model's difference as negative; the lab asks for round_to="none" to get unrounded numbers.</p></aside>
 </section>
 
 <section class="slide" id="pareto-k" data-label="Pareto k" data-lo="LO3">
@@ -195,7 +195,7 @@ numpyro.sample("y", dist.NegativeBinomial2(mean, phi), obs=y)
     <div class="step c-navy"><b>1 · Simulate</b>parameters from the prior, then data</div>
     <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Fit</b>the model to those data: 99 draws</div>
     <div class="arrow frag" data-frag="c">→</div><div class="step c-amber frag" data-frag="c"><b>3 · Rank</b>count draws below the true value: 0 to 99</div>
-    <div class="arrow frag" data-frag="d">→</div><div class="step c-teal frag" data-frag="d"><b>4 · Repeat</b>100 or 200 times; plot each parameter's ranks</div>
+    <div class="arrow frag" data-frag="d">→</div><div class="step c-teal frag" data-frag="d"><b>4 · Repeat</b>100 times; plot each parameter's ranks</div>
   </div>
   <div class="callout tip mt frag"><b>Shapes to read.</b> Flat: right. U: posterior too narrow. Hump: too wide. Slope: biased.</div>
   <aside class="notes"><p>The argument in one sentence: averaged over the prior, the posterior is the prior, so a true value drawn from the prior is just another draw from the posterior and its rank is uniform. Any departure is a mismatch between the simulator and the fitted model, in code or in maths.</p><p>Source: Talts, Betancourt, Simpson, Vehtari and Gelman (2018), Validating Bayesian Inference Algorithms with Simulation-Based Calibration.</p></aside>
@@ -219,7 +219,7 @@ numpyro.sample("y", dist.NegativeBinomial2(mean, phi), obs=y)
   <div class="cols cols-3">
     <div class="card c-teal"><h4>It finds</h4><p class="small mb0">Coding errors, wrong parameterisations, a sampler that cannot fit the model.</p></div>
     <div class="card c-coral"><h4>It misses</h4><p class="small mb0">The same mistake in both the simulator and the model; a model that is wrong about Yanabi.</p></div>
-    <div class="card c-purple"><h4>It costs</h4><p class="small mb0">100 fits. Small models and short chains make it a few minutes on a laptop.</p></div>
+    <div class="card c-purple"><h4>It costs</h4><p class="small mb0">100 fits per calibration. Small models and short chains make it a few minutes on a laptop.</p></div>
   </div>
   <aside class="notes"><p>Session 1's checks test the model against the data; this session tests the code against its own assumptions. The capstone asks for both. The stretch item calibrates a derived quantity, the rate at age 40, which participants report to Nouran.</p></aside>
 </section>

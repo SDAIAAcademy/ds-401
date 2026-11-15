@@ -212,7 +212,7 @@ U.check(len(v) == 2, "two sentences")
 # %% [markdown]
 # ## ✱ Stretch · A rootogram
 #
-# For counts 0 to 15, plot the square root of the observed frequency against the square root of the mean replicated frequency for both models.
+# For counts 0 to 15, plot the square root of the observed frequency against the square root of the mean replicated frequency for both models. Predict first: will the Poisson curve miss the bars? Then explain what you see with task 2's dispersion statistic, which is computed within each district.
 
 # %%
 def stretch():

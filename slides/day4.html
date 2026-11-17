@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="deck" data-track="data-science">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 4 · From posterior to decision · Bayesian Modelling and Decisions under Uncertainty</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<link rel="icon" href="../_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="day4.md">
+<link rel="describedby" href="../llms.txt">
+<link rel="stylesheet" href="../_engine/academy.css">
+</head>
+<body>
+<div class="deck" data-course="Bayesian Modelling and Decisions under Uncertainty" data-track="data-science" data-day="Day 4">
+<section class="slide title" id="title" data-auto="title" data-label="Welcome" data-n="1">
+  <div class="kicker">SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty</div>
+  <h1>From posterior to decision</h1>
+  <p class="lead mt">Day 4: Turn the posterior into a re-piping plan within budget, price the survey that would sharpen it, and review someone else’s analysis</p>
+  <div class="meta"><span class="track">Data Science Track</span><span>4 teaching days + capstone day</span><span>4 sessions · 4 labs</span><span>DS-401</span></div>
+  <aside class="notes"><p>Three days built and checked a posterior. Today it becomes a decision Nouran can sign: which districts to repair or re-pipe within SAR 40 million, whether to buy the leak survey, and what to say about a consultant's report that reached a different list. Lab 4.1 is AI-off.</p></aside>
+</section>
+
+<section class="slide" id="agenda" data-auto="agenda" data-label="Agenda" data-n="2">
+  <div class="kicker">Today</div>
+  <h2>From posterior to decision</h2>
+  <div class="agenda"><div class="item"><div><b>Session 1 · Loss, utility and the decision table</b><small>Actions, costs and outcomes, and expected utility computed over posterior draws</small></div></div><div class="item"><div><b>Session 2 · Choosing under a budget</b><small>A plan for the capital budget with avoided bursts and their uncertainty</small></div></div><div class="item"><div><b>Session 3 · What more data is worth</b><small>Expected value of perfect and of sample information, against the price of the data</small></div></div><div class="item"><div><b>Session 4 · Reviewing a Bayesian analysis</b><small>A checklist for priors, computation, checking and reporting, and flaws ranked by their effect on the decision</small></div></div></div>
+</section>
+
+<section class="slide" id="review-day3" data-lo="LO3" data-n="3">
+  <div class="kicker">Review of Day 3</div>
+  <h2>What the model choice rests on</h2>
+  <div class="quiz" data-type="single" data-lo="LO3" data-id="review-day3-q1">
+    <p class="lead">Day 4 uses the hierarchical negative binomial with the reporting term. Which piece of yesterday's evidence would most change today's plan had it gone the other way?</p>
+    <div class="opts">
+      <div class="opt" data-why="Picks a check the fit forces, which could not have gone the other way" data-k="A">The replicated network total matching 3,894 bursts</div>
+      <div class="opt" data-why="Picks the prior that the data dominate" data-k="B">The power-scaling of the prior on τ</div>
+      <div class="opt" data-ok data-k="C">The dispersion check: a Poisson would make every district look more certain than it is</div>
+      <div class="opt" data-why="Confuses a check of the code with a check of the model against the world" data-k="D">The calibration of the colleague's model</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The dispersion decides how wide every district's interval is, and today's decisions and the survey's value both depend on that width.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. The calibration in option D tested a different, smaller model; it says the habit of calibrating matters, not that today's model is right.</p></aside>
+</section>
+
+<!-- Session 1 -->
+
+<section class="slide section" id="s1" data-auto="section" data-session="1" data-n="4">
+  <div class="kicker">Session 1</div>
+  <h1>Loss, utility and the decision table</h1>
+  <ul class="bullets outcomes"><li>Write a decision table of actions, costs and consequences</li><li>Compute expected cost over posterior draws for each action</li><li>Show where a decision on the posterior mean differs from one on the whole posterior</li></ul>
+  <div class="sess-no">01</div>
+</section>
+
+<section class="slide" id="decision-table" data-label="Decision table" data-lo="LO5" data-n="5" data-session="1">
+  <div class="kicker">Loss, utility and the decision table</div>
+  <h2>Three actions, one cost each, computed for every posterior draw</h2>
+  <pre class="code s" data-file="Lab 4.1"><code class="language-python">cost(action) = cost_per_km * km + rate * km * <span class="hljs-number">80_000</span> * (<span class="hljs-number">20</span> - years * reduction)</code></pre>
+  <table class="t small mt">
+    <tr><th>Action</th><th class="num">SAR per km</th><th class="num">Fewer bursts</th><th class="num">For</th></tr>
+    <tr><td>Wait</td><td class="num">0</td><td class="num">0%</td><td class="num">–</td></tr>
+    <tr><td>Repair weak joints, manage pressure</td><td class="num">40,000</td><td class="num">30%</td><td class="num">10 years</td></tr>
+    <tr><td>Re-pipe the mains</td><td class="num">400,000</td><td class="num">90%</td><td class="num">20 years</td></tr>
+  </table>
+  <p class="caption">Synthetic planning numbers (data/costs.json); a burst costs SAR 80,000; horizon 20 years.</p>
+  <aside class="notes"><p>Work one district on the board: 10 km at 0.25 bursts per km-year expects 50 bursts in 20 years. Wait: SAR 4.0 million. Repair: 0.4 million plus 42.5 bursts, 3.8 million. Re-pipe: 4.0 million plus 5 bursts, 4.4 million. Repair wins at this rate. Per kilometre, waiting is cheapest below about 0.17 bursts per km-year and re-piping above 0.30. Expected utility does this for every draw, then averages.</p></aside>
+</section>
+
+<section class="slide" id="eu-steps" data-label="Expected utility" data-lo="LO5" data-n="6" data-session="1">
+  <div class="kicker">Step by step</div>
+  <h2>Average the cost over the posterior, then choose</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>1 · Draws</b>2,000 posterior rates for each of 140 districts</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Costs</b>each action's cost in each draw: 3 × 2,000 × 140</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>3 · Choose</b>the action with the lowest expected cost in each district</div>
+  </div>
+  <div class="callout tip mt frag"><b>Result.</b> Wait in 87 districts, repair 38, re-pipe 15.</div>
+  <aside class="notes"><p>Numbers from data/posterior/rates.npz, the posterior of the model chosen on Day 3. Order matters: average the cost, then choose; choosing per draw and taking the most frequent action is a different and worse rule.</p></aside>
+</section>
+
+<section class="slide" id="plug-in" data-label="Plug-in" data-lo="LO5" data-n="7" data-session="1">
+  <div class="kicker">Lab 4.1, tasks 4 and 5</div>
+  <h2>Deciding on the median rate gets three rural districts wrong</h2>
+  <table class="t small">
+    <tr><th>District</th><th>Kind</th><th>Sensors</th><th>Median plug-in</th><th>Expected utility</th><th class="num">Mean / median</th></tr>
+    <tr><td>D045</td><td>rural</td><td>yes</td><td>wait</td><td>repair</td><td class="num">1.05</td></tr>
+    <tr><td>D069</td><td>rural</td><td>no</td><td>repair</td><td>re-pipe</td><td class="num">1.03</td></tr>
+    <tr><td>D091</td><td>rural</td><td>no</td><td>wait</td><td>repair</td><td class="num">1.03</td></tr>
+  </table>
+  <p class="small mt">The mean plug-in agrees everywhere: these costs are straight lines in the rate. The median sits below the mean of a skewed posterior.</p>
+  <aside class="notes"><p>Be honest about the size: with linear costs, deciding on the posterior mean is exactly right, so the Bayesian advantage today is not in this table. It is in the budget, where the interval of the plan matters, and in the survey, where the whole distribution decides the value. A report of medians is the common case, which is why these three districts are worth showing. The stretch's cautious rule (lowest 90th percentile of cost) changes 43 districts and costs SAR 11.6 million more on average: the price of caution, to be chosen knowingly.</p></aside>
+</section>
+
+<section class="slide" id="check-eu" data-lo="LO5" data-n="8" data-session="1">
+  <div class="kicker">Checkpoint</div>
+  <h2>Expected cost or cost at the estimate</h2>
+  <div class="quiz" data-type="single" data-lo="LO5" data-id="check-eu-q1">
+    <p class="lead">An extra cost applies only when a district exceeds 40 bursts in a year: a fine from the regulator. Does deciding on the posterior mean rate still give the expected-utility choice?</p>
+    <div class="opts">
+      <div class="opt" data-why="Generalises from linear costs to all costs" data-k="A">Yes: the mean plug-in is always the same as expected utility</div>
+      <div class="opt" data-ok data-k="B">Not in general: the fine is not linear in the rate, so its expectation depends on the whole posterior</div>
+      <div class="opt" data-why="Thinks the median fixes non-linearity" data-k="C">No, but the median plug-in would</div>
+      <div class="opt" data-why="Thinks a threshold cost cannot be computed from draws" data-k="D">No decision can be made with a threshold cost</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The expectation of a straight line is the line at the mean; for a threshold, the probability of crossing it comes from the posterior's tail.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. The regulator's fine is invented for the question; the capstone briefs include costs of this shape (a waiting-time target, for example).</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-4-1" data-auto="lab" data-lab="4.1" data-label="Lab 4.1" data-n="9" data-session="1">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 4.1 · 25 min</div><h2>Replace, repair or wait</h2><p class="lead small">Compute the expected 20-year cost of replacing, repairing or waiting for every district over the supplied posterior and compare with decisions made on the posterior mean.</p><a class="nb" href="../labs/D4_1_compute_expected_utility.ipynb">D4_1_compute_expected_utility.ipynb</a></div><ul class="checklist"><li>Load the posterior and the costs <span class="min">3 min</span></li><li>The cost of each action in each draw <span class="min">7 min</span></li><li>Expected cost and the best action per district <span class="min">6 min</span></li><li>Plug-in decisions against expected utility <span class="min">6 min</span></li><li>Where the two disagree <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Decide on the 90th percentile of cost instead of the mean, and say who would choose that</li></ul></div>
+  <aside class="notes"><p>AI-off lab. Usual problems: broadcasting km against draws in the wrong axis; taking the argmin per draw and then a vote; mixing millions and riyals. Fallback: none needed; the posterior is supplied.</p></aside>
+</section>
+
+<!-- Session 2 -->
+
+<section class="slide section" id="s2" data-auto="section" data-session="2" data-n="10">
+  <div class="kicker">Session 2</div>
+  <h1>Choosing under a budget</h1>
+  <ul class="bullets outcomes"><li>Rank actions by expected benefit per riyal</li><li>Choose a plan that fits a capital budget</li><li>Report avoided bursts with an interval, and who carries the remaining risk</li></ul>
+  <div class="sess-no">02</div>
+</section>
+
+<section class="slide" id="budget-bind" data-label="Budget" data-lo="LO5" data-n="11" data-session="2">
+  <div class="kicker">Choosing under a budget</div>
+  <h2>The best plan for each district costs SAR 61 million; the budget is 40</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Each district's best action ignores the others; the budget couples them.</li>
+      <li>Rank steps by expected net saving per riyal: wait to repair, repair to re-pipe.</li>
+      <li>Fill the budget in that order; a district's second step comes only after its first.</li>
+    </ul>
+    <div class="stack">
+      <div class="stat"><div class="big">61.4</div><div class="lbl">SAR million for the unconstrained plan</div></div>
+      <div class="stat"><div class="big">40.0</div><div class="lbl">SAR million capital budget</div></div>
+    </div>
+  </div>
+  <aside class="notes"><p>This is a knapsack problem with two nested items per district. Ranking whole actions by their own ratio, rather than incremental steps, gives a plan worth about half as much (SAR 9 million of saving against 18): the incremental steps matter. The stretch solves it exactly by dynamic programming in units of SAR 4,000 and reaches the same saving.</p></aside>
+</section>
+
+<section class="slide" id="the-plan" data-label="The plan" data-lo="LO5" data-n="12" data-session="2">
+  <div class="kicker">Lab 4.2, tasks 3 and 4</div>
+  <h2>43 districts within the budget, with an interval on what they avoid</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">34 + 9</div><div class="lbl">repairs and re-pipings, SAR 40.0 million</div></div>
+    <div class="stat"><div class="big">18.2</div><div class="lbl">SAR million expected net saving over 20 years</div></div>
+    <div class="stat"><div class="big">719</div><div class="lbl">bursts avoided, 90% interval 607 to 870</div></div>
+  </div>
+  <div class="callout tip small mt"><b>The interval is part of the plan.</b> A board that hears "719" will remember it; a board that hears "between 600 and 870" can plan for both.</div>
+  <aside class="notes"><p>The interval is computed by applying the same plan in every posterior draw: a plan's outcome is a distribution, not a number. Part of that width comes from the districts without sensors, whose reporting share rests on the audit.</p></aside>
+</section>
+
+<section class="slide" id="remaining-risk" data-label="Remaining risk" data-lo="LO5" data-n="13" data-session="2">
+  <div class="kicker">Responsible use: Lab 4.2, task 5</div>
+  <h2>Name who carries the risk the plan leaves, and where the model knows least</h2>
+  <div class="cols cols-2">
+    <div class="card c-coral flat"><h4>Largest unfunded risks</h4><p class="small mb0">Large urban districts with sensors (D116, D087, D014): many bursts expected, but each kilometre is cheap to leave. Their residents and crews carry the bursts the plan does not prevent.</p></div>
+    <div class="card c-purple flat"><h4>Least known</h4><p class="small mb0">Mostly rural districts without sensors: their rates rest on the audit prior. The memo names them, and session 3 prices finding out.</p></div>
+  </div>
+  <aside class="notes"><p>This is the check the catalog entry names for responsible use on Day 4. The capstone memo has the same two paragraphs. A plan that reports only the funded list hides a choice about who waits.</p></aside>
+</section>
+
+<section class="slide" id="check-budget" data-lo="LO5" data-n="14" data-session="2">
+  <div class="kicker">Checkpoint</div>
+  <h2>Filling a budget</h2>
+  <div class="quiz" data-type="single" data-lo="LO5" data-id="check-budget-q1">
+    <p class="lead">District A: repair costs 1 million and saves 1.5 million; re-piping costs 10 million and saves 4 million in all. Funds are short. Which step is ranked by which ratio?</p>
+    <div class="opts">
+      <div class="opt" data-why="Ranks the whole re-pipe by its total ratio, mixing in the repair's cheap saving" data-k="A">Re-pipe at 0.4 per riyal, as one step</div>
+      <div class="opt" data-why="Ignores the second step altogether" data-k="B">Only the repair is ever considered</div>
+      <div class="opt" data-why="Ranks by total saving, ignoring cost" data-k="C">Re-pipe first because it saves the most</div>
+      <div class="opt" data-ok data-k="D">Repair at 1.5 per riyal; then the upgrade to re-pipe at 2.5 / 9 ≈ 0.28 per riyal</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The upgrade's value is what it adds over the repair: 2.5 million more saving for 9 million more cost.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. The numbers are invented for the question; Lab 4.2 builds the same steps for 140 districts.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-4-2" data-auto="lab" data-lab="4.2" data-label="Lab 4.2" data-n="15" data-session="2">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 4.2 · 25 min</div><h2>A plan within the budget</h2><p class="lead small">Choose the districts to re-pipe or repair within the capital budget, with avoided bursts and their uncertainty, and name the districts the model knows least about.</p><a class="nb" href="../labs/D4_2_choose_districts_re.ipynb">D4_2_choose_districts_re.ipynb</a></div><ul class="checklist"><li>The plan without a budget, and its cost <span class="min">4 min</span></li><li>Benefit per riyal <span class="min">5 min</span></li><li>Fill the budget <span class="min">6 min</span></li><li>Avoided bursts with an interval <span class="min">6 min</span></li><li>Who carries the remaining risk <span class="min">4 min</span></li><li class="stretch">✱ Stretch: Solve the budget exactly by dynamic programming and compare with the greedy plan</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain; it writes no plan code. Usual problems: ranking whole actions instead of increments; allowing an upgrade before its repair; reporting avoided bursts from the posterior mean only. The exact stretch is a short loop over 140 districts.</p></aside>
+</section>
+
+<!-- Session 3 -->
+
+<section class="slide section" id="s3" data-auto="section" data-session="3" data-n="16">
+  <div class="kicker">Session 3</div>
+  <h1>What more data is worth</h1>
+  <ul class="bullets outcomes"><li>Compute the expected value of perfect information for a decision</li><li>Compute the expected value of a survey by preposterior simulation</li><li>Give a verdict on an offer of data by comparing its value with its price</li></ul>
+  <div class="sess-no">03</div>
+</section>
+
+<section class="slide" id="voi-idea" data-label="Value of information" data-lo="LO5" data-n="17" data-session="3">
+  <div class="kicker">What more data is worth</div>
+  <h2>Information is worth what it would change in the decision</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Perfect information</b>Decide in each draw knowing the true rate; average; subtract today's best</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-amber frag" data-frag="b"><b>The real survey</b>Simulate its result (15% error), update, decide, average</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>Against its price</b>Buy where the value exceeds SAR 45,000 per district</div>
+  </div>
+  <div class="callout tip mt frag"><b>No change, no value.</b> A district whose best action holds across its whole posterior gains nothing from a survey.</div>
+  <aside class="notes"><p>EVPI is an upper bound; EVSI, by preposterior analysis, values the actual survey. The update in Lab 4.3 reweights the posterior draws by the survey's likelihood, which needs no new fit.</p><p>Source: Raiffa and Schlaifer (1961), Applied Statistical Decision Theory, for the preposterior analysis.</p></aside>
+</section>
+
+<section class="slide" id="survey-numbers" data-label="The survey" data-lo="LO5" data-n="18" data-session="3">
+  <div class="kicker">Lab 4.3, tasks 2 to 4</div>
+  <h2>Decline the full survey; propose 16 districts</h2>
+  <table class="t small">
+    <tr><th></th><th class="num">Price, SAR million</th><th class="num">Value, SAR million</th></tr>
+    <tr><td>Perfect information, 76 districts</td><td class="num">–</td><td class="num">2.38</td></tr>
+    <tr><td>Full survey as offered, 76 districts</td><td class="num">3.42</td><td class="num">1.81</td></tr>
+    <tr class="hl"><td>Targeted survey, 16 districts</td><td class="num">0.72</td><td class="num">1.21</td></tr>
+  </table>
+  <p class="small mt">The 16 are mostly rural districts close to a decision threshold, with uncertain rates.</p>
+  <aside class="notes"><p>Even perfect information on all 76 is worth less than the full price, which settles the offer before any simulation. The targeted survey buys two thirds of the value for a fifth of the price. The stretch asks whether a survey that changes no funded decision under a binding budget can still be worth its price: within this budget, only changes that move money between districts count.</p></aside>
+</section>
+
+<section class="slide" id="check-voi" data-lo="LO5" data-n="19" data-session="3">
+  <div class="kicker">Checkpoint</div>
+  <h2>Which district to survey</h2>
+  <div class="quiz" data-type="single" data-lo="LO5" data-id="check-voi-q1">
+    <p class="lead">Two districts without sensors. X: rate very uncertain, but re-piping is best in every draw. Y: rate moderately uncertain, and repair or wait each wins in about half the draws. Where is a survey worth more?</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">Y: the survey can change its decision; X's decision is already settled</div>
+      <div class="opt" data-why="Equates value of information with uncertainty alone" data-k="B">X: it is the more uncertain</div>
+      <div class="opt" data-why="Thinks information always has the same value" data-k="C">Both the same: a survey costs the same in each</div>
+      <div class="opt" data-why="Thinks a settled decision needs confirming" data-k="D">Neither: surveys only confirm a model</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Information is valuable where it can change the action; uncertainty that cannot change the choice is worth nothing to this decision.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. X's uncertainty may still matter for the memo's interval of avoided bursts; it does not matter for the choice.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-4-3" data-auto="lab" data-lab="4.3" data-label="Lab 4.3" data-n="20" data-session="3">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 4.3 · 25 min</div><h2>The price of the leak survey</h2><p class="lead small">Price the acoustic leak survey offered for districts without sensors by its value of information and give a verdict on the offer.</p><a class="nb" href="../labs/D4_3_price_leak_survey.ipynb">D4_3_price_leak_survey.ipynb</a></div><ul class="checklist"><li>The districts the survey covers <span class="min">3 min</span></li><li>Perfect information, district by district <span class="min">6 min</span></li><li>Simulate the survey before buying it <span class="min">8 min</span></li><li>The survey’s value against its price <span class="min">5 min</span></li><li>The verdict <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Buy the survey only where its value exceeds its price, and price that smaller offer</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain; the verdict is the participant's. Usual problems: computing EVPI as the variance of the cost; updating the posterior with the survey's error on the rate scale instead of the log scale; comparing value with price for the whole survey only. Small negative EVSI values are simulation noise.</p></aside>
+</section>
+
+<!-- Session 4 -->
+
+<section class="slide section" id="s4" data-auto="section" data-session="4" data-n="21">
+  <div class="kicker">Session 4</div>
+  <h1>Reviewing a Bayesian analysis</h1>
+  <ul class="bullets outcomes"><li>Review an analysis against a checklist of priors, computation, checking and reporting</li><li>Rank flaws by their effect on the decision</li><li>Choose and scope a capstone brief</li></ul>
+  <div class="sess-no">04</div>
+</section>
+
+<section class="slide" id="review-checklist" data-label="Checklist" data-lo="LO6" data-n="22" data-session="4">
+  <div class="kicker">Reviewing a Bayesian analysis</div>
+  <h2>Six questions, in the order of the workflow</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Priors</h4><p class="small mb0">Stated, justified, checked by prior predictive simulation?</p></div>
+    <div class="card c-cyan"><h4>Computation</h4><p class="small mb0">Four chains, R-hat under 1.01, ESS, divergences explained?</p></div>
+    <div class="card c-navy"><h4>Structure</h4><p class="small mb0">Pooling suited to unequal groups, and defended?</p></div>
+    <div class="card c-amber"><h4>Measurement</h4><p class="small mb0">Is what was recorded what happened?</p></div>
+    <div class="card c-purple"><h4>Checking</h4><p class="small mb0">Predictive checks and a comparison of models?</p></div>
+    <div class="card c-coral"><h4>Decision</h4><p class="small mb0">Costs, uncertainty, remaining risk, value of data?</p></div>
+  </div>
+  <aside class="notes"><p>Each card is a day of the course. A review that finds a flaw quotes the report and says what it does to the decision; "the priors could be better" is not a finding.</p><p>Source: Gelman et al. (2020), Bayesian Workflow; the WAMBS checklist of Depaoli and van de Schoot (2017) for priors and computation.</p></aside>
+</section>
+
+<section class="slide" id="consultant-top" data-label="The evidence" data-lo="LO6" data-n="23" data-session="4">
+  <div class="kicker">Lab 4.4, task 3</div>
+  <h2>The consultant's top six, raw and pooled</h2>
+  <table class="t small">
+    <tr><th>District</th><th>Kind</th><th>Sensors</th><th class="num">Raw rate</th><th class="num">Posterior median (90%)</th></tr>
+    <tr><td>D010</td><td>rural</td><td>no</td><td class="num">0.51</td><td class="num">0.39 (0.26 to 0.60)</td></tr>
+    <tr class="hl"><td>D017</td><td>suburban</td><td>yes</td><td class="num">0.50</td><td class="num">0.40 (0.30 to 0.54)</td></tr>
+    <tr class="hl"><td>D073</td><td>rural</td><td>yes</td><td class="num">0.50</td><td class="num">0.25 (0.15 to 0.39)</td></tr>
+    <tr><td>D113</td><td>rural</td><td>no</td><td class="num">0.42</td><td class="num">0.32 (0.19 to 0.53)</td></tr>
+    <tr><td>D067</td><td>rural</td><td>no</td><td class="num">0.41</td><td class="num">0.38 (0.23 to 0.60)</td></tr>
+    <tr><td>D118</td><td>rural</td><td>no</td><td class="num">0.40</td><td class="num">0.41 (0.25 to 0.67)</td></tr>
+  </table>
+  <aside class="notes"><p>D073 halves under pooling: a few bursts on a short network. D017's raw rate includes the trunk-main year; re-piping its 58 km would cost SAR 23 million, more than half the budget, on one unusual year. The districts without sensors hold their place because the reporting term lifts them back.</p></aside>
+</section>
+
+<section class="slide" id="rank-flaws" data-label="Ranking" data-lo="LO6" data-n="24" data-session="4">
+  <div class="kicker">Lab 4.4, task 3</div>
+  <h2>Rank the flaws by what they do to the decision, not by how wrong they look</h2>
+  <ol class="bullets small">
+    <li><b>Structure.</b> No pooling: small districts top the list on noise; 13 zero-burst districts are declared safe.</li>
+    <li><b>Measurement.</b> Unrecorded bursts read as low risk in 76 districts.</li>
+    <li><b>Decision.</b> A ranking of means taken as the plan: no costs, intervals, remaining risk or survey price.</li>
+    <li><b>Computation.</b> Two chains, R-hat against 1.1, 37 divergences dismissed.</li>
+    <li><b>Priors</b> and <b>checking</b>: Normal(0, 100) called uninformative; R² as fit.</li>
+  </ol>
+  <aside class="notes"><p>Computation looks worst to a statistician and changes the list least here: a correct fit of a no-pooling model still ranks D073 high. Other rankings pass if argued by effect on the decision. LO6 asks for at least four of the six found.</p></aside>
+</section>
+
+<section class="slide" id="check-review" data-lo="LO6" data-n="25" data-session="4">
+  <div class="kicker">Checkpoint</div>
+  <h2>Writing one finding</h2>
+  <div class="quiz" data-type="single" data-lo="LO6" data-id="check-review-q1">
+    <p class="lead">Which sentence is a usable review finding?</p>
+    <div class="opts">
+      <div class="opt" data-why="States an opinion without the evidence or the consequence" data-k="A">The priors are not good enough</div>
+      <div class="opt" data-why="Names the evidence but not what it does to the decision" data-k="B">The report uses Normal(0, 100)</div>
+      <div class="opt" data-ok data-k="C">Each district is estimated alone, so D073 (a few bursts on a short network) ranks third; pooled, its rate halves and it leaves the list</div>
+      <div class="opt" data-why="Prescribes a tool instead of identifying a flaw" data-k="D">The analysis should have used NumPyro</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A finding quotes what the report did, shows the evidence, and says how it changes the decision.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. Participants write six of these in Lab 4.4 and the peer review of the oral uses the same form.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-4-4" data-auto="lab" data-lab="4.4" data-label="Lab 4.4" data-n="26" data-session="4">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 4.4 · 25 min</div><h2>Review an analysis, choose a brief</h2><p class="lead small">Review a consultant’s Bayesian analysis of Yanabi’s bursts by checklist, rank the flaws you find by their effect on the decision, and choose your capstone brief.</p><a class="nb" href="../labs/D4_4_review_supplied_analysis.ipynb">D4_4_review_supplied_analysis.ipynb</a></div><ul class="checklist"><li>Read the analysis <span class="min">6 min</span></li><li>The checklist, item by item <span class="min">8 min</span></li><li>Rank the flaws by their effect on the decision <span class="min">6 min</span></li><li>Choose your capstone brief <span class="min">5 min</span></li><li class="stretch">✱ Stretch: Rerun one of the consultant’s claims and show the number changes</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain a checklist item; the review is the participant's. Usual problems: listing flaws without evidence; ranking computation first by habit; forgetting to choose a capstone brief (task 4). The stretch reruns one of the consultant's claims.</p></aside>
+</section>
+
+<section class="slide" id="wrap-up" data-n="27" data-session="4">
+  <div class="kicker">Day 4 · wrap-up</div>
+  <h2>Three things to keep</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Average the cost, then choose</h4><p class="small mb0">And report the plan's outcome as an interval, with who carries the risk it leaves.</p></div>
+    <div class="card c-coral"><h4>Price information by the decision</h4><p class="small mb0">Data are worth buying only where they can change what you do.</p></div>
+    <div class="card c-purple"><h4>Review by effect</h4><p class="small mb0">Quote, show the evidence, say what changes.</p></div>
+  </div>
+  <aside class="notes"><p>Close the teaching days by returning to Nouran: she now has a plan of 43 districts, an interval, a counter-offer for the survey and a reply to the consultant. Ask what she would still need before the board.</p></aside>
+</section>
+
+<section class="slide dark" id="next" data-label="Next" data-n="28" data-session="4">
+  <div class="kicker">Next</div>
+  <h2>Capstone: your own model and decision memo</h2>
+  <p class="lead">Start your capstone repository on the brief you chose in Lab 4.4. Read labs/capstone/README.md for the structure and the rubric.</p>
+  <aside class="notes"><p>Each participant is also assigned a peer whose model they will review in the oral: announce the pairs before participants leave.</p></aside>
+</section>
+</div>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T23:05:21Z","version":"2027.1.0","commit":"c70a408"},"course":{"id":"ds-401","code":"DS-401","title":"Bayesian Modelling and Decisions under Uncertainty","track":"data-science","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ds-401/","repo":"SDAIAAcademy/ds-401","home":"../index.html"},"deck":{"id":"day4","kind":"day","day":4,"label":"Day 4","title":"From posterior to decision","prev":"day3.html","next":"capstone.html","md":"day4.md","alt":{}},"sessions":[{"n":1,"label":"Session 1","title":"Loss, utility and the decision table","slide":"s1","outcomes":["Write a decision table of actions, costs and consequences","Compute expected cost over posterior draws for each action","Show where a decision on the posterior mean differs from one on the whole posterior"],"minutes":50,"lab":{"id":"4.1","title":"Replace, repair or wait","minutes":25,"href":"../labs/D4_1_compute_expected_utility.ipynb"}},{"n":2,"label":"Session 2","title":"Choosing under a budget","slide":"s2","outcomes":["Rank actions by expected benefit per riyal","Choose a plan that fits a capital budget","Report avoided bursts with an interval, and who carries the remaining risk"],"minutes":50,"lab":{"id":"4.2","title":"A plan within the budget","minutes":25,"href":"../labs/D4_2_choose_districts_re.ipynb"}},{"n":3,"label":"Session 3","title":"What more data is worth","slide":"s3","outcomes":["Compute the expected value of perfect information for a decision","Compute the expected value of a survey by preposterior simulation","Give a verdict on an offer of data by comparing its value with its price"],"minutes":50,"lab":{"id":"4.3","title":"The price of the leak survey","minutes":25,"href":"../labs/D4_3_price_leak_survey.ipynb"}},{"n":4,"label":"Session 4","title":"Reviewing a Bayesian analysis","slide":"s4","outcomes":["Review an analysis against a checklist of priors, computation, checking and reporting","Rank flaws by their effect on the decision","Choose and scope a capstone brief"],"minutes":50,"lab":{"id":"4.4","title":"Review an analysis, choose a brief","minutes":25,"href":"../labs/D4_4_review_supplied_analysis.ipynb"}}],"slides":[{"id":"title","n":1,"title":"From posterior to decision","kind":"title","session":0,"hash":"b6694ab3","md":"#### [day4#title] From posterior to decision\n\n*SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty*\n\nDay 4: Turn the posterior into a re-piping plan within budget, price the survey that would sharpen it, and review someone else’s analysis\n\nData Science Track · 4 teaching days + capstone day · 4 sessions · 4 labs · DS-401","notes":"Three days built and checked a posterior. Today it becomes a decision Nouran can sign: which districts to repair or re-pipe within SAR 40 million, whether to buy the leak survey, and what to say about a consultant's report that reached a different list. Lab 4.1 is AI-off.","minutes":null,"lo":[]},{"id":"agenda","n":2,"title":"From posterior to decision","kind":"content","session":0,"hash":"c7efcfa1","md":"#### [day4#agenda] From posterior to decision\n\n*Today*\n\n- **Session 1 · Loss, utility and the decision table**: Actions, costs and outcomes, and expected utility computed over posterior draws\n- **Session 2 · Choosing under a budget**: A plan for the capital budget with avoided bursts and their uncertainty\n- **Session 3 · What more data is worth**: Expected value of perfect and of sample information, against the price of the data\n- **Session 4 · Reviewing a Bayesian analysis**: A checklist for priors, computation, checking and reporting, and flaws ranked by their effect on the decision","notes":"","minutes":null,"lo":[]},{"id":"review-day3","n":3,"title":"What the model choice rests on","kind":"quiz","session":0,"hash":"206bd923","md":"#### [day4#review-day3] What the model choice rests on\n\n*Review of Day 3*\n\n**Question:** Day 4 uses the hierarchical negative binomial with the reporting term. Which piece of yesterday's evidence would most change today's plan had it gone the other way?\n\n- A. The replicated network total matching 3,894 bursts\n- B. The power-scaling of the prior on τ\n- C. The dispersion check: a Poisson would make every district look more certain than it is\n- D. The calibration of the colleague's model","notes":"Answer: C. The calibration in option D tested a different, smaller model; it says the habit of calibrating matters, not that today's model is right.","minutes":null,"lo":["LO3"]},{"id":"s1","n":4,"title":"Loss, utility and the decision table","kind":"section","session":1,"hash":"02b4d7cd","md":"#### [day4#s1] Loss, utility and the decision table\n\n*Session 1*\n\n- Write a decision table of actions, costs and consequences\n- Compute expected cost over posterior draws for each action\n- Show where a decision on the posterior mean differs from one on the whole posterior","notes":"","minutes":null,"lo":["LO5"]},{"id":"decision-table","n":5,"title":"Three actions, one cost each, computed for every posterior draw","kind":"content","session":1,"hash":"98c4fed0","md":"#### [day4#decision-table] Three actions, one cost each, computed for every posterior draw\n\n*Loss, utility and the decision table*\n\n```python\n# file: Lab 4.1\ncost(action) = cost_per_km * km + rate * km * 80_000 * (20 - years * reduction)\n```\n\n| Action | SAR per km | Fewer bursts | For |\n| --- | --- | --- | --- |\n| Wait | 0 | 0% | – |\n| Repair weak joints, manage pressure | 40,000 | 30% | 10 years |\n| Re-pipe the mains | 400,000 | 90% | 20 years |\n\nSynthetic planning numbers (data/costs.json); a burst costs SAR 80,000; horizon 20 years.","notes":"Work one district on the board: 10 km at 0.25 bursts per km-year expects 50 bursts in 20 years. Wait: SAR 4.0 million. Repair: 0.4 million plus 42.5 bursts, 3.8 million. Re-pipe: 4.0 million plus 5 bursts, 4.4 million. Repair wins at this rate. Per kilometre, waiting is cheapest below about 0.17 bursts per km-year and re-piping above 0.30. Expected utility does this for every draw, then averages.","minutes":null,"lo":["LO5"]},{"id":"eu-steps","n":6,"title":"Average the cost over the posterior, then choose","kind":"content","session":1,"hash":"1e7267cf","md":"#### [day4#eu-steps] Average the cost over the posterior, then choose\n\n*Step by step*\n\n1. **1 · Draws** 2,000 posterior rates for each of 140 districts\n2. **2 · Costs** each action's cost in each draw: 3 × 2,000 × 140\n3. **3 · Choose** the action with the lowest expected cost in each district\n\n> **Result.** Wait in 87 districts, repair 38, re-pipe 15.","notes":"Numbers from data/posterior/rates.npz, the posterior of the model chosen on Day 3. Order matters: average the cost, then choose; choosing per draw and taking the most frequent action is a different and worse rule.","minutes":null,"lo":["LO5"]},{"id":"plug-in","n":7,"title":"Deciding on the median rate gets three rural districts wrong","kind":"content","session":1,"hash":"ff091b8c","md":"#### [day4#plug-in] Deciding on the median rate gets three rural districts wrong\n\n*Lab 4.1, tasks 4 and 5*\n\n| District | Kind | Sensors | Median plug-in | Expected utility | Mean / median |\n| --- | --- | --- | --- | --- | --- |\n| D045 | rural | yes | wait | repair | 1.05 |\n| D069 | rural | no | repair | re-pipe | 1.03 |\n| D091 | rural | no | wait | repair | 1.03 |\n\nThe mean plug-in agrees everywhere: these costs are straight lines in the rate. The median sits below the mean of a skewed posterior.","notes":"Be honest about the size: with linear costs, deciding on the posterior mean is exactly right, so the Bayesian advantage today is not in this table. It is in the budget, where the interval of the plan matters, and in the survey, where the whole distribution decides the value. A report of medians is the common case, which is why these three districts are worth showing. The stretch's cautious rule (lowest 90th percentile of cost) changes 43 districts and costs SAR 11.6 million more on average: the price of caution, to be chosen knowingly.","minutes":null,"lo":["LO5"]},{"id":"check-eu","n":8,"title":"Expected cost or cost at the estimate","kind":"quiz","session":1,"hash":"4817ef49","md":"#### [day4#check-eu] Expected cost or cost at the estimate\n\n*Checkpoint*\n\n**Question:** An extra cost applies only when a district exceeds 40 bursts in a year: a fine from the regulator. Does deciding on the posterior mean rate still give the expected-utility choice?\n\n- A. Yes: the mean plug-in is always the same as expected utility\n- B. Not in general: the fine is not linear in the rate, so its expectation depends on the whole posterior\n- C. No, but the median plug-in would\n- D. No decision can be made with a threshold cost","notes":"Answer: B. The regulator's fine is invented for the question; the capstone briefs include costs of this shape (a waiting-time target, for example).","minutes":null,"lo":["LO5"]},{"id":"lab-4-1","n":9,"title":"Replace, repair or wait","kind":"lab","session":1,"hash":"6df268bf","md":"#### [day4#lab-4-1] Replace, repair or wait\n\nLab 4.1 · 25 min\n\nCompute the expected 20-year cost of replacing, repairing or waiting for every district over the supplied posterior and compare with decisions made on the posterior mean.\n\n[D4_1_compute_expected_utility.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D4_1_compute_expected_utility.ipynb)\n\n- [ ] Load the posterior and the costs (3 min)\n- [ ] The cost of each action in each draw (7 min)\n- [ ] Expected cost and the best action per district (6 min)\n- [ ] Plug-in decisions against expected utility (6 min)\n- [ ] Where the two disagree (3 min)\n- [ ] ✱ Stretch: Decide on the 90th percentile of cost instead of the mean, and say who would choose that","notes":"AI-off lab. Usual problems: broadcasting km against draws in the wrong axis; taking the argmin per draw and then a vote; mixing millions and riyals. Fallback: none needed; the posterior is supplied.","minutes":null,"lo":[]},{"id":"s2","n":10,"title":"Choosing under a budget","kind":"section","session":2,"hash":"1415a811","md":"#### [day4#s2] Choosing under a budget\n\n*Session 2*\n\n- Rank actions by expected benefit per riyal\n- Choose a plan that fits a capital budget\n- Report avoided bursts with an interval, and who carries the remaining risk","notes":"","minutes":null,"lo":["LO5"]},{"id":"budget-bind","n":11,"title":"The best plan for each district costs SAR 61 million; the budget is 40","kind":"content","session":2,"hash":"bf7f3bf5","md":"#### [day4#budget-bind] The best plan for each district costs SAR 61 million; the budget is 40\n\n*Choosing under a budget*\n\n- Each district's best action ignores the others; the budget couples them.\n- Rank steps by expected net saving per riyal: wait to repair, repair to re-pipe.\n- Fill the budget in that order; a district's second step comes only after its first.\n\n- **61.4** SAR million for the unconstrained plan\n- **40.0** SAR million capital budget","notes":"This is a knapsack problem with two nested items per district. Ranking whole actions by their own ratio, rather than incremental steps, gives a plan worth about half as much (SAR 9 million of saving against 18): the incremental steps matter. The stretch solves it exactly by dynamic programming in units of SAR 4,000 and reaches the same saving.","minutes":null,"lo":["LO5"]},{"id":"the-plan","n":12,"title":"43 districts within the budget, with an interval on what they avoid","kind":"content","session":2,"hash":"2e406740","md":"#### [day4#the-plan] 43 districts within the budget, with an interval on what they avoid\n\n*Lab 4.2, tasks 3 and 4*\n\n- **34 + 9** repairs and re-pipings, SAR 40.0 million\n- **18.2** SAR million expected net saving over 20 years\n- **719** bursts avoided, 90% interval 607 to 870\n\n> **The interval is part of the plan.** A board that hears \"719\" will remember it; a board that hears \"between 600 and 870\" can plan for both.","notes":"The interval is computed by applying the same plan in every posterior draw: a plan's outcome is a distribution, not a number. Part of that width comes from the districts without sensors, whose reporting share rests on the audit.","minutes":null,"lo":["LO5"]},{"id":"remaining-risk","n":13,"title":"Name who carries the risk the plan leaves, and where the model knows least","kind":"content","session":2,"hash":"30a8c16b","md":"#### [day4#remaining-risk] Name who carries the risk the plan leaves, and where the model knows least\n\n*Responsible use: Lab 4.2, task 5*\n\n- **Largest unfunded risks.** Large urban districts with sensors (D116, D087, D014): many bursts expected, but each kilometre is cheap to leave. Their residents and crews carry the bursts the plan does not prevent.\n- **Least known.** Mostly rural districts without sensors: their rates rest on the audit prior. The memo names them, and session 3 prices finding out.","notes":"This is the check the catalog entry names for responsible use on Day 4. The capstone memo has the same two paragraphs. A plan that reports only the funded list hides a choice about who waits.","minutes":null,"lo":["LO5"]},{"id":"check-budget","n":14,"title":"Filling a budget","kind":"quiz","session":2,"hash":"e849a5cf","md":"#### [day4#check-budget] Filling a budget\n\n*Checkpoint*\n\n**Question:** District A: repair costs 1 million and saves 1.5 million; re-piping costs 10 million and saves 4 million in all. Funds are short. Which step is ranked by which ratio?\n\n- A. Re-pipe at 0.4 per riyal, as one step\n- B. Only the repair is ever considered\n- C. Re-pipe first because it saves the most\n- D. Repair at 1.5 per riyal; then the upgrade to re-pipe at 2.5 / 9 ≈ 0.28 per riyal","notes":"Answer: D. The numbers are invented for the question; Lab 4.2 builds the same steps for 140 districts.","minutes":null,"lo":["LO5"]},{"id":"lab-4-2","n":15,"title":"A plan within the budget","kind":"lab","session":2,"hash":"25d7049a","md":"#### [day4#lab-4-2] A plan within the budget\n\nLab 4.2 · 25 min\n\nChoose the districts to re-pipe or repair within the capital budget, with avoided bursts and their uncertainty, and name the districts the model knows least about.\n\n[D4_2_choose_districts_re.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D4_2_choose_districts_re.ipynb)\n\n- [ ] The plan without a budget, and its cost (4 min)\n- [ ] Benefit per riyal (5 min)\n- [ ] Fill the budget (6 min)\n- [ ] Avoided bursts with an interval (6 min)\n- [ ] Who carries the remaining risk (4 min)\n- [ ] ✱ Stretch: Solve the budget exactly by dynamic programming and compare with the greedy plan","notes":"Mirsad may explain; it writes no plan code. Usual problems: ranking whole actions instead of increments; allowing an upgrade before its repair; reporting avoided bursts from the posterior mean only. The exact stretch is a short loop over 140 districts.","minutes":null,"lo":[]},{"id":"s3","n":16,"title":"What more data is worth","kind":"section","session":3,"hash":"fa89d981","md":"#### [day4#s3] What more data is worth\n\n*Session 3*\n\n- Compute the expected value of perfect information for a decision\n- Compute the expected value of a survey by preposterior simulation\n- Give a verdict on an offer of data by comparing its value with its price","notes":"","minutes":null,"lo":["LO5"]},{"id":"voi-idea","n":17,"title":"Information is worth what it would change in the decision","kind":"content","session":3,"hash":"86463888","md":"#### [day4#voi-idea] Information is worth what it would change in the decision\n\n*What more data is worth*\n\n1. **Perfect information** Decide in each draw knowing the true rate; average; subtract today's best\n2. **The real survey** Simulate its result (15% error), update, decide, average\n3. **Against its price** Buy where the value exceeds SAR 45,000 per district\n\n> **No change, no value.** A district whose best action holds across its whole posterior gains nothing from a survey.","notes":"EVPI is an upper bound; EVSI, by preposterior analysis, values the actual survey. The update in Lab 4.3 reweights the posterior draws by the survey's likelihood, which needs no new fit.\n\nSource: Raiffa and Schlaifer (1961), Applied Statistical Decision Theory, for the preposterior analysis.","minutes":null,"lo":["LO5"]},{"id":"survey-numbers","n":18,"title":"Decline the full survey; propose 16 districts","kind":"content","session":3,"hash":"3eb640fc","md":"#### [day4#survey-numbers] Decline the full survey; propose 16 districts\n\n*Lab 4.3, tasks 2 to 4*\n\n|  | Price, SAR million | Value, SAR million |\n| --- | --- | --- |\n| Perfect information, 76 districts | – | 2.38 |\n| Full survey as offered, 76 districts | 3.42 | 1.81 |\n| Targeted survey, 16 districts | 0.72 | 1.21 |\n\nThe 16 are mostly rural districts close to a decision threshold, with uncertain rates.","notes":"Even perfect information on all 76 is worth less than the full price, which settles the offer before any simulation. The targeted survey buys two thirds of the value for a fifth of the price. The stretch asks whether a survey that changes no funded decision under a binding budget can still be worth its price: within this budget, only changes that move money between districts count.","minutes":null,"lo":["LO5"]},{"id":"check-voi","n":19,"title":"Which district to survey","kind":"quiz","session":3,"hash":"dd1f79f3","md":"#### [day4#check-voi] Which district to survey\n\n*Checkpoint*\n\n**Question:** Two districts without sensors. X: rate very uncertain, but re-piping is best in every draw. Y: rate moderately uncertain, and repair or wait each wins in about half the draws. Where is a survey worth more?\n\n- A. Y: the survey can change its decision; X's decision is already settled\n- B. X: it is the more uncertain\n- C. Both the same: a survey costs the same in each\n- D. Neither: surveys only confirm a model","notes":"Answer: A. X's uncertainty may still matter for the memo's interval of avoided bursts; it does not matter for the choice.","minutes":null,"lo":["LO5"]},{"id":"lab-4-3","n":20,"title":"The price of the leak survey","kind":"lab","session":3,"hash":"6ee52ceb","md":"#### [day4#lab-4-3] The price of the leak survey\n\nLab 4.3 · 25 min\n\nPrice the acoustic leak survey offered for districts without sensors by its value of information and give a verdict on the offer.\n\n[D4_3_price_leak_survey.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D4_3_price_leak_survey.ipynb)\n\n- [ ] The districts the survey covers (3 min)\n- [ ] Perfect information, district by district (6 min)\n- [ ] Simulate the survey before buying it (8 min)\n- [ ] The survey’s value against its price (5 min)\n- [ ] The verdict (3 min)\n- [ ] ✱ Stretch: Buy the survey only where its value exceeds its price, and price that smaller offer","notes":"Mirsad may explain; the verdict is the participant's. Usual problems: computing EVPI as the variance of the cost; updating the posterior with the survey's error on the rate scale instead of the log scale; comparing value with price for the whole survey only. Small negative EVSI values are simulation noise.","minutes":null,"lo":[]},{"id":"s4","n":21,"title":"Reviewing a Bayesian analysis","kind":"section","session":4,"hash":"e2577e28","md":"#### [day4#s4] Reviewing a Bayesian analysis\n\n*Session 4*\n\n- Review an analysis against a checklist of priors, computation, checking and reporting\n- Rank flaws by their effect on the decision\n- Choose and scope a capstone brief","notes":"","minutes":null,"lo":["LO6"]},{"id":"review-checklist","n":22,"title":"Six questions, in the order of the workflow","kind":"content","session":4,"hash":"1aef1cac","md":"#### [day4#review-checklist] Six questions, in the order of the workflow\n\n*Reviewing a Bayesian analysis*\n\n- **Priors.** Stated, justified, checked by prior predictive simulation?\n- **Computation.** Four chains, R-hat under 1.01, ESS, divergences explained?\n- **Structure.** Pooling suited to unequal groups, and defended?\n- **Measurement.** Is what was recorded what happened?\n- **Checking.** Predictive checks and a comparison of models?\n- **Decision.** Costs, uncertainty, remaining risk, value of data?","notes":"Each card is a day of the course. A review that finds a flaw quotes the report and says what it does to the decision; \"the priors could be better\" is not a finding.\n\nSource: Gelman et al. (2020), Bayesian Workflow; the WAMBS checklist of Depaoli and van de Schoot (2017) for priors and computation.","minutes":null,"lo":["LO6"]},{"id":"consultant-top","n":23,"title":"The consultant's top six, raw and pooled","kind":"content","session":4,"hash":"ce153635","md":"#### [day4#consultant-top] The consultant's top six, raw and pooled\n\n*Lab 4.4, task 3*\n\n| District | Kind | Sensors | Raw rate | Posterior median (90%) |\n| --- | --- | --- | --- | --- |\n| D010 | rural | no | 0.51 | 0.39 (0.26 to 0.60) |\n| D017 | suburban | yes | 0.50 | 0.40 (0.30 to 0.54) |\n| D073 | rural | yes | 0.50 | 0.25 (0.15 to 0.39) |\n| D113 | rural | no | 0.42 | 0.32 (0.19 to 0.53) |\n| D067 | rural | no | 0.41 | 0.38 (0.23 to 0.60) |\n| D118 | rural | no | 0.40 | 0.41 (0.25 to 0.67) |","notes":"D073 halves under pooling: a few bursts on a short network. D017's raw rate includes the trunk-main year; re-piping its 58 km would cost SAR 23 million, more than half the budget, on one unusual year. The districts without sensors hold their place because the reporting term lifts them back.","minutes":null,"lo":["LO6"]},{"id":"rank-flaws","n":24,"title":"Rank the flaws by what they do to the decision, not by how wrong they look","kind":"content","session":4,"hash":"afd976bf","md":"#### [day4#rank-flaws] Rank the flaws by what they do to the decision, not by how wrong they look\n\n*Lab 4.4, task 3*\n\n1. **Structure.** No pooling: small districts top the list on noise; 13 zero-burst districts are declared safe.\n2. **Measurement.** Unrecorded bursts read as low risk in 76 districts.\n3. **Decision.** A ranking of means taken as the plan: no costs, intervals, remaining risk or survey price.\n4. **Computation.** Two chains, R-hat against 1.1, 37 divergences dismissed.\n5. **Priors** and **checking**: Normal(0, 100) called uninformative; R² as fit.","notes":"Computation looks worst to a statistician and changes the list least here: a correct fit of a no-pooling model still ranks D073 high. Other rankings pass if argued by effect on the decision. LO6 asks for at least four of the six found.","minutes":null,"lo":["LO6"]},{"id":"check-review","n":25,"title":"Writing one finding","kind":"quiz","session":4,"hash":"cd7c13cc","md":"#### [day4#check-review] Writing one finding\n\n*Checkpoint*\n\n**Question:** Which sentence is a usable review finding?\n\n- A. The priors are not good enough\n- B. The report uses Normal(0, 100)\n- C. Each district is estimated alone, so D073 (a few bursts on a short network) ranks third; pooled, its rate halves and it leaves the list\n- D. The analysis should have used NumPyro","notes":"Answer: C. Participants write six of these in Lab 4.4 and the peer review of the oral uses the same form.","minutes":null,"lo":["LO6"]},{"id":"lab-4-4","n":26,"title":"Review an analysis, choose a brief","kind":"lab","session":4,"hash":"56e9f428","md":"#### [day4#lab-4-4] Review an analysis, choose a brief\n\nLab 4.4 · 25 min\n\nReview a consultant’s Bayesian analysis of Yanabi’s bursts by checklist, rank the flaws you find by their effect on the decision, and choose your capstone brief.\n\n[D4_4_review_supplied_analysis.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D4_4_review_supplied_analysis.ipynb)\n\n- [ ] Read the analysis (6 min)\n- [ ] The checklist, item by item (8 min)\n- [ ] Rank the flaws by their effect on the decision (6 min)\n- [ ] Choose your capstone brief (5 min)\n- [ ] ✱ Stretch: Rerun one of the consultant’s claims and show the number changes","notes":"Mirsad may explain a checklist item; the review is the participant's. Usual problems: listing flaws without evidence; ranking computation first by habit; forgetting to choose a capstone brief (task 4). The stretch reruns one of the consultant's claims.","minutes":null,"lo":[]},{"id":"wrap-up","n":27,"title":"Three things to keep","kind":"content","session":4,"hash":"8ba9bd16","md":"#### [day4#wrap-up] Three things to keep\n\n*Day 4 · wrap-up*\n\n- **Average the cost, then choose.** And report the plan's outcome as an interval, with who carries the risk it leaves.\n- **Price information by the decision.** Data are worth buying only where they can change what you do.\n- **Review by effect.** Quote, show the evidence, say what changes.","notes":"Close the teaching days by returning to Nouran: she now has a plan of 43 districts, an interval, a counter-offer for the survey and a reply to the consultant. Ask what she would still need before the board.","minutes":null,"lo":[]},{"id":"next","n":28,"title":"Capstone: your own model and decision memo","kind":"content","session":4,"hash":"c9fa12a7","md":"#### [day4#next] Capstone: your own model and decision memo\n\n*Next*\n\nStart your capstone repository on the brief you chose in Lab 4.4. Read labs/capstone/README.md for the structure and the rubric.","notes":"Each participant is also assigned a peer whose model they will review in the oral: announce the pairs before participants leave.","minutes":null,"lo":[]}],"activities":[{"id":"review-day3-q1","slide":"review-day3","type":"single","prompt":"Day 4 uses the hierarchical negative binomial with the reporting term. Which piece of yesterday's evidence would most change today's plan had it gone the other way?","options":[{"key":"A","text":"The replicated network total matching 3,894 bursts"},{"key":"B","text":"The power-scaling of the prior on τ"},{"key":"C","text":"The dispersion check: a Poisson would make every district look more certain than it is"},{"key":"D","text":"The calibration of the colleague's model"}],"correct":[2],"explanation":"The dispersion decides how wide every district's interval is, and today's decisions and the survey's value both depend on that width.","misconceptions":["Picks a check the fit forces, which could not have gone the other way","Picks the prior that the data dominate","","Confuses a check of the code with a check of the model against the world"],"lo":["LO3"]},{"id":"check-eu-q1","slide":"check-eu","type":"single","prompt":"An extra cost applies only when a district exceeds 40 bursts in a year: a fine from the regulator. Does deciding on the posterior mean rate still give the expected-utility choice?","options":[{"key":"A","text":"Yes: the mean plug-in is always the same as expected utility"},{"key":"B","text":"Not in general: the fine is not linear in the rate, so its expectation depends on the whole posterior"},{"key":"C","text":"No, but the median plug-in would"},{"key":"D","text":"No decision can be made with a threshold cost"}],"correct":[1],"explanation":"The expectation of a straight line is the line at the mean; for a threshold, the probability of crossing it comes from the posterior's tail.","misconceptions":["Generalises from linear costs to all costs","","Thinks the median fixes non-linearity","Thinks a threshold cost cannot be computed from draws"],"lo":["LO5"]},{"id":"check-budget-q1","slide":"check-budget","type":"single","prompt":"District A: repair costs 1 million and saves 1.5 million; re-piping costs 10 million and saves 4 million in all. Funds are short. Which step is ranked by which ratio?","options":[{"key":"A","text":"Re-pipe at 0.4 per riyal, as one step"},{"key":"B","text":"Only the repair is ever considered"},{"key":"C","text":"Re-pipe first because it saves the most"},{"key":"D","text":"Repair at 1.5 per riyal; then the upgrade to re-pipe at 2.5 / 9 ≈ 0.28 per riyal"}],"correct":[3],"explanation":"The upgrade's value is what it adds over the repair: 2.5 million more saving for 9 million more cost.","misconceptions":["Ranks the whole re-pipe by its total ratio, mixing in the repair's cheap saving","Ignores the second step altogether","Ranks by total saving, ignoring cost",""],"lo":["LO5"]},{"id":"check-voi-q1","slide":"check-voi","type":"single","prompt":"Two districts without sensors. X: rate very uncertain, but re-piping is best in every draw. Y: rate moderately uncertain, and repair or wait each wins in about half the draws. Where is a survey worth more?","options":[{"key":"A","text":"Y: the survey can change its decision; X's decision is already settled"},{"key":"B","text":"X: it is the more uncertain"},{"key":"C","text":"Both the same: a survey costs the same in each"},{"key":"D","text":"Neither: surveys only confirm a model"}],"correct":[0],"explanation":"Information is valuable where it can change the action; uncertainty that cannot change the choice is worth nothing to this decision.","misconceptions":["","Equates value of information with uncertainty alone","Thinks information always has the same value","Thinks a settled decision needs confirming"],"lo":["LO5"]},{"id":"check-review-q1","slide":"check-review","type":"single","prompt":"Which sentence is a usable review finding?","options":[{"key":"A","text":"The priors are not good enough"},{"key":"B","text":"The report uses Normal(0, 100)"},{"key":"C","text":"Each district is estimated alone, so D073 (a few bursts on a short network) ranks third; pooled, its rate halves and it leaves the list"},{"key":"D","text":"The analysis should have used NumPyro"}],"correct":[2],"explanation":"A finding quotes what the report did, shows the evidence, and says how it changes the decision.","misconceptions":["States an opinion without the evidence or the consequence","Names the evidence but not what it does to the decision","","Prescribes a tool instead of identifying a flaw"],"lo":["LO6"]}],"ai":{"context":{"course":"../context/course.md","courseJs":"../context/course.js","day":"day4.md","llms":"../llms.txt"},"tasks":[],"tools":[]},"bridge":{"allowedOrigins":[]},"features":{},"strings":{}}</script>
+<script src="../_engine/academy.js"></script>
+</body>
+</html>

@@ -1,0 +1,1053 @@
+{
+  "v": 1,
+  "engine": "1.0.0",
+  "build": {
+    "at": "2026-11-15T23:05:21Z",
+    "version": "2027.1.0",
+    "commit": "c70a408"
+  },
+  "lang": "en",
+  "dir": "ltr",
+  "langs": [
+    "en"
+  ],
+  "alt": {},
+  "course": {
+    "id": "ds-401",
+    "code": "DS-401",
+    "version": "2027.1.0",
+    "title": "Bayesian Modelling and Decisions under Uncertainty",
+    "tagline": "Build Bayesian models of uneven data, prove the computation and the code are sound, and turn the posterior into a decision with a price on further data",
+    "description": "Participants build Bayesian models that support decisions and judge models built by others. On synthetic burst records from 140 districts of a fictional water utility, they test priors by simulation, fit and diagnose Hamiltonian Monte Carlo, pool small districts hierarchically, check and compare models by predictive accuracy, and verify code by simulation-based calibration. The last day turns posteriors into a replacement plan by expected utility and prices a proposed leak survey by its value of information.",
+    "track": "data-science",
+    "track_name": "Data Science Track",
+    "level": 400,
+    "badge": {
+      "name": "Data Science",
+      "level": "Expert"
+    },
+    "audience": "Specialists. Data scientists who have completed the level 300 core or can show equivalent work: a defended analysis with a validated model or a causal estimate that they can explain.",
+    "prerequisites": [
+      "DS-301 Regression and Generalised Linear Modelling",
+      "Fits and interprets generalised linear models in code",
+      "Simulates from probability distributions and computes a likelihood"
+    ],
+    "url": "https://sdaiaacademy.github.io/ds-401/",
+    "repo": "SDAIAAcademy/ds-401",
+    "home": "../index.html",
+    "format": "intensive",
+    "format_note": "Intensive: 4 teaching days of four sessions and a capstone day, with guided pre-work and a tracked follow-up task",
+    "shape": "4 teaching days + capstone day",
+    "hours": {
+      "instruction": 6,
+      "lab": 7,
+      "guided_self_study": 6,
+      "assessment": 1,
+      "capstone": 6,
+      "total": 26
+    },
+    "unit": "day",
+    "outcomes": [
+      {
+        "id": "LO1",
+        "text": "Implement a Bayesian workflow from prior predictive simulation to sampler diagnosis, given a burst-count model with network length as exposure",
+        "level": "Applied",
+        "evidence": "a notebook with prior draws, diagnostics and a reason for each prior"
+      },
+      {
+        "id": "LO2",
+        "text": "Design a hierarchical model for districts with very unequal data and defend the pooling it implies, given 140 districts, a third with fewer than five recorded bursts",
+        "level": "Performance",
+        "evidence": "no-, complete- and partial-pooling estimates with a written defence"
+      },
+      {
+        "id": "LO3",
+        "text": "Evaluate competing models by posterior predictive checks and approximate leave-one-out cross-validation and choose one for the decision, given three candidate models of the same data",
+        "level": "Performance",
+        "evidence": "a comparison table with check plots and the reasoning"
+      },
+      {
+        "id": "LO4",
+        "text": "Diagnose an error in a model implementation by parameter recovery and simulation-based calibration, given a model with a seeded coding error",
+        "level": "Performance",
+        "evidence": "calibration plots that locate the error and a corrected model that passes"
+      },
+      {
+        "id": "LO5",
+        "text": "Decide a replacement plan by expected utility under the posterior and price further data by its value of information, given costs, a capital budget and an offered acoustic leak survey",
+        "level": "Performance",
+        "evidence": "a two-page memo with the plan, its expected loss and a verdict on the survey"
+      },
+      {
+        "id": "LO6",
+        "text": "Review another analyst's Bayesian analysis for priors, computation, checking and reporting, given an analysis with six planted flaws",
+        "level": "Performance",
+        "evidence": "a review that finds at least four flaws and ranks them by effect on the decision"
+      }
+    ],
+    "case_study": {
+      "name": "Yanabi Water Authority",
+      "summary": "Yanabi Water Authority is a fictional water utility with 140 districts, from 200 km urban networks to rural networks of one or two kilometres, some with burst sensors and most rural ones without. Participants model five years of synthetic burst records with known generating parameters (seed 401), with planted problems to find: very unequal districts, under-reporting where no sensors listen, extra year-to-year variation, a trunk-main failure year, a seeded coding error and a consultant analysis with six flaws; the posterior then decides a re-piping plan within a capital budget and the price of an acoustic leak survey."
+    },
+    "days": [
+      {
+        "id": "day1",
+        "kind": "day",
+        "n": 1,
+        "number": 1,
+        "label": "Day 1",
+        "title": "From priors to posteriors",
+        "subtitle": "Write the story that makes the data, test the priors by simulation, fit with Hamiltonian Monte Carlo and read whether the computation can be trusted",
+        "shape": "4 sessions · 4 labs",
+        "deck": "../slides/day1.html",
+        "md": "../slides/day1.md",
+        "url": "https://sdaiaacademy.github.io/ds-401/slides/day1.html",
+        "sessions": [
+          {
+            "n": 1,
+            "label": "Session 1",
+            "title": "Models that generate data",
+            "summary": "A burst count as a generative story, and Bayes’ rule computed on a grid",
+            "outcomes": [
+              "Write a generative model of burst counts with network length as exposure",
+              "Compute a posterior on a grid from a prior and a likelihood",
+              "Explain why the posterior of a small district leans on its prior"
+            ],
+            "lo": [
+              "LO1"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "1.1",
+              "title": "Simulate and recover a burst rate",
+              "summary": "Simulate burst counts from a rate you choose, recover it on a grid, then compare the posteriors of a small and a large district.",
+              "minutes": 25,
+              "href": "../labs/D1_1_simulate_burst_counts.ipynb",
+              "steps": [
+                {
+                  "text": "The generative story as a simulator",
+                  "minutes": 6
+                },
+                {
+                  "text": "The log likelihood on a grid of rates",
+                  "minutes": 5
+                },
+                {
+                  "text": "Prior times likelihood: the grid posterior",
+                  "minutes": 5
+                },
+                {
+                  "text": "A small district and a large one",
+                  "minutes": 6
+                },
+                {
+                  "text": "Where the grid stops working",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Simulate with year-to-year variation and see the grid posterior become too sure"
+            }
+          },
+          {
+            "n": 2,
+            "label": "Session 2",
+            "title": "Priors you can defend",
+            "summary": "Priors judged by what they predict, before any outcome is seen",
+            "outcomes": [
+              "Translate a prior on a log scale into the units the engineers use",
+              "Run a prior predictive simulation for every district",
+              "Write a reason for each prior a model carries"
+            ],
+            "lo": [
+              "LO1"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "1.2",
+              "title": "Prior predictive checks",
+              "summary": "Simulate a year of bursts in all 140 districts from three candidate priors, compare with the engineers’ statements, keep one and reject two with reasons.",
+              "minutes": 25,
+              "href": "../labs/D1_2_run_prior_predictive.ipynb",
+              "steps": [
+                {
+                  "text": "Three priors in bursts per km-year",
+                  "minutes": 5
+                },
+                {
+                  "text": "Simulate a year in every district from each prior",
+                  "minutes": 6
+                },
+                {
+                  "text": "Compare with what the engineers know",
+                  "minutes": 5
+                },
+                {
+                  "text": "Keep one prior, reject two, with a reason each",
+                  "minutes": 5
+                },
+                {
+                  "text": "The prior of the age effect",
+                  "minutes": 4
+                }
+              ],
+              "stretch": "Prior predictive share of district-years without a burst"
+            }
+          },
+          {
+            "n": 3,
+            "label": "Session 3",
+            "title": "Fitting with Hamiltonian Monte Carlo",
+            "summary": "Why sampling replaces the grid, and how HMC and NUTS move through a posterior",
+            "outcomes": [
+              "Explain how Hamiltonian Monte Carlo uses the gradient of the log posterior",
+              "Write a Poisson model with an offset in a probabilistic programming language",
+              "Report rate ratios with posterior intervals"
+            ],
+            "lo": [
+              "LO1"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "1.3",
+              "title": "A Poisson model with an offset",
+              "summary": "Write the burst model with network length as exposure in NumPyro, run four chains, and read material and age effects as rate ratios with intervals.",
+              "minutes": 25,
+              "href": "../labs/D1_3_fit_poisson_model.ipynb",
+              "steps": [
+                {
+                  "text": "Write the model",
+                  "minutes": 8
+                },
+                {
+                  "text": "Run four chains",
+                  "minutes": 4
+                },
+                {
+                  "text": "Rate ratios with intervals",
+                  "minutes": 6
+                },
+                {
+                  "text": "Against the generating values",
+                  "minutes": 3
+                },
+                {
+                  "text": "Expected bursts next year for two districts",
+                  "minutes": 4
+                }
+              ],
+              "stretch": "Remove the offset and see what the model then says"
+            }
+          },
+          {
+            "n": 4,
+            "label": "Session 4",
+            "title": "Reading the computation",
+            "summary": "The diagnostics that decide whether a fit can be read, and when an approximation is enough",
+            "outcomes": [
+              "Read R-hat, bulk and tail effective sample size and divergences",
+              "Tell an efficiency warning from a validity failure",
+              "Judge when approximate inference is good enough for a question"
+            ],
+            "lo": [
+              "LO1"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "1.4",
+              "title": "Four fits, two untrustworthy",
+              "summary": "Compute the diagnostics of four supplied fits, flag the two that cannot be trusted and write the reason for each verdict.",
+              "minutes": 25,
+              "href": "../labs/D1_4_flag_two_untrustworthy.ipynb",
+              "steps": [
+                {
+                  "text": "Load the fits and read the run log",
+                  "minutes": 3
+                },
+                {
+                  "text": "R-hat and effective sample sizes",
+                  "minutes": 6
+                },
+                {
+                  "text": "Divergences, tree depth and energy",
+                  "minutes": 6
+                },
+                {
+                  "text": "Rank plots of the two suspects",
+                  "minutes": 5
+                },
+                {
+                  "text": "A verdict per fit, with its reason",
+                  "minutes": 5
+                }
+              ],
+              "stretch": "Fit Lab 1.3’s model with a variational approximation and compare the intervals with NUTS"
+            }
+          }
+        ]
+      },
+      {
+        "id": "day2",
+        "kind": "day",
+        "n": 2,
+        "number": 2,
+        "label": "Day 2",
+        "title": "Pooling across districts",
+        "subtitle": "Let districts with little data borrow strength from the others, and say what that borrowing does to the rural ones",
+        "shape": "4 sessions · 4 labs",
+        "deck": "../slides/day2.html",
+        "md": "../slides/day2.md",
+        "url": "https://sdaiaacademy.github.io/ds-401/slides/day2.html",
+        "sessions": [
+          {
+            "n": 1,
+            "label": "Session 1",
+            "title": "No, complete and partial pooling",
+            "summary": "Three ways to treat 140 districts, and the shrinkage a hierarchy implies",
+            "outcomes": [
+              "Fit no-pooling, complete-pooling and partial-pooling models of the same counts",
+              "Read shrinkage as a function of how much data a district has",
+              "Check whether pooling pulls one group of districts towards another’s average"
+            ],
+            "lo": [
+              "LO2"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "2.1",
+              "title": "Three poolings and the rural districts",
+              "summary": "Fit the three models, plot how far each district’s estimate moves, and test whether partial pooling pulls rural districts towards the urban average.",
+              "minutes": 25,
+              "href": "../labs/D2_1_fit_all_three.ipynb",
+              "steps": [
+                {
+                  "text": "Three models from one function",
+                  "minutes": 5
+                },
+                {
+                  "text": "Fit no, complete and partial pooling",
+                  "minutes": 6
+                },
+                {
+                  "text": "The shrinkage plot",
+                  "minutes": 5
+                },
+                {
+                  "text": "Are rural districts pulled towards the urban average?",
+                  "minutes": 6
+                },
+                {
+                  "text": "A defence of the pooling in three sentences",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Plot shrinkage against each district’s number of recorded bursts"
+            }
+          },
+          {
+            "n": 2,
+            "label": "Session 2",
+            "title": "Group-level predictors",
+            "summary": "Shrinking towards a prediction instead of towards one grand mean",
+            "outcomes": [
+              "Add district-level predictors to the mean of a hierarchical model",
+              "Compare the between-district spread before and after",
+              "Explain why predictors change who is shrunk towards what"
+            ],
+            "lo": [
+              "LO2"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "2.2",
+              "title": "Material and age at the district level",
+              "summary": "Add pipe material and age to the hierarchical model and compare the spread between districts and the rural shrinkage with Lab 2.1.",
+              "minutes": 25,
+              "href": "../labs/D2_2_add_pipe_material.ipynb",
+              "steps": [
+                {
+                  "text": "District-level predictors in the mean",
+                  "minutes": 6
+                },
+                {
+                  "text": "Fit and diagnose",
+                  "minutes": 5
+                },
+                {
+                  "text": "The spread between districts, before and after",
+                  "minutes": 4
+                },
+                {
+                  "text": "The rural districts again",
+                  "minutes": 6
+                },
+                {
+                  "text": "What the predictors explain",
+                  "minutes": 4
+                }
+              ],
+              "stretch": "Add the district kind as a predictor and discuss what it stands for"
+            }
+          },
+          {
+            "n": 3,
+            "label": "Session 3",
+            "title": "The funnel and non-centred models",
+            "summary": "Why hierarchical models diverge when data are thin, and the reparameterisation that repairs them",
+            "outcomes": [
+              "Recognise the funnel geometry behind divergences in a hierarchical model",
+              "Rewrite a centred model in non-centred form",
+              "Show that the repaired model gives a trustworthy answer"
+            ],
+            "lo": [
+              "LO1",
+              "LO2"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "2.3",
+              "title": "Repair a divergent model",
+              "summary": "Reproduce the divergences of the centred model on the small districts, locate them in the funnel, and repair the model by non-centred parameterisation.",
+              "minutes": 25,
+              "href": "../labs/D2_3_repair_divergent_model.ipynb",
+              "steps": [
+                {
+                  "text": "Reproduce the divergences",
+                  "minutes": 5
+                },
+                {
+                  "text": "Where they sit: the spread against one district",
+                  "minutes": 5
+                },
+                {
+                  "text": "Write the non-centred model",
+                  "minutes": 7
+                },
+                {
+                  "text": "Refit and compare the diagnostics",
+                  "minutes": 5
+                },
+                {
+                  "text": "The same answer, now trustworthy?",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Raise the target acceptance rate of the centred model instead, and compare"
+            }
+          },
+          {
+            "n": 4,
+            "label": "Session 4",
+            "title": "Under-reporting as measurement error",
+            "summary": "Bursts that happen but are not recorded, modelled instead of ignored",
+            "outcomes": [
+              "Write reported counts as true counts thinned by a reporting share",
+              "Use an audit to set an informative prior on what the data cannot identify",
+              "Report corrected rates for districts without sensors with their wider uncertainty"
+            ],
+            "lo": [
+              "LO2"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "2.4",
+              "title": "A reporting rate for districts without sensors",
+              "summary": "Add a reporting-rate term with an audit-based prior for districts without sensors and compare their corrected rates with the uncorrected ones.",
+              "minutes": 25,
+              "href": "../labs/D2_4_add_reporting_rate.ipynb",
+              "steps": [
+                {
+                  "text": "Reported bursts with and without sensors",
+                  "minutes": 4
+                },
+                {
+                  "text": "The audit prior on the reporting share",
+                  "minutes": 5
+                },
+                {
+                  "text": "Add the reporting term",
+                  "minutes": 7
+                },
+                {
+                  "text": "Corrected rates for districts without sensors",
+                  "minutes": 6
+                },
+                {
+                  "text": "What the data cannot tell apart",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Change the audit prior and watch the corrected rates follow it"
+            }
+          }
+        ]
+      },
+      {
+        "id": "day3",
+        "kind": "day",
+        "n": 3,
+        "number": 3,
+        "label": "Day 3",
+        "title": "Is the model good enough",
+        "subtitle": "Check the model against its own data, compare candidates by prediction, prove the code right and measure what the priors decide",
+        "shape": "4 sessions · 4 labs",
+        "deck": "../slides/day3.html",
+        "md": "../slides/day3.md",
+        "url": "https://sdaiaacademy.github.io/ds-401/slides/day3.html",
+        "sessions": [
+          {
+            "n": 1,
+            "label": "Session 1",
+            "title": "Posterior predictive checks",
+            "summary": "Replicated data from the posterior, and the test statistics that expose a misfit",
+            "outcomes": [
+              "Simulate replicated data from a fitted model",
+              "Choose test statistics that target the decision, such as the share of zeros",
+              "Replace a model whose checks fail and check the replacement"
+            ],
+            "lo": [
+              "LO3"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "3.1",
+              "title": "Zeros and dispersion",
+              "summary": "Expose the Poisson model’s misfit on district-years without a burst and on dispersion, then fit a negative binomial and check it the same way.",
+              "minutes": 25,
+              "href": "../labs/D3_1_expose_poisson_misfit.ipynb",
+              "steps": [
+                {
+                  "text": "Replicated data from the Poisson model",
+                  "minutes": 6
+                },
+                {
+                  "text": "Share of zeros and dispersion",
+                  "minutes": 6
+                },
+                {
+                  "text": "Fit a negative binomial",
+                  "minutes": 6
+                },
+                {
+                  "text": "The same checks for the negative binomial",
+                  "minutes": 5
+                },
+                {
+                  "text": "A verdict in two sentences",
+                  "minutes": 2
+                }
+              ],
+              "stretch": "Draw a rootogram of both models"
+            }
+          },
+          {
+            "n": 2,
+            "label": "Session 2",
+            "title": "Comparing models by predictive accuracy",
+            "summary": "Expected log predictive density, approximate leave-one-out and its diagnostics",
+            "outcomes": [
+              "Estimate expected log predictive density by Pareto-smoothed importance sampling",
+              "Compare models by the difference and its standard error, not by the ranking alone",
+              "Find influential observations from Pareto k and decide what to do about them"
+            ],
+            "lo": [
+              "LO3"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "3.2",
+              "title": "Three models by leave-one-out",
+              "summary": "Compare three candidate models by approximate leave-one-out, inspect the influential district-years, and choose one for the decision.",
+              "minutes": 25,
+              "href": "../labs/D3_2_compare_three_models.ipynb",
+              "steps": [
+                {
+                  "text": "Three candidates and their log likelihoods",
+                  "minutes": 5
+                },
+                {
+                  "text": "Approximate leave-one-out for each",
+                  "minutes": 5
+                },
+                {
+                  "text": "The difference and its standard error",
+                  "minutes": 5
+                },
+                {
+                  "text": "Pareto k: the influential district-years",
+                  "minutes": 6
+                },
+                {
+                  "text": "Choose a model for the decision",
+                  "minutes": 4
+                }
+              ],
+              "stretch": "Leave out whole districts instead of district-years"
+            }
+          },
+          {
+            "n": 3,
+            "label": "Session 3",
+            "title": "Is the code right",
+            "summary": "Parameter recovery and simulation-based calibration as tests of a model implementation",
+            "outcomes": [
+              "Recover known parameters from data simulated by the model",
+              "Run a short simulation-based calibration and read its rank histograms",
+              "Locate and fix an implementation error from the parameter that fails"
+            ],
+            "lo": [
+              "LO4"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "3.3",
+              "title": "Simulation-based calibration",
+              "summary": "Run a short simulation-based calibration of a supplied model, locate its seeded coding error from the ranks, fix it and show the corrected model passes.",
+              "minutes": 25,
+              "href": "../labs/D3_3_locate_seeded_error.ipynb",
+              "steps": [
+                {
+                  "text": "Parameter recovery on one dataset",
+                  "minutes": 5
+                },
+                {
+                  "text": "The calibration loop",
+                  "minutes": 8
+                },
+                {
+                  "text": "Ranks for each parameter",
+                  "minutes": 5
+                },
+                {
+                  "text": "Find and fix the line",
+                  "minutes": 4
+                },
+                {
+                  "text": "Calibrate again",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Calibrate a derived quantity: the rate of a district whose pipes average 40 years"
+            }
+          },
+          {
+            "n": 4,
+            "label": "Session 4",
+            "title": "How much the priors matter",
+            "summary": "Prior sensitivity by refitting and by power-scaling, reported on the quantities the decision uses",
+            "outcomes": [
+              "Run a power-scaling sensitivity diagnostic",
+              "Refit with alternative priors that someone could defend",
+              "Summarise what changes for the decision and what does not"
+            ],
+            "lo": [
+              "LO3"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "3.4",
+              "title": "Prior sensitivity",
+              "summary": "Run a power-scaling diagnostic, refit with two other priors on the district spread, and summarise what changes for the rural rates and the ranking of districts.",
+              "minutes": 25,
+              "href": "../labs/D3_4_run_prior_sensitivity.ipynb",
+              "steps": [
+                {
+                  "text": "The base fit and the power-scaling diagnostic",
+                  "minutes": 6
+                },
+                {
+                  "text": "Two alternative priors on the spread",
+                  "minutes": 7
+                },
+                {
+                  "text": "What changes: spread, rural rates, top 15",
+                  "minutes": 7
+                },
+                {
+                  "text": "A summary for the director",
+                  "minutes": 5
+                }
+              ],
+              "stretch": "Do the same for the prior on the negative binomial shape"
+            }
+          }
+        ]
+      },
+      {
+        "id": "day4",
+        "kind": "day",
+        "n": 4,
+        "number": 4,
+        "label": "Day 4",
+        "title": "From posterior to decision",
+        "subtitle": "Turn the posterior into a re-piping plan within budget, price the survey that would sharpen it, and review someone else’s analysis",
+        "shape": "4 sessions · 4 labs",
+        "deck": "../slides/day4.html",
+        "md": "../slides/day4.md",
+        "url": "https://sdaiaacademy.github.io/ds-401/slides/day4.html",
+        "sessions": [
+          {
+            "n": 1,
+            "label": "Session 1",
+            "title": "Loss, utility and the decision table",
+            "summary": "Actions, costs and outcomes, and expected utility computed over posterior draws",
+            "outcomes": [
+              "Write a decision table of actions, costs and consequences",
+              "Compute expected cost over posterior draws for each action",
+              "Show where a decision on the posterior mean differs from one on the whole posterior"
+            ],
+            "lo": [
+              "LO5"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "4.1",
+              "title": "Replace, repair or wait",
+              "summary": "Compute the expected 20-year cost of replacing, repairing or waiting for every district over the supplied posterior and compare with decisions made on the posterior mean.",
+              "minutes": 25,
+              "href": "../labs/D4_1_compute_expected_utility.ipynb",
+              "steps": [
+                {
+                  "text": "Load the posterior and the costs",
+                  "minutes": 3
+                },
+                {
+                  "text": "The cost of each action in each draw",
+                  "minutes": 7
+                },
+                {
+                  "text": "Expected cost and the best action per district",
+                  "minutes": 6
+                },
+                {
+                  "text": "Plug-in decisions against expected utility",
+                  "minutes": 6
+                },
+                {
+                  "text": "Where the two disagree",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Decide on the 90th percentile of cost instead of the mean, and say who would choose that"
+            }
+          },
+          {
+            "n": 2,
+            "label": "Session 2",
+            "title": "Choosing under a budget",
+            "summary": "A plan for the capital budget with avoided bursts and their uncertainty",
+            "outcomes": [
+              "Rank actions by expected benefit per riyal",
+              "Choose a plan that fits a capital budget",
+              "Report avoided bursts with an interval, and who carries the remaining risk"
+            ],
+            "lo": [
+              "LO5"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "4.2",
+              "title": "A plan within the budget",
+              "summary": "Choose the districts to re-pipe or repair within the capital budget, with avoided bursts and their uncertainty, and name the districts the model knows least about.",
+              "minutes": 25,
+              "href": "../labs/D4_2_choose_districts_re.ipynb",
+              "steps": [
+                {
+                  "text": "The plan without a budget, and its cost",
+                  "minutes": 4
+                },
+                {
+                  "text": "Benefit per riyal",
+                  "minutes": 5
+                },
+                {
+                  "text": "Fill the budget",
+                  "minutes": 6
+                },
+                {
+                  "text": "Avoided bursts with an interval",
+                  "minutes": 6
+                },
+                {
+                  "text": "Who carries the remaining risk",
+                  "minutes": 4
+                }
+              ],
+              "stretch": "Solve the budget exactly by dynamic programming and compare with the greedy plan"
+            }
+          },
+          {
+            "n": 3,
+            "label": "Session 3",
+            "title": "What more data is worth",
+            "summary": "Expected value of perfect and of sample information, against the price of the data",
+            "outcomes": [
+              "Compute the expected value of perfect information for a decision",
+              "Compute the expected value of a survey by preposterior simulation",
+              "Give a verdict on an offer of data by comparing its value with its price"
+            ],
+            "lo": [
+              "LO5"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "4.3",
+              "title": "The price of the leak survey",
+              "summary": "Price the acoustic leak survey offered for districts without sensors by its value of information and give a verdict on the offer.",
+              "minutes": 25,
+              "href": "../labs/D4_3_price_leak_survey.ipynb",
+              "steps": [
+                {
+                  "text": "The districts the survey covers",
+                  "minutes": 3
+                },
+                {
+                  "text": "Perfect information, district by district",
+                  "minutes": 6
+                },
+                {
+                  "text": "Simulate the survey before buying it",
+                  "minutes": 8
+                },
+                {
+                  "text": "The survey’s value against its price",
+                  "minutes": 5
+                },
+                {
+                  "text": "The verdict",
+                  "minutes": 3
+                }
+              ],
+              "stretch": "Buy the survey only where its value exceeds its price, and price that smaller offer"
+            }
+          },
+          {
+            "n": 4,
+            "label": "Session 4",
+            "title": "Reviewing a Bayesian analysis",
+            "summary": "A checklist for priors, computation, checking and reporting, and flaws ranked by their effect on the decision",
+            "outcomes": [
+              "Review an analysis against a checklist of priors, computation, checking and reporting",
+              "Rank flaws by their effect on the decision",
+              "Choose and scope a capstone brief"
+            ],
+            "lo": [
+              "LO6"
+            ],
+            "minutes": 50,
+            "lab": {
+              "id": "4.4",
+              "title": "Review an analysis, choose a brief",
+              "summary": "Review a consultant’s Bayesian analysis of Yanabi’s bursts by checklist, rank the flaws you find by their effect on the decision, and choose your capstone brief.",
+              "minutes": 25,
+              "href": "../labs/D4_4_review_supplied_analysis.ipynb",
+              "steps": [
+                {
+                  "text": "Read the analysis",
+                  "minutes": 6
+                },
+                {
+                  "text": "The checklist, item by item",
+                  "minutes": 8
+                },
+                {
+                  "text": "Rank the flaws by their effect on the decision",
+                  "minutes": 6
+                },
+                {
+                  "text": "Choose your capstone brief",
+                  "minutes": 5
+                }
+              ],
+              "stretch": "Rerun one of the consultant’s claims and show the number changes"
+            }
+          }
+        ]
+      },
+      {
+        "id": "capstone",
+        "kind": "capstone",
+        "n": 5,
+        "number": null,
+        "label": "Capstone",
+        "title": "Capstone project presentations",
+        "subtitle": "An eight-minute presentation of the model and the decision, then seven minutes of questions: the assessor changes a prior or a cost, and a peer reviews the model",
+        "shape": "",
+        "deck": "../slides/capstone.html",
+        "md": "../slides/capstone.md",
+        "url": "https://sdaiaacademy.github.io/ds-401/slides/capstone.html",
+        "sessions": []
+      }
+    ],
+    "capstone": {
+      "summary": "A Bayesian model and decision memo for one of three synthetic briefs (water losses, school inspections, clinic waiting times) in a public repository whose README reports diagnostics, checks and the decision; 15-minute oral with a peer-model review",
+      "submission": "A public GitHub repository link: the model, the run log, the checks and the two-page decision memo, with a README that reports the diagnostics, the checks and the decision",
+      "talk_minutes": 8,
+      "qa_minutes": 7,
+      "rubric": [
+        {
+          "criterion": "Model and priors",
+          "weight": 20
+        },
+        {
+          "criterion": "Computation",
+          "weight": 20
+        },
+        {
+          "criterion": "Checking",
+          "weight": 25
+        },
+        {
+          "criterion": "Decision",
+          "weight": 25
+        },
+        {
+          "criterion": "Reproducibility",
+          "weight": 10
+        }
+      ]
+    },
+    "labs": {
+      "kind": "notebooks",
+      "base": "labs/"
+    },
+    "tools": [
+      {
+        "slot": "Probabilistic programming",
+        "examples": [
+          "Stan through CmdStanPy or CmdStanR",
+          "PyMC with Bambi",
+          "NumPyro",
+          "brms for R"
+        ]
+      },
+      {
+        "slot": "Diagnostics and model comparison",
+        "examples": [
+          "ArviZ",
+          "loo and bayesplot for R"
+        ]
+      },
+      {
+        "slot": "Analysis environment",
+        "examples": [
+          "Python through uv with Jupyter or marimo",
+          "R with Quarto"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "group": "Workflow and computation",
+        "items": [
+          {
+            "title": "Gelman et al. (2020), Bayesian Workflow",
+            "url": "https://arxiv.org/abs/2011.01808"
+          },
+          {
+            "title": "Betancourt (2017), A Conceptual Introduction to Hamiltonian Monte Carlo",
+            "url": "https://arxiv.org/abs/1701.02434"
+          },
+          {
+            "title": "Betancourt and Girolami (2013), Hamiltonian Monte Carlo for Hierarchical Models",
+            "url": "https://arxiv.org/abs/1312.0906"
+          },
+          {
+            "title": "Vehtari et al. (2019), Rank-normalization, folding, and localization: an improved R-hat",
+            "url": "https://arxiv.org/abs/1903.08008"
+          },
+          {
+            "title": "Stan User’s Guide",
+            "url": "https://mc-stan.org/docs/stan-users-guide/"
+          }
+        ]
+      },
+      {
+        "group": "Checking and comparing",
+        "items": [
+          {
+            "title": "Gabry et al. (2017), Visualization in Bayesian workflow",
+            "url": "https://arxiv.org/abs/1709.01449"
+          },
+          {
+            "title": "Vehtari, Gelman and Gabry (2015), Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC",
+            "url": "https://arxiv.org/abs/1507.04544"
+          },
+          {
+            "title": "Talts et al. (2018), Validating Bayesian Inference Algorithms with Simulation-Based Calibration",
+            "url": "https://arxiv.org/abs/1804.06788"
+          },
+          {
+            "title": "Modrák et al. (2022), Simulation-Based Calibration Checking for Bayesian Computation",
+            "url": "https://arxiv.org/abs/2211.02383"
+          },
+          {
+            "title": "Kallioinen et al. (2021), Detecting and diagnosing prior and likelihood sensitivity with power-scaling",
+            "url": "https://arxiv.org/abs/2107.14054"
+          }
+        ]
+      },
+      {
+        "group": "Tools",
+        "items": [
+          {
+            "title": "NumPyro documentation",
+            "url": "https://num.pyro.ai/en/stable/"
+          },
+          {
+            "title": "ArviZ documentation",
+            "url": "https://python.arviz.org/en/stable/"
+          },
+          {
+            "title": "CmdStanPy",
+            "url": "https://mc-stan.org/cmdstanpy/"
+          },
+          {
+            "title": "Bambi",
+            "url": "https://bambinos.github.io/bambi/"
+          },
+          {
+            "title": "loo for R",
+            "url": "https://mc-stan.org/loo/"
+          },
+          {
+            "title": "bayesplot for R",
+            "url": "https://mc-stan.org/bayesplot/"
+          },
+          {
+            "title": "marimo",
+            "url": "https://marimo.io/"
+          },
+          {
+            "title": "Quarto",
+            "url": "https://quarto.org/"
+          }
+        ]
+      },
+      {
+        "group": "National references",
+        "items": [
+          {
+            "title": "Data Classification Policy (National Data Management Office, SDAIA)",
+            "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/DataClassificationPolicy.pdf"
+          },
+          {
+            "title": "Personal Data Protection Law (SDAIA)",
+            "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/PersonalDataProtectionLaw.pdf"
+          },
+          {
+            "title": "Implementing Regulation of the Personal Data Protection Law (SDAIA)",
+            "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/ImplementingRegulationPersonalDataProtectionLaw.pdf"
+          },
+          {
+            "title": "AI Ethics Principles (SDAIA)",
+            "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/ai-principles.pdf"
+          },
+          {
+            "title": "National AI Risk Management Framework, English executive summary (SDAIA)",
+            "url": "https://sdaia.gov.sa/en/MediaCenter/KnowledgeCenter/ResearchLibrary/ExecutiveSummaryEn.pdf"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "water_losses": {
+    "title": "Water losses: which metered zones get pressure management",
+    "file": "data/water_losses.csv",
+    "question": "Yanabi can fit pressure-reducing valves in 12 of 60 metered zones this year. Each valve costs SAR 150,000 and is expected to cut night-flow losses by 20%. Water lost costs SAR 4 per cubic metre. Which zones, and what is the expected saving and its uncertainty?",
+    "decision": "12 zones out of 60, or fewer if the expected saving does not cover the cost"
+  },
+  "school_inspections": {
+    "title": "School inspections: which schools get a follow-up visit",
+    "file": "data/school_inspections.csv",
+    "question": "An inspectorate can make 30 follow-up visits. A visit costs SAR 9,000; a serious finding left unaddressed for a year is valued at SAR 4,000. Which schools, and how sure are you about the small schools with one visit on record?",
+    "decision": "30 follow-up visits among 200 schools"
+  },
+  "clinic_waits": {
+    "title": "Clinic waiting times: where an extra doctor goes",
+    "file": "data/clinic_waits.csv",
+    "question": "A health cluster can add one doctor to each of 5 clinics out of 40. The target is a median wait under 30 minutes. Which clinics, and what is the probability that each one meets the target after the change?",
+    "decision": "5 clinics out of 40"
+  }
+}

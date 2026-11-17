@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="page" data-track="data-science">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayesian Modelling and Decisions under Uncertainty · SDAIA Academy</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<meta name="description" content="Build Bayesian models of uneven data, prove the computation and the code are sound, and turn the posterior into a decision with a price on further data">
+<link rel="icon" href="_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="index.md">
+<link rel="describedby" href="llms.txt">
+<link rel="stylesheet" href="_engine/academy.css">
+</head>
+<body>
+<header>
+<div class="wrap">
+<div class="top"><div class="logo" id="logo"></div><nav><a href="slides/day1.html">Slides</a><a href="practice.html">Practice</a><a href="index.md" type="text/markdown">Markdown</a></nav></div>
+<div class="kicker">Data Science Track · SDAIA Academy · DS-401</div>
+<h1>Bayesian Modelling and Decisions under Uncertainty<span class="sub ar" lang="ar" dir="rtl">النمذجة البايزية واتخاذ القرارات في ظل عدم اليقين</span></h1>
+<p>Build Bayesian models of uneven data, prove the computation and the code are sound, and turn the posterior into a decision with a price on further data</p>
+<div class="meta"><span class="track">Data Science Track</span><span>4 teaching days + capstone day</span><span>26 hours</span><span>Level 400</span><span>Data Science · Expert badge</span></div>
+</div>
+</header>
+<main class="wrap">
+<h2>About the course</h2>
+<p>Participants build Bayesian models that support decisions and judge models built by others. On synthetic burst records from 140 districts of a fictional water utility, they test priors by simulation, fit and diagnose Hamiltonian Monte Carlo, pool small districts hierarchically, check and compare models by predictive accuracy, and verify code by simulation-based calibration. The last day turns posteriors into a replacement plan by expected utility and prices a proposed leak survey by its value of information.</p>
+<p><b>Who it is for:</b> Specialists. Data scientists who have completed the level 300 core or can show equivalent work: a defended analysis with a validated model or a causal estimate that they can explain.</p>
+<p><b>Format:</b> Intensive: 4 teaching days of four sessions and a capstone day, with guided pre-work and a tracked follow-up task</p>
+<h2>The case study</h2>
+<div class="note info"><b>Yanabi Water Authority.</b> Yanabi Water Authority is a fictional water utility with 140 districts, from 200 km urban networks to rural networks of one or two kilometres, some with burst sensors and most rural ones without. Participants model five years of synthetic burst records with known generating parameters (seed 401), with planted problems to find: very unequal districts, under-reporting where no sensors listen, extra year-to-year variation, a trunk-main failure year, a seeded coding error and a consultant analysis with six flaws; the posterior then decides a re-piping plan within a capital budget and the price of an acoustic leak survey.</div>
+<h2>The course</h2>
+<div class="day">
+<div class="day-head c-teal"><div><div class="t">Day 1 · 4 sessions · 4 labs</div><h3>From priors to posteriors</h3></div><a class="btn" href="slides/day1.html">Open the slides</a></div>
+<div class="scroll"><table>
+<tr><th>Session</th><th>Topic</th><th>Lab</th></tr>
+<tr><td>1</td><td><b>Models that generate data</b><br>A burst count as a generative story, and Bayes’ rule computed on a grid<ul><li>Write a generative model of burst counts with network length as exposure</li><li>Compute a posterior on a grid from a prior and a likelihood</li><li>Explain why the posterior of a small district leans on its prior</li></ul></td><td><a href="labs/D1_1_simulate_burst_counts.ipynb">Lab 1.1 · Simulate and recover a burst rate</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D1_1_simulate_burst_counts.ipynb">Open in Colab</a></td></tr>
+<tr><td>2</td><td><b>Priors you can defend</b><br>Priors judged by what they predict, before any outcome is seen<ul><li>Translate a prior on a log scale into the units the engineers use</li><li>Run a prior predictive simulation for every district</li><li>Write a reason for each prior a model carries</li></ul></td><td><a href="labs/D1_2_run_prior_predictive.ipynb">Lab 1.2 · Prior predictive checks</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D1_2_run_prior_predictive.ipynb">Open in Colab</a></td></tr>
+<tr><td>3</td><td><b>Fitting with Hamiltonian Monte Carlo</b><br>Why sampling replaces the grid, and how HMC and NUTS move through a posterior<ul><li>Explain how Hamiltonian Monte Carlo uses the gradient of the log posterior</li><li>Write a Poisson model with an offset in a probabilistic programming language</li><li>Report rate ratios with posterior intervals</li></ul></td><td><a href="labs/D1_3_fit_poisson_model.ipynb">Lab 1.3 · A Poisson model with an offset</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D1_3_fit_poisson_model.ipynb">Open in Colab</a></td></tr>
+<tr><td>4</td><td><b>Reading the computation</b><br>The diagnostics that decide whether a fit can be read, and when an approximation is enough<ul><li>Read R-hat, bulk and tail effective sample size and divergences</li><li>Tell an efficiency warning from a validity failure</li><li>Judge when approximate inference is good enough for a question</li></ul></td><td><a href="labs/D1_4_flag_two_untrustworthy.ipynb">Lab 1.4 · Four fits, two untrustworthy</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D1_4_flag_two_untrustworthy.ipynb">Open in Colab</a></td></tr>
+</table></div>
+</div>
+<div class="day">
+<div class="day-head c-cyan"><div><div class="t">Day 2 · 4 sessions · 4 labs</div><h3>Pooling across districts</h3></div><a class="btn" href="slides/day2.html">Open the slides</a></div>
+<div class="scroll"><table>
+<tr><th>Session</th><th>Topic</th><th>Lab</th></tr>
+<tr><td>1</td><td><b>No, complete and partial pooling</b><br>Three ways to treat 140 districts, and the shrinkage a hierarchy implies<ul><li>Fit no-pooling, complete-pooling and partial-pooling models of the same counts</li><li>Read shrinkage as a function of how much data a district has</li><li>Check whether pooling pulls one group of districts towards another’s average</li></ul></td><td><a href="labs/D2_1_fit_all_three.ipynb">Lab 2.1 · Three poolings and the rural districts</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D2_1_fit_all_three.ipynb">Open in Colab</a></td></tr>
+<tr><td>2</td><td><b>Group-level predictors</b><br>Shrinking towards a prediction instead of towards one grand mean<ul><li>Add district-level predictors to the mean of a hierarchical model</li><li>Compare the between-district spread before and after</li><li>Explain why predictors change who is shrunk towards what</li></ul></td><td><a href="labs/D2_2_add_pipe_material.ipynb">Lab 2.2 · Material and age at the district level</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D2_2_add_pipe_material.ipynb">Open in Colab</a></td></tr>
+<tr><td>3</td><td><b>The funnel and non-centred models</b><br>Why hierarchical models diverge when data are thin, and the reparameterisation that repairs them<ul><li>Recognise the funnel geometry behind divergences in a hierarchical model</li><li>Rewrite a centred model in non-centred form</li><li>Show that the repaired model gives a trustworthy answer</li></ul></td><td><a href="labs/D2_3_repair_divergent_model.ipynb">Lab 2.3 · Repair a divergent model</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D2_3_repair_divergent_model.ipynb">Open in Colab</a></td></tr>
+<tr><td>4</td><td><b>Under-reporting as measurement error</b><br>Bursts that happen but are not recorded, modelled instead of ignored<ul><li>Write reported counts as true counts thinned by a reporting share</li><li>Use an audit to set an informative prior on what the data cannot identify</li><li>Report corrected rates for districts without sensors with their wider uncertainty</li></ul></td><td><a href="labs/D2_4_add_reporting_rate.ipynb">Lab 2.4 · A reporting rate for districts without sensors</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D2_4_add_reporting_rate.ipynb">Open in Colab</a></td></tr>
+</table></div>
+</div>
+<div class="day">
+<div class="day-head c-coral"><div><div class="t">Day 3 · 4 sessions · 4 labs</div><h3>Is the model good enough</h3></div><a class="btn" href="slides/day3.html">Open the slides</a></div>
+<div class="scroll"><table>
+<tr><th>Session</th><th>Topic</th><th>Lab</th></tr>
+<tr><td>1</td><td><b>Posterior predictive checks</b><br>Replicated data from the posterior, and the test statistics that expose a misfit<ul><li>Simulate replicated data from a fitted model</li><li>Choose test statistics that target the decision, such as the share of zeros</li><li>Replace a model whose checks fail and check the replacement</li></ul></td><td><a href="labs/D3_1_expose_poisson_misfit.ipynb">Lab 3.1 · Zeros and dispersion</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D3_1_expose_poisson_misfit.ipynb">Open in Colab</a></td></tr>
+<tr><td>2</td><td><b>Comparing models by predictive accuracy</b><br>Expected log predictive density, approximate leave-one-out and its diagnostics<ul><li>Estimate expected log predictive density by Pareto-smoothed importance sampling</li><li>Compare models by the difference and its standard error, not by the ranking alone</li><li>Find influential observations from Pareto k and decide what to do about them</li></ul></td><td><a href="labs/D3_2_compare_three_models.ipynb">Lab 3.2 · Three models by leave-one-out</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D3_2_compare_three_models.ipynb">Open in Colab</a></td></tr>
+<tr><td>3</td><td><b>Is the code right</b><br>Parameter recovery and simulation-based calibration as tests of a model implementation<ul><li>Recover known parameters from data simulated by the model</li><li>Run a short simulation-based calibration and read its rank histograms</li><li>Locate and fix an implementation error from the parameter that fails</li></ul></td><td><a href="labs/D3_3_locate_seeded_error.ipynb">Lab 3.3 · Simulation-based calibration</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D3_3_locate_seeded_error.ipynb">Open in Colab</a></td></tr>
+<tr><td>4</td><td><b>How much the priors matter</b><br>Prior sensitivity by refitting and by power-scaling, reported on the quantities the decision uses<ul><li>Run a power-scaling sensitivity diagnostic</li><li>Refit with alternative priors that someone could defend</li><li>Summarise what changes for the decision and what does not</li></ul></td><td><a href="labs/D3_4_run_prior_sensitivity.ipynb">Lab 3.4 · Prior sensitivity</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D3_4_run_prior_sensitivity.ipynb">Open in Colab</a></td></tr>
+</table></div>
+</div>
+<div class="day">
+<div class="day-head c-purple"><div><div class="t">Day 4 · 4 sessions · 4 labs</div><h3>From posterior to decision</h3></div><a class="btn" href="slides/day4.html">Open the slides</a></div>
+<div class="scroll"><table>
+<tr><th>Session</th><th>Topic</th><th>Lab</th></tr>
+<tr><td>1</td><td><b>Loss, utility and the decision table</b><br>Actions, costs and outcomes, and expected utility computed over posterior draws<ul><li>Write a decision table of actions, costs and consequences</li><li>Compute expected cost over posterior draws for each action</li><li>Show where a decision on the posterior mean differs from one on the whole posterior</li></ul></td><td><a href="labs/D4_1_compute_expected_utility.ipynb">Lab 4.1 · Replace, repair or wait</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D4_1_compute_expected_utility.ipynb">Open in Colab</a></td></tr>
+<tr><td>2</td><td><b>Choosing under a budget</b><br>A plan for the capital budget with avoided bursts and their uncertainty<ul><li>Rank actions by expected benefit per riyal</li><li>Choose a plan that fits a capital budget</li><li>Report avoided bursts with an interval, and who carries the remaining risk</li></ul></td><td><a href="labs/D4_2_choose_districts_re.ipynb">Lab 4.2 · A plan within the budget</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D4_2_choose_districts_re.ipynb">Open in Colab</a></td></tr>
+<tr><td>3</td><td><b>What more data is worth</b><br>Expected value of perfect and of sample information, against the price of the data<ul><li>Compute the expected value of perfect information for a decision</li><li>Compute the expected value of a survey by preposterior simulation</li><li>Give a verdict on an offer of data by comparing its value with its price</li></ul></td><td><a href="labs/D4_3_price_leak_survey.ipynb">Lab 4.3 · The price of the leak survey</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D4_3_price_leak_survey.ipynb">Open in Colab</a></td></tr>
+<tr><td>4</td><td><b>Reviewing a Bayesian analysis</b><br>A checklist for priors, computation, checking and reporting, and flaws ranked by their effect on the decision<ul><li>Review an analysis against a checklist of priors, computation, checking and reporting</li><li>Rank flaws by their effect on the decision</li><li>Choose and scope a capstone brief</li></ul></td><td><a href="labs/D4_4_review_supplied_analysis.ipynb">Lab 4.4 · Review an analysis, choose a brief</a> <span class="muted">(25 min)</span><br><a href="https://colab.research.google.com/github/SDAIAAcademy/ds-401/blob/main/labs/D4_4_review_supplied_analysis.ipynb">Open in Colab</a></td></tr>
+</table></div>
+</div>
+<div class="day">
+<div class="day-head c-amber"><div><div class="t">Capstone</div><h3>Capstone project presentations</h3></div><a class="btn" href="slides/capstone.html">Open the slides</a></div>
+<div class="scroll"><table><tr><td>An eight-minute presentation of the model and the decision, then seven minutes of questions: the assessor changes a prior or a cost, and a peer reviews the model</td></tr></table></div>
+</div>
+<h2>Capstone</h2>
+<div class="two">
+<div><p>A Bayesian model and decision memo for one of three synthetic briefs (water losses, school inspections, clinic waiting times) in a public repository whose README reports diagnostics, checks and the decision; 15-minute oral with a peer-model review</p><p><b>What you submit:</b> A public GitHub repository link: the model, the run log, the checks and the two-page decision memo, with a README that reports the diagnostics, the checks and the decision</p><p><b>Format:</b> 8 min talk and demo · 7 min Q&amp;A</p></div>
+<div><h3>Rubric</h3><div class="bar c-teal"><span>Model and priors<i style="--w:80%"></i></span><b>20%</b></div><div class="bar c-cyan"><span>Computation<i style="--w:80%"></i></span><b>20%</b></div><div class="bar c-coral"><span>Checking<i style="--w:100%"></i></span><b>25%</b></div><div class="bar c-purple"><span>Decision<i style="--w:100%"></i></span><b>25%</b></div><div class="bar c-amber"><span>Reproducibility<i style="--w:40%"></i></span><b>10%</b></div></div>
+</div>
+<h2>Outcomes</h2>
+<p>By the end of the course, participants can:</p>
+<div class="day"><div class="scroll"><table>
+<tr><th></th><th>Outcomes</th><th>Level</th><th>Evidence</th></tr>
+<tr><td><b>LO1</b></td><td>Implement a Bayesian workflow from prior predictive simulation to sampler diagnosis, given a burst-count model with network length as exposure</td><td>Applied</td><td>a notebook with prior draws, diagnostics and a reason for each prior</td></tr>
+<tr><td><b>LO2</b></td><td>Design a hierarchical model for districts with very unequal data and defend the pooling it implies, given 140 districts, a third with fewer than five recorded bursts</td><td>Performance</td><td>no-, complete- and partial-pooling estimates with a written defence</td></tr>
+<tr><td><b>LO3</b></td><td>Evaluate competing models by posterior predictive checks and approximate leave-one-out cross-validation and choose one for the decision, given three candidate models of the same data</td><td>Performance</td><td>a comparison table with check plots and the reasoning</td></tr>
+<tr><td><b>LO4</b></td><td>Diagnose an error in a model implementation by parameter recovery and simulation-based calibration, given a model with a seeded coding error</td><td>Performance</td><td>calibration plots that locate the error and a corrected model that passes</td></tr>
+<tr><td><b>LO5</b></td><td>Decide a replacement plan by expected utility under the posterior and price further data by its value of information, given costs, a capital budget and an offered acoustic leak survey</td><td>Performance</td><td>a two-page memo with the plan, its expected loss and a verdict on the survey</td></tr>
+<tr><td><b>LO6</b></td><td>Review another analyst's Bayesian analysis for priors, computation, checking and reporting, given an analysis with six planted flaws</td><td>Performance</td><td>a review that finds at least four flaws and ranks them by effect on the decision</td></tr>
+</table></div></div>
+<h2>Tools</h2>
+<div class="grid">
+<div class="card c-teal"><h3>Probabilistic programming</h3><p>Stan through CmdStanPy or CmdStanR · PyMC with Bambi · NumPyro · brms for R</p></div>
+<div class="card c-cyan"><h3>Diagnostics and model comparison</h3><p>ArviZ · loo and bayesplot for R</p></div>
+<div class="card c-coral"><h3>Analysis environment</h3><p>Python through uv with Jupyter or marimo · R with Quarto</p></div>
+</div>
+<h2>Before you start</h2>
+<h3>Prerequisites</h3>
+<ul><li>DS-301 Regression and Generalised Linear Modelling</li><li>Fits and interprets generalised linear models in code</li><li>Simulates from probability distributions and computes a likelihood</li></ul>
+<div class="note tip">The labs are notebooks. Open each one in Google Colab from the table above, or clone the repository and run them locally.</div>
+<h2>Sources</h2>
+<h3>Workflow and computation</h3>
+<ul><li><a href="https://arxiv.org/abs/2011.01808">Gelman et al. (2020), Bayesian Workflow</a></li><li><a href="https://arxiv.org/abs/1701.02434">Betancourt (2017), A Conceptual Introduction to Hamiltonian Monte Carlo</a></li><li><a href="https://arxiv.org/abs/1312.0906">Betancourt and Girolami (2013), Hamiltonian Monte Carlo for Hierarchical Models</a></li><li><a href="https://arxiv.org/abs/1903.08008">Vehtari et al. (2019), Rank-normalization, folding, and localization: an improved R-hat</a></li><li><a href="https://mc-stan.org/docs/stan-users-guide/">Stan User’s Guide</a></li></ul>
+<h3>Checking and comparing</h3>
+<ul><li><a href="https://arxiv.org/abs/1709.01449">Gabry et al. (2017), Visualization in Bayesian workflow</a></li><li><a href="https://arxiv.org/abs/1507.04544">Vehtari, Gelman and Gabry (2015), Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC</a></li><li><a href="https://arxiv.org/abs/1804.06788">Talts et al. (2018), Validating Bayesian Inference Algorithms with Simulation-Based Calibration</a></li><li><a href="https://arxiv.org/abs/2211.02383">Modrák et al. (2022), Simulation-Based Calibration Checking for Bayesian Computation</a></li><li><a href="https://arxiv.org/abs/2107.14054">Kallioinen et al. (2021), Detecting and diagnosing prior and likelihood sensitivity with power-scaling</a></li></ul>
+<h3>Tools</h3>
+<ul><li><a href="https://num.pyro.ai/en/stable/">NumPyro documentation</a></li><li><a href="https://python.arviz.org/en/stable/">ArviZ documentation</a></li><li><a href="https://mc-stan.org/cmdstanpy/">CmdStanPy</a></li><li><a href="https://bambinos.github.io/bambi/">Bambi</a></li><li><a href="https://mc-stan.org/loo/">loo for R</a></li><li><a href="https://mc-stan.org/bayesplot/">bayesplot for R</a></li><li><a href="https://marimo.io/">marimo</a></li><li><a href="https://quarto.org/">Quarto</a></li></ul>
+<h3>National references</h3>
+<ul><li><a href="https://sdaia.gov.sa/en/SDAIA/about/Documents/DataClassificationPolicy.pdf">Data Classification Policy (National Data Management Office, SDAIA)</a></li><li><a href="https://sdaia.gov.sa/en/SDAIA/about/Documents/PersonalDataProtectionLaw.pdf">Personal Data Protection Law (SDAIA)</a></li><li><a href="https://sdaia.gov.sa/en/SDAIA/about/Documents/ImplementingRegulationPersonalDataProtectionLaw.pdf">Implementing Regulation of the Personal Data Protection Law (SDAIA)</a></li><li><a href="https://sdaia.gov.sa/en/SDAIA/about/Documents/ai-principles.pdf">AI Ethics Principles (SDAIA)</a></li><li><a href="https://sdaia.gov.sa/en/MediaCenter/KnowledgeCenter/ResearchLibrary/ExecutiveSummaryEn.pdf">National AI Risk Management Framework, English executive summary (SDAIA)</a></li></ul>
+<h2>Files and links</h2>
+<div class="files">
+<a href="practice.html"><b>practice.html</b><span>Practice questions with feedback</span></a>
+<a href="index.md"><b>index.md</b><span>This page as Markdown, for an AI assistant</span></a>
+<a href="llms.txt"><b>llms.txt</b><span>The course for AI assistants (llms.txt)</span></a>
+<a href="https://github.com/SDAIAAcademy/ds-401"><b>SDAIAAcademy/ds-401</b><span>The course repository</span></a>
+</div>
+</main>
+<footer><div class="wrap">SDAIA Academy · Data Science Track · Bayesian Modelling and Decisions under Uncertainty<br><span class="muted">Course version 2027.1.0 · engine 1.0.0 · built 2026-11-15 · commit c70a408</span></div></footer>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T23:05:21Z","version":"2027.1.0","commit":"c70a408"},"course":{"id":"ds-401","code":"DS-401","title":"Bayesian Modelling and Decisions under Uncertainty","track":"data-science","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ds-401/","repo":"SDAIAAcademy/ds-401","home":"index.html"},"ai":{"context":{"course":"context/course.md","courseJs":"context/course.js","day":null,"llms":"llms.txt"},"tasks":[],"tools":[]},"features":{},"strings":{}}</script>
+<script src="_engine/academy.js"></script>
+</body>
+</html>

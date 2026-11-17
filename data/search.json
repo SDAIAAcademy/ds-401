@@ -1,0 +1,1381 @@
+{
+  "v": 1,
+  "engine": "1.0.0",
+  "build": {
+    "at": "2026-11-15T23:05:21Z",
+    "version": "2027.1.0",
+    "commit": "c70a408"
+  },
+  "lang": "en",
+  "dir": "ltr",
+  "slides": [
+    {
+      "deck": "day1",
+      "id": "title",
+      "n": 1,
+      "session": 0,
+      "title": "From priors to posteriors",
+      "text": "SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty From priors to posteriors Day 1: Write the story that makes the data, test the priors by simulation, fit with Hamiltonian Monte Carlo and read whether the computation can be trusted Data Science Track4 teaching days + capstone day4 sessions · 4 labsDS-401",
+      "href": "../slides/day1.html#title"
+    },
+    {
+      "deck": "day1",
+      "id": "agenda",
+      "n": 2,
+      "session": 0,
+      "title": "From priors to posteriors",
+      "text": "Today From priors to posteriors Session 1 · Models that generate data A burst count as a generative story, and Bayes’ rule computed on a grid Session 2 · Priors you can defend Priors judged by what they predict, before any outcome is seen Session 3 · Fitting with Hamiltonian Monte Carlo Why sampling replaces the grid, and how HMC and NUTS move through a posterior Session 4 · Reading the computation The diagnostics that decide whether a fit can be read, and when an approximation is enough",
+      "href": "../slides/day1.html#agenda"
+    },
+    {
+      "deck": "day1",
+      "id": "the-decision",
+      "n": 3,
+      "session": 0,
+      "title": "Every model this week ends in one decision about pipes",
+      "text": "Yanabi Water Authority Every model this week ends in one decision about pipes The question Dr. Nouran Al-Ateeq, director of asset management, must choose which of 140 districts to re-pipe or repair within a capital budget. The data Five years of reported bursts, 2021 to 2025, from networks of 1.2 km to 198 km. Synthetic, with known generating values. The difficulty A third of the districts recorded fewer than five bursts in five years, and most rural districts have no sensors. Day 1 builds the workflow on one model. Day 2 pools districts, Day 3 checks the models, Day 4 decides.",
+      "href": "../slides/day1.html#the-decision"
+    },
+    {
+      "deck": "day1",
+      "id": "prework-classification",
+      "n": 4,
+      "session": 0,
+      "title": "Real asset and customer records stay out of a hosted notebook until classified",
+      "text": "From the pre-work Real asset and customer records stay out of a hosted notebook until classified The pre-work asked you to classify Yanabi's real burst and customer files under the national data classification levels. Burst counts per district: an internal record. Customer addresses on a burst ticket: personal data under the Personal Data Protection Law. This course uses only synthetic files, so Colab is allowed here. At work, the classification decides where a notebook may run. Ask Wurud first Wurud Al-Samhan, the data protection officer, signs off before a real extract leaves Yanabi's systems.",
+      "href": "../slides/day1.html#prework-classification"
+    },
+    {
+      "deck": "day1",
+      "id": "setup-check",
+      "n": 5,
+      "session": 0,
+      "title": "One notebook proves your setup: run it now",
+      "text": "Before the first lab One notebook proves your setup: run it now cd ds-401/labs uv sync uv run jupyter execute 00_setup_check.ipynb Or open 00_setup_check.ipynb in Colab and run all cells. It imports NumPyro, JAX and ArviZ, fits a tiny model and prints the versions. Everything runs on a laptop processor. No model is downloaded and no key is needed. AI policy. The first model of each day (Labs 1.1, 2.1, 3.1, 4.1) is written without AI. In the other labs the tutor Mirsad explains diagnostics and errors; it writes no model code.",
+      "href": "../slides/day1.html#setup-check"
+    },
+    {
+      "deck": "day1",
+      "id": "s1",
+      "n": 6,
+      "session": 1,
+      "title": "Models that generate data",
+      "text": "Session 1 Models that generate data Write a generative model of burst counts with network length as exposure Compute a posterior on a grid from a prior and a likelihood Explain why the posterior of a small district leans on its prior 01",
+      "href": "../slides/day1.html#s1"
+    },
+    {
+      "deck": "day1",
+      "id": "recap-glm",
+      "n": 7,
+      "session": 1,
+      "title": "You have fitted this count model before, by maximum likelihood",
+      "text": "Recap from DS-301 You have fitted this count model before, by maximum likelihood Counts with an exposure: log E[bursts] = log km + α + Xβ. The offset fixes the coefficient of log km at 1, so β describes a rate. Overdispersion and the negative binomial: Day 3 returns to them. What changes this week Each unknown gets a distribution, not one best value. The decision on Day 4 uses the whole distribution.",
+      "href": "../slides/day1.html#recap-glm"
+    },
+    {
+      "deck": "day1",
+      "id": "generative-story",
+      "n": 8,
+      "session": 1,
+      "title": "Write the story that produces the bursts, then run it forwards",
+      "text": "A model is a simulator Write the story that produces the bursts, then run it forwards 1 · Rate bursts per km of main per year → 2 · Exposure times the district's km, for one year → 3 · Count a Poisson draw with that mean → 4 · Record what was reported (Day 2) If you can simulate the data, you can test every later step against a truth you chose.",
+      "href": "../slides/day1.html#generative-story"
+    },
+    {
+      "deck": "day1",
+      "id": "bayes-rule",
+      "n": 9,
+      "session": 1,
+      "title": "The posterior weighs every candidate rate by prior and data",
+      "text": "Prior times likelihood The posterior weighs every candidate rate by prior and data lp = log_prior(grid) + log_lik(grid, counts, km) w = np.exp(lp - lp.max()) w = w / w.sum() # posterior weights on the grid Work on the log scale: products of many probabilities underflow. Subtract the maximum before exponentiating. The normalising constant is the sum of the weights.",
+      "href": "../slides/day1.html#bayes-rule"
+    },
+    {
+      "deck": "day1",
+      "id": "small-and-large",
+      "n": 10,
+      "session": 1,
+      "title": "Five years say little about a 1.2 km district",
+      "text": "Lab 1.1, task 4 Five years say little about a 1.2 km district District km Bursts, 5 years Median rate 90% interval D043, rural 1.2 2 0.194 0.058 to 0.523 D011, urban 198.0 87 0.087 0.073 to 0.104 Same prior, same five years: the small district's interval is 15 times wider, and its median still leans on the prior's centre.",
+      "href": "../slides/day1.html#small-and-large"
+    },
+    {
+      "deck": "day1",
+      "id": "grid-limit",
+      "n": 11,
+      "session": 1,
+      "title": "A grid works for one rate and fails for 140",
+      "text": "Why we need a sampler A grid works for one rate and fails for 140 10^280 grid points for 140 rates at 100 points each The grid grows exponentially with the number of unknowns. Almost all of its points have negligible posterior weight. A sampler spends its effort where the weight is: session 3.",
+      "href": "../slides/day1.html#grid-limit"
+    },
+    {
+      "deck": "day1",
+      "id": "workflow-map",
+      "n": 12,
+      "session": 1,
+      "title": "A Bayesian workflow is a loop, not a fit",
+      "text": "The week as a workflow A Bayesian workflow is a loop, not a fit Prior predictive Day 1 → Fit and diagnose Days 1 and 2 → Check and compare Day 3 → Calibrate the code Day 3 → Decide Day 4 A failed check sends you back. A model is expanded or replaced, and every step runs again.",
+      "href": "../slides/day1.html#workflow-map"
+    },
+    {
+      "deck": "day1",
+      "id": "check-grid",
+      "n": 13,
+      "session": 1,
+      "title": "A narrow posterior",
+      "text": "Checkpoint A narrow posterior Two districts share the prior. District P has 200 km and 90 bursts in five years; district Q has 2 km and 3 bursts. Which statement about their posteriors holds? P's posterior depends more on the prior than Q's Q's posterior is wider and closer to the prior's centre Both have the same width because the prior is the same Q's posterior is narrow because 3 bursts is a small number",
+      "href": "../slides/day1.html#check-grid"
+    },
+    {
+      "deck": "day1",
+      "id": "lab-1-1",
+      "n": 14,
+      "session": 1,
+      "title": "Simulate and recover a burst rate",
+      "text": "Lab 1.1 · 25 min Simulate and recover a burst rate Simulate burst counts from a rate you choose, recover it on a grid, then compare the posteriors of a small and a large district. D1_1_simulate_burst_counts.ipynb The generative story as a simulator 6 min The log likelihood on a grid of rates 5 min Prior times likelihood: the grid posterior 5 min A small district and a large one 6 min Where the grid stops working 3 min ✱ Stretch: Simulate with year-to-year variation and see the grid posterior become too sure",
+      "href": "../slides/day1.html#lab-1-1"
+    },
+    {
+      "deck": "day1",
+      "id": "s2",
+      "n": 15,
+      "session": 2,
+      "title": "Priors you can defend",
+      "text": "Session 2 Priors you can defend Translate a prior on a log scale into the units the engineers use Run a prior predictive simulation for every district Write a reason for each prior a model carries 02",
+      "href": "../slides/day1.html#s2"
+    },
+    {
+      "deck": "day1",
+      "id": "log-scale",
+      "n": 16,
+      "session": 2,
+      "title": "A prior on the log rate means something only on the rate scale",
+      "text": "Reading a prior A prior on the log rate means something only on the rate scale Prior on the log rate 5th percentile Median 95th percentile N(0, 10), \"flat-looking\" 0.00000013 0.78 17,000,000 N(log 0.1, 1), weakly informative 0.019 0.10 0.52 N(log 0.5, 0.05), tight 0.46 0.50 0.54 Bursts per km of main per year, from 1,000 prior draws (Lab 1.2, task 1, quick run).",
+      "href": "../slides/day1.html#log-scale"
+    },
+    {
+      "deck": "day1",
+      "id": "flat-not-harmless",
+      "n": 17,
+      "session": 2,
+      "title": "The \"harmless\" flat prior predicts impossible district-years",
+      "text": "Lab 1.2, tasks 2 and 3 The \"harmless\" flat prior predicts impossible district-years 37% of simulated district-years above 500 bursts under N(0, 10) No district in the region has ever had 500 bursts in a year. With little data, such a prior pulls small districts towards absurd values. With a lot of data it hardly matters, which is how it hides.",
+      "href": "../slides/day1.html#flat-not-harmless"
+    },
+    {
+      "deck": "day1",
+      "id": "prior-predictive",
+      "n": 18,
+      "session": 2,
+      "title": "Simulate data from the prior alone, then ask an engineer",
+      "text": "Prior predictive simulation Simulate data from the prior alone, then ask an engineer 1 · Draw parameters from the prior → 2 · Simulate a year in all 140 districts → 3 · Compare with statements written before the data Not the burst counts. Tuning a prior to the observed data uses the data twice and makes the posterior too sure.",
+      "href": "../slides/day1.html#prior-predictive"
+    },
+    {
+      "deck": "day1",
+      "id": "too-tight",
+      "n": 19,
+      "session": 2,
+      "title": "A prior can also be wrong by being too sure",
+      "text": "The other failure A prior can also be wrong by being too sure Prior District-years above 500 Network totals in 300 to 3,000 N(0, 10) 37% 10% N(log 0.1, 1) 0% 73% N(log 0.5, 0.05) 0% 0% The vendor's tight prior never breaks the first statement, yet it rules out every network total the engineers call plausible.",
+      "href": "../slides/day1.html#too-tight"
+    },
+    {
+      "deck": "day1",
+      "id": "reason-per-prior",
+      "n": 20,
+      "session": 2,
+      "title": "Every prior in the notebook carries one sentence of reason",
+      "text": "The evidence LO1 asks for Every prior in the notebook carries one sentence of reason α ~ Normal(log 0.1, 1) Centred on the engineers' \"one burst per 10 km a year\"; 73% of simulated network totals within their plausible range. β age ~ Normal(0, 0.5) Median rate ratio 1.0 per 10 years, 95th percentile 2.3: \"might double, never five times\". A reason quotes a number or a statement. \"Weakly informative\" alone is a label, not a reason.",
+      "href": "../slides/day1.html#reason-per-prior"
+    },
+    {
+      "deck": "day1",
+      "id": "weakly-informative",
+      "n": 21,
+      "session": 2,
+      "title": "Weakly informative: rules out the impossible, stays open on the plausible",
+      "text": "A working definition Weakly informative: rules out the impossible, stays open on the plausible Too vague Puts weight on rates no pipe ever had. Harms small districts. Weakly informative Spans every rate an engineer would accept, and little beyond. Informative Carries a measurement: an audit, an earlier study. Day 2 uses one for reporting.",
+      "href": "../slides/day1.html#weakly-informative"
+    },
+    {
+      "deck": "day1",
+      "id": "check-prior",
+      "n": 22,
+      "session": 2,
+      "title": "Choosing the prior",
+      "text": "Checkpoint Choosing the prior A colleague sets the prior on the log burst rate by fitting it to the five years of observed counts, then fits the model to the same counts. What is the problem? Priors may never use data of any kind Nothing: with 700 counts the prior does not matter The data are used twice, so the posterior is too sure The sampler cannot handle a prior estimated from data",
+      "href": "../slides/day1.html#check-prior"
+    },
+    {
+      "deck": "day1",
+      "id": "lab-1-2",
+      "n": 23,
+      "session": 2,
+      "title": "Prior predictive checks",
+      "text": "Lab 1.2 · 25 min Prior predictive checks Simulate a year of bursts in all 140 districts from three candidate priors, compare with the engineers’ statements, keep one and reject two with reasons. D1_2_run_prior_predictive.ipynb Three priors in bursts per km-year 5 min Simulate a year in every district from each prior 6 min Compare with what the engineers know 5 min Keep one prior, reject two, with a reason each 5 min The prior of the age effect 4 min ✱ Stretch: Prior predictive share of district-years without a burst",
+      "href": "../slides/day1.html#lab-1-2"
+    },
+    {
+      "deck": "day1",
+      "id": "s3",
+      "n": 24,
+      "session": 3,
+      "title": "Fitting with Hamiltonian Monte Carlo",
+      "text": "Session 3 Fitting with Hamiltonian Monte Carlo Explain how Hamiltonian Monte Carlo uses the gradient of the log posterior Write a Poisson model with an offset in a probabilistic programming language Report rate ratios with posterior intervals 03",
+      "href": "../slides/day1.html#s3"
+    },
+    {
+      "deck": "day1",
+      "id": "draws-not-formulas",
+      "n": 25,
+      "session": 3,
+      "title": "A pile of posterior draws answers any question you can compute",
+      "text": "Monte Carlo A pile of posterior draws answers any question you can compute A median, an interval, a probability: functions of the draws. A derived quantity, such as next year's bursts in D017, is computed draw by draw. The decision on Day 4 is a cost computed in every draw, then averaged. mu = np.exp(a + b @ X[j]) * km[j] # one value per draw np.quantile(mu, [0.5, 0.05, 0.95])",
+      "href": "../slides/day1.html#draws-not-formulas"
+    },
+    {
+      "deck": "day1",
+      "id": "hmc-intuition",
+      "n": 26,
+      "session": 3,
+      "title": "HMC rolls a particle across the posterior using its gradient",
+      "text": "Hamiltonian Monte Carlo HMC rolls a particle across the posterior using its gradient Position The current values of all parameters. Momentum A random push, drawn fresh at each iteration. Gradient The slope of the log posterior steers the path towards high density. The path is followed in small leapfrog steps; the end point is accepted or rejected so that the draws come from the posterior.",
+      "href": "../slides/day1.html#hmc-intuition"
+    },
+    {
+      "deck": "day1",
+      "id": "nuts",
+      "n": 27,
+      "session": 3,
+      "title": "NUTS chooses the path length; warm-up chooses the step size",
+      "text": "The No-U-Turn sampler NUTS chooses the path length; warm-up chooses the step size Setting Who sets it What goes wrong Path length NUTS: doubles the path until it turns back Paths that hit the maximum tree depth: slow Step size Warm-up: tuned to a target acceptance rate Too large for a curved region: divergences Mass matrix Warm-up: the scale of each parameter Very different scales: slow mixing",
+      "href": "../slides/day1.html#nuts"
+    },
+    {
+      "deck": "day1",
+      "id": "numpyro-model",
+      "n": 28,
+      "session": 3,
+      "title": "The model is the generative story, written as code",
+      "text": "Lab 1.3, task 1 The model is the generative story, written as code def pooled_model(d, log_km, X, y=None): alpha = numpyro.sample(\"alpha\", dist.Normal(np.log(0.10), 1.0)) beta = numpyro.sample(\"beta\", dist.Normal(0.0, 0.5).expand([4]).to_event(1)) eta = alpha + X @ beta # log rate per district numpyro.sample(\"y\", dist.Poisson(jnp.exp(log_km + eta[d])), obs=y) The same function simulates data when y is missing and conditions on it when y is given.",
+      "href": "../slides/day1.html#numpyro-model"
+    },
+    {
+      "deck": "day1",
+      "id": "tool-slot",
+      "n": 29,
+      "session": 3,
+      "title": "The labs use NumPyro; the workflow is the same in every tool",
+      "text": "Probabilistic programming: interchangeable examples The labs use NumPyro; the workflow is the same in every tool Stan Through CmdStanPy or CmdStanR; compiles a model to C++. PyMC With Bambi for formula-style models. NumPyro On JAX; installs without a compiler, runs on a laptop or Colab. brms Formula models in R, fitted by Stan. Diagnostics and comparison: ArviZ in Python; loo and bayesplot in R. Your capstone may use any of them.",
+      "href": "../slides/day1.html#tool-slot"
+    },
+    {
+      "deck": "day1",
+      "id": "pooled-result",
+      "n": 30,
+      "session": 3,
+      "title": "Asbestos cement bursts nearly twice as often as PVC of the same age",
+      "text": "Lab 1.3, task 3 Asbestos cement bursts nearly twice as often as PVC of the same age Asbestos cement 1.85 (1.70 to 2.02) Age, per 10 years 1.35 (1.30 to 1.39) Cast iron 1.33 (1.23 to 1.44) Ductile iron 1.22 (1.13 to 1.31) Rate ratios against PVC, posterior medians with 90% intervals, complete-pooling Poisson model (quick run).",
+      "href": "../slides/day1.html#pooled-result"
+    },
+    {
+      "deck": "day1",
+      "id": "check-offset",
+      "n": 31,
+      "session": 3,
+      "title": "The offset",
+      "text": "Checkpoint The offset Juhaina asks why the model does not estimate a coefficient for log km, as it does for age. What do you answer? Because bursts are assumed proportional to length, so its coefficient is fixed at 1 Because network length does not affect the number of bursts Because the sampler cannot estimate a coefficient on a logarithm Because its prior is centred on 1 and the data agree",
+      "href": "../slides/day1.html#check-offset"
+    },
+    {
+      "deck": "day1",
+      "id": "lab-1-3",
+      "n": 32,
+      "session": 3,
+      "title": "A Poisson model with an offset",
+      "text": "Lab 1.3 · 25 min A Poisson model with an offset Write the burst model with network length as exposure in NumPyro, run four chains, and read material and age effects as rate ratios with intervals. D1_3_fit_poisson_model.ipynb Write the model 8 min Run four chains 4 min Rate ratios with intervals 6 min Against the generating values 3 min Expected bursts next year for two districts 4 min ✱ Stretch: Remove the offset and see what the model then says",
+      "href": "../slides/day1.html#lab-1-3"
+    },
+    {
+      "deck": "day1",
+      "id": "s4",
+      "n": 33,
+      "session": 4,
+      "title": "Reading the computation",
+      "text": "Session 4 Reading the computation Read R-hat, bulk and tail effective sample size and divergences Tell an efficiency warning from a validity failure Judge when approximate inference is good enough for a question 04",
+      "href": "../slides/day1.html#s4"
+    },
+    {
+      "deck": "day1",
+      "id": "four-checks",
+      "n": 34,
+      "session": 4,
+      "title": "Four numbers decide whether a fit can be read",
+      "text": "Before reading any posterior Four numbers decide whether a fit can be read Diagnostic Course threshold, four chains What it detects Rank-normalised R-hat below 1.01 chains that disagree Bulk and tail ESS at least 400 too few independent draws for the centre or the tails Divergences zero, or explained regions the integrator could not follow E-BFMI above 0.3 momentum that cannot cross energy levels",
+      "href": "../slides/day1.html#four-checks"
+    },
+    {
+      "deck": "day1",
+      "id": "rhat-story",
+      "n": 35,
+      "session": 4,
+      "title": "No divergence, and still one chain is somewhere else",
+      "text": "Fit C No divergence, and still one chain is somewhere else Chain Mean of α 1 -2.417 2 -2.411 3 -2.403 4 -1.229 1.60 R-hat of fit C",
+      "href": "../slides/day1.html#rhat-story"
+    },
+    {
+      "deck": "day1",
+      "id": "divergences",
+      "n": 36,
+      "session": 4,
+      "title": "741 divergences: the sampler could not reach part of the posterior",
+      "text": "Fit B 741 divergences: the sampler could not reach part of the posterior A divergence is a path whose energy blew up: the step size was too large for the curvature there. The draws then miss that region, and every summary is biased. Fit B is the centred hierarchical model on the small districts: a funnel. Do not just raise target_accept. It shrinks the step size, often leaving fewer divergences and the same bias. Lab 2.3 changes the model instead.",
+      "href": "../slides/day1.html#divergences"
+    },
+    {
+      "deck": "day1",
+      "id": "efficiency-validity",
+      "n": 37,
+      "session": 4,
+      "title": "A capped tree costs time; it does not make the draws wrong",
+      "text": "Fit D A capped tree costs time; it does not make the draws wrong 33% of draws hit the tree-depth cap of 4 1.002 R-hat 1,452 smallest bulk ESS Zaina capped the tree depth to save time. The chains still mixed, so fit D can be read.",
+      "href": "../slides/day1.html#efficiency-validity"
+    },
+    {
+      "deck": "day1",
+      "id": "rank-plots",
+      "n": 38,
+      "session": 4,
+      "title": "Rank plots show chains that disagree better than trace plots do",
+      "text": "Looking at chains Rank plots show chains that disagree better than trace plots do Rank all draws of a parameter together, then plot each chain's ranks as a histogram. Chains from the same distribution: flat, similar histograms. A chain stuck high or low: a histogram piled at one end. pc = az.plot_rank(fits[\"fit_C\"], var_names=[\"alpha\", \"tau\"]) pc.savefig(\"artifacts/rank_fit_C.png\")",
+      "href": "../slides/day1.html#rank-plots"
+    },
+    {
+      "deck": "day1",
+      "id": "approximate-inference",
+      "n": 39,
+      "session": 4,
+      "title": "An approximation is fine when the posterior is simple and the question is its centre",
+      "text": "When approximate inference suffices An approximation is fine when the posterior is simple and the question is its centre 90% interval of β NUTS Variational (AutoNormal) Age per 10 years 0.265 to 0.334 0.253 to 0.326 Asbestos cement 0.533 to 0.699 0.551 to 0.698 Five parameters and 700 counts: close enough for a rate ratio. For 140 district effects, skewed spreads and tail decisions, sample.",
+      "href": "../slides/day1.html#approximate-inference"
+    },
+    {
+      "deck": "day1",
+      "id": "check-diagnostics",
+      "n": 40,
+      "session": 4,
+      "title": "Which fit to send back",
+      "text": "Checkpoint Which fit to send back A fit reports R-hat 1.003, bulk ESS 2,100, no divergences, and 40% of draws at the maximum tree depth. Another reports no divergences and R-hat 1.21. Which do you send back? The first, because 40% of trees are capped Neither, because neither has divergences Both, because each has a warning The second, because its chains disagree",
+      "href": "../slides/day1.html#check-diagnostics"
+    },
+    {
+      "deck": "day1",
+      "id": "lab-1-4",
+      "n": 41,
+      "session": 4,
+      "title": "Four fits, two untrustworthy",
+      "text": "Lab 1.4 · 25 min Four fits, two untrustworthy Compute the diagnostics of four supplied fits, flag the two that cannot be trusted and write the reason for each verdict. D1_4_flag_two_untrustworthy.ipynb Load the fits and read the run log 3 min R-hat and effective sample sizes 6 min Divergences, tree depth and energy 6 min Rank plots of the two suspects 5 min A verdict per fit, with its reason 5 min ✱ Stretch: Fit Lab 1.3’s model with a variational approximation and compare the intervals with NUTS",
+      "href": "../slides/day1.html#lab-1-4"
+    },
+    {
+      "deck": "day1",
+      "id": "wrap-up",
+      "n": 42,
+      "session": 4,
+      "title": "Three things to keep",
+      "text": "Day 1 · wrap-up Three things to keep Simulate first A model you can run forwards can be tested against a truth you chose, and its priors against what engineers know. Diagnose before reading R-hat, ESS, divergences and E-BFMI, every fit, before any number leaves the notebook. Small districts lean on the prior Five years of 2 bursts say little; tomorrow they borrow from the other districts.",
+      "href": "../slides/day1.html#wrap-up"
+    },
+    {
+      "deck": "day1",
+      "id": "next",
+      "n": 43,
+      "session": 4,
+      "title": "Day 2: Pooling across districts",
+      "text": "Next Day 2: Pooling across districts Finish any lab you did not complete; each one starts from the supplied files. Read the run log of fit B again: tomorrow you repair it.",
+      "href": "../slides/day1.html#next"
+    },
+    {
+      "deck": "day2",
+      "id": "title",
+      "n": 1,
+      "session": 0,
+      "title": "Pooling across districts",
+      "text": "SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty Pooling across districts Day 2: Let districts with little data borrow strength from the others, and say what that borrowing does to the rural ones Data Science Track4 teaching days + capstone day4 sessions · 4 labsDS-401",
+      "href": "../slides/day2.html#title"
+    },
+    {
+      "deck": "day2",
+      "id": "agenda",
+      "n": 2,
+      "session": 0,
+      "title": "Pooling across districts",
+      "text": "Today Pooling across districts Session 1 · No, complete and partial pooling Three ways to treat 140 districts, and the shrinkage a hierarchy implies Session 2 · Group-level predictors Shrinking towards a prediction instead of towards one grand mean Session 3 · The funnel and non-centred models Why hierarchical models diverge when data are thin, and the reparameterisation that repairs them Session 4 · Under-reporting as measurement error Bursts that happen but are not recorded, modelled instead of ignored",
+      "href": "../slides/day2.html#agenda"
+    },
+    {
+      "deck": "day2",
+      "id": "review-day1",
+      "n": 3,
+      "session": 0,
+      "title": "Before reading a fit",
+      "text": "Review of Day 1 Before reading a fit A colleague's fit reports R-hat 1.004 and bulk ESS 900, but 23 divergences. She wants to publish the rate ratios. What do you advise? Not yet: find where the divergences sit and change the model or its form, then refit Publish: R-hat and ESS are fine Run twice as many draws and publish Drop the divergent draws and publish the rest",
+      "href": "../slides/day2.html#review-day1"
+    },
+    {
+      "deck": "day2",
+      "id": "s1",
+      "n": 4,
+      "session": 1,
+      "title": "No, complete and partial pooling",
+      "text": "Session 1 No, complete and partial pooling Fit no-pooling, complete-pooling and partial-pooling models of the same counts Read shrinkage as a function of how much data a district has Check whether pooling pulls one group of districts towards another’s average 01",
+      "href": "../slides/day2.html#s1"
+    },
+    {
+      "deck": "day2",
+      "id": "recap-random-intercepts",
+      "n": 5,
+      "session": 1,
+      "title": "You met random intercepts in DS-301; today they get priors and a defence",
+      "text": "Recap from DS-301 You met random intercepts in DS-301; today they get priors and a defence DS-301 Day 4 fitted random intercepts by maximum likelihood for 30 districts. Here: 140 districts, a prior on the spread τ, the whole posterior of every district. New today: predictors at the district level, the funnel, and measurement error. The question LO2 asks Not \"is pooling allowed?\" but \"what does this pooling do to which districts, and can you defend it?\"",
+      "href": "../slides/day2.html#recap-random-intercepts"
+    },
+    {
+      "deck": "day2",
+      "id": "three-poolings",
+      "n": 6,
+      "session": 1,
+      "title": "No pooling trusts each district; complete pooling trusts none",
+      "text": "Three ways to treat 140 districts No pooling trusts each district; complete pooling trusts none No pooling One rate per district, each from its own record. Tiny districts get wild estimates; 13 with no recorded burst look perfectly safe. Complete pooling One rate for all (Lab 1.3). Every district is average, including the old asbestos-cement ones. Partial pooling District rates drawn from a common distribution with spread τ. The data decide how much each district borrows.",
+      "href": "../slides/day2.html#three-poolings"
+    },
+    {
+      "deck": "day2",
+      "id": "hierarchy-code",
+      "n": 7,
+      "session": 1,
+      "title": "One line makes the districts a population",
+      "text": "Lab 2.1, task 1 One line makes the districts a population alpha = numpyro.sample(\"alpha\", dist.Normal(np.log(0.10), 1.0)) tau = numpyro.sample(\"tau\", dist.HalfNormal(0.5)) with numpyro.plate(\"district\", J): eta = numpyro.sample(\"eta\", dist.Normal(alpha, tau)) # the population numpyro.sample(\"y\", dist.Poisson(jnp.exp(log_km + eta[d])), obs=y) τ near 0 is complete pooling; τ very large is no pooling. The posterior of τ chooses between them.",
+      "href": "../slides/day2.html#hierarchy-code"
+    },
+    {
+      "deck": "day2",
+      "id": "shrinkage-by-kind",
+      "n": 8,
+      "session": 1,
+      "title": "Rural districts borrow most of their estimate; urban ones keep their own",
+      "text": "Lab 2.1, task 3 Rural districts borrow most of their estimate; urban ones keep their own Rural 0.55 Suburban 0.12 Urban 0.04 Median shrinkage towards the common rate (0: own estimate, 1: common rate). τ = 0.56, 90% interval 0.49 to 0.65 (quick run).",
+      "href": "../slides/day2.html#shrinkage-by-kind"
+    },
+    {
+      "deck": "day2",
+      "id": "rural-pull",
+      "n": 9,
+      "session": 1,
+      "title": "Pooling towards one rate hides how much riskier the rural districts are",
+      "text": "Responsible use: Lab 2.1, task 4 Pooling towards one rate hides how much riskier the rural districts are 0.73 true gap of rural districts above the common rate (log scale) 0.11 the gap the estimates keep 16% of the real difference survives Who is harmed. Most kilometres are urban, so the common rate is an urban rate. A plan built on these estimates under-invests where the pipes are oldest.",
+      "href": "../slides/day2.html#rural-pull"
+    },
+    {
+      "deck": "day2",
+      "id": "defend-pooling",
+      "n": 10,
+      "session": 1,
+      "title": "A defence of pooling says what it does to whom",
+      "text": "LO2's evidence A defence of pooling says what it does to whom Why partial pooling: 51 districts recorded fewer than five bursts; alone, their estimates are noise. What it does: small districts borrow from the population, here up to half their estimate. Whom it affects: the rural districts, whose risk it understates while one urban-dominated rate is the target. What changes next: shrink towards a prediction for each district's material and age.",
+      "href": "../slides/day2.html#defend-pooling"
+    },
+    {
+      "deck": "day2",
+      "id": "check-pooling",
+      "n": 11,
+      "session": 1,
+      "title": "A district with no recorded burst",
+      "text": "Checkpoint A district with no recorded burst D120 is a rural district of 2 km with no burst recorded in five years. What does each model say about its rate? No pooling and complete pooling both give it a rate near zero Partial pooling gives it exactly the common rate No pooling: near zero; complete: the common rate; partial: between, close to the common rate No model can say anything until it has a burst",
+      "href": "../slides/day2.html#check-pooling"
+    },
+    {
+      "deck": "day2",
+      "id": "lab-2-1",
+      "n": 12,
+      "session": 1,
+      "title": "Three poolings and the rural districts",
+      "text": "Lab 2.1 · 25 min Three poolings and the rural districts Fit the three models, plot how far each district’s estimate moves, and test whether partial pooling pulls rural districts towards the urban average. D2_1_fit_all_three.ipynb Three models from one function 5 min Fit no, complete and partial pooling 6 min The shrinkage plot 5 min Are rural districts pulled towards the urban average? 6 min A defence of the pooling in three sentences 3 min ✱ Stretch: Plot shrinkage against each district’s number of recorded bursts",
+      "href": "../slides/day2.html#lab-2-1"
+    },
+    {
+      "deck": "day2",
+      "id": "s2",
+      "n": 13,
+      "session": 2,
+      "title": "Group-level predictors",
+      "text": "Session 2 Group-level predictors Add district-level predictors to the mean of a hierarchical model Compare the between-district spread before and after Explain why predictors change who is shrunk towards what 02",
+      "href": "../slides/day2.html#s2"
+    },
+    {
+      "deck": "day2",
+      "id": "shrink-to-prediction",
+      "n": 14,
+      "session": 2,
+      "title": "Shrink each district towards what its pipes predict, not towards the average",
+      "text": "Group-level predictors Shrink each district towards what its pipes predict, not towards the average mu = alpha + X @ beta # material and age eta = mu + tau * z # district effect around it A rural asbestos-cement district of 40 years is now pulled towards the rate of such networks. τ now measures what material and age leave unexplained. The district-level predictors cost no data from the small districts: they are known for all 140.",
+      "href": "../slides/day2.html#shrink-to-prediction"
+    },
+    {
+      "deck": "day2",
+      "id": "tau-falls",
+      "n": 15,
+      "session": 2,
+      "title": "Material and age explain about half of what made districts differ",
+      "text": "Lab 2.2, task 3 Material and age explain about half of what made districts differ 0.56 τ without predictors 0.41 τ with material and age 47% of the variance between districts explained",
+      "href": "../slides/day2.html#tau-falls"
+    },
+    {
+      "deck": "day2",
+      "id": "rural-bias-table",
+      "n": 16,
+      "session": 2,
+      "title": "The predictors remove much of the rural bias, not all of it",
+      "text": "Lab 2.2, task 4 The predictors remove much of the rural bias, not all of it Mean log(estimate / true rate) Without predictors With material and age Rural -0.61 -0.25 Suburban -0.11 -0.12 Urban -0.06 -0.07 Rural estimates are still about 22% below the truth. Most rural districts have no sensors: session 4.",
+      "href": "../slides/day2.html#rural-bias-table"
+    },
+    {
+      "deck": "day2",
+      "id": "rural-indicator",
+      "n": 17,
+      "session": 2,
+      "title": "A \"rural\" predictor fits the records better and the truth worse",
+      "text": "Lab 2.2, stretch A \"rural\" predictor fits the records better and the truth worse Its coefficient comes out negative: -0.21, 90% interval -0.48 to 0.04. It learns the low reported counts of rural districts, most without sensors. Rural estimates move further from their true rates: -0.32 on the log scale. A predictor that stands for a missing variable \"Rural\" here means \"no sensors\". Model the recording process instead (session 4).",
+      "href": "../slides/day2.html#rural-indicator"
+    },
+    {
+      "deck": "day2",
+      "id": "group-predictor-cost",
+      "n": 18,
+      "session": 2,
+      "title": "A good group-level predictor is known for every group and plausibly causal",
+      "text": "Choosing group-level predictors A good group-level predictor is known for every group and plausibly causal Material, age Known for all 140; engineering reasons to expect an effect. Pressure, soil Plausible; Yanabi has them for the urban districts only. A missing value is a modelling problem of its own. District kind Known for all, but stands for several things at once, including how bursts are recorded.",
+      "href": "../slides/day2.html#group-predictor-cost"
+    },
+    {
+      "deck": "day2",
+      "id": "check-predictors",
+      "n": 19,
+      "session": 2,
+      "title": "What τ means now",
+      "text": "Checkpoint What τ means now After adding material and age, τ fell from 0.56 to 0.41. Nouran asks what that means for a rural asbestos-cement district with 3 recorded bursts. It is now pulled towards the rate predicted for old asbestos-cement networks, and somewhat more strongly It is pooled less because the model now knows more Its own three bursts no longer matter Its rate has fallen by 0.15",
+      "href": "../slides/day2.html#check-predictors"
+    },
+    {
+      "deck": "day2",
+      "id": "lab-2-2",
+      "n": 20,
+      "session": 2,
+      "title": "Material and age at the district level",
+      "text": "Lab 2.2 · 25 min Material and age at the district level Add pipe material and age to the hierarchical model and compare the spread between districts and the rural shrinkage with Lab 2.1. D2_2_add_pipe_material.ipynb District-level predictors in the mean 6 min Fit and diagnose 5 min The spread between districts, before and after 4 min The rural districts again 6 min What the predictors explain 4 min ✱ Stretch: Add the district kind as a predictor and discuss what it stands for",
+      "href": "../slides/day2.html#lab-2-2"
+    },
+    {
+      "deck": "day2",
+      "id": "s3",
+      "n": 21,
+      "session": 3,
+      "title": "The funnel and non-centred models",
+      "text": "Session 3 The funnel and non-centred models Recognise the funnel geometry behind divergences in a hierarchical model Rewrite a centred model in non-centred form Show that the repaired model gives a trustworthy answer 03",
+      "href": "../slides/day2.html#s3"
+    },
+    {
+      "deck": "day2",
+      "id": "the-funnel",
+      "n": 22,
+      "session": 3,
+      "title": "When τ is small, every district effect must squeeze into a narrow neck",
+      "text": "Why fit B diverged When τ is small, every district effect must squeeze into a narrow neck The funnel of a centred hierarchical model η of one small district log τ divergences in the neck wide mouth: large τ Sketch. In Lab 2.3's run, every one of the centred model's 59 divergences had τ below its median.",
+      "href": "../slides/day2.html#the-funnel"
+    },
+    {
+      "deck": "day2",
+      "id": "centred-vs-noncentred",
+      "n": 23,
+      "session": 3,
+      "title": "Non-centred: sample standard district effects, then scale them by τ",
+      "text": "Same model, different coordinates Non-centred: sample standard district effects, then scale them by τ eta = sample(\"eta\", Normal(mu, tau)) z = sample(\"z\", Normal(0, 1)) eta = deterministic(\"eta\", mu + tau * z) The joint distribution is identical. In z, the posterior has no funnel: its shape no longer depends on τ.",
+      "href": "../slides/day2.html#centred-vs-noncentred"
+    },
+    {
+      "deck": "day2",
+      "id": "repair-numbers",
+      "n": 24,
+      "session": 3,
+      "title": "The non-centred model samples the 49 small districts cleanly",
+      "text": "Lab 2.3, task 4 The non-centred model samples the 49 small districts cleanly Divergences R-hat Bulk ESS E-BFMI Centred 59 1.037 49 0.10 Non-centred 0 1.004 563 0.82 Same priors, same 300 warm-up iterations, 2,000 kept draws (quick run).",
+      "href": "../slides/day2.html#repair-numbers"
+    },
+    {
+      "deck": "day2",
+      "id": "tau-interval",
+      "n": 25,
+      "session": 3,
+      "title": "The centred fit missed the small values of τ",
+      "text": "Lab 2.3, task 5 The centred fit missed the small values of τ Centred 0.095 to 0.491 Non-centred 0.018 to 0.514 90% intervals of τ for the small districts. Missing small τ means pooling them less than the data allow.",
+      "href": "../slides/day2.html#tau-interval"
+    },
+    {
+      "deck": "day2",
+      "id": "target-accept-trap",
+      "n": 26,
+      "session": 3,
+      "title": "Raising target_accept removed the divergences and not the problem",
+      "text": "Lab 2.3, stretch Raising target_accept removed the divergences and not the problem 0 divergences at target_accept 0.99 1.144 R-hat, still far above 1.01 A smaller step reaches a little further into the neck, slowly. The chains still disagree, and τ's interval still starts at 0.061. Change the geometry; do not only shrink the step.",
+      "href": "../slides/day2.html#target-accept-trap"
+    },
+    {
+      "deck": "day2",
+      "id": "when-centred",
+      "n": 27,
+      "session": 3,
+      "title": "With strong data in every group, the centred form can be the better one",
+      "text": "Not a rule of thumb With strong data in every group, the centred form can be the better one All 140 districts, centred No divergence, bulk ESS above 1,000 in Lab 2.1: large districts pin their own effects, so there is no funnel. 49 small districts, centred 59 divergences: little data per district, the prior's funnel dominates. Choose the form by the data, then check. The diagnostics, not a habit, decide.",
+      "href": "../slides/day2.html#when-centred"
+    },
+    {
+      "deck": "day2",
+      "id": "check-funnel",
+      "n": 28,
+      "session": 3,
+      "title": "A divergent hierarchical model",
+      "text": "Checkpoint A divergent hierarchical model A hierarchical model of 50 small districts gives 60 divergences, all at small τ. What is the best first step? Raise target_accept to 0.99 until the divergences stop Drop the districts with fewer than three bursts Switch to complete pooling, which never diverges Rewrite the district effects in non-centred form and refit",
+      "href": "../slides/day2.html#check-funnel"
+    },
+    {
+      "deck": "day2",
+      "id": "lab-2-3",
+      "n": 29,
+      "session": 3,
+      "title": "Repair a divergent model",
+      "text": "Lab 2.3 · 25 min Repair a divergent model Reproduce the divergences of the centred model on the small districts, locate them in the funnel, and repair the model by non-centred parameterisation. D2_3_repair_divergent_model.ipynb Reproduce the divergences 5 min Where they sit: the spread against one district 5 min Write the non-centred model 7 min Refit and compare the diagnostics 5 min The same answer, now trustworthy? 3 min ✱ Stretch: Raise the target acceptance rate of the centred model instead, and compare",
+      "href": "../slides/day2.html#lab-2-3"
+    },
+    {
+      "deck": "day2",
+      "id": "s4",
+      "n": 30,
+      "session": 4,
+      "title": "Under-reporting as measurement error",
+      "text": "Session 4 Under-reporting as measurement error Write reported counts as true counts thinned by a reporting share Use an audit to set an informative prior on what the data cannot identify Report corrected rates for districts without sensors with their wider uncertainty 04",
+      "href": "../slides/day2.html#s4"
+    },
+    {
+      "deck": "day2",
+      "id": "reported-not-happened",
+      "n": 31,
+      "session": 4,
+      "title": "Rural districts without sensors report 30% fewer bursts per kilometre",
+      "text": "Lab 2.4, task 1 Rural districts without sensors report 30% fewer bursts per kilometre With sensors 0.244 Without sensors 0.173 Reported bursts per km-year, rural districts only. Real difference, or bursts nobody recorded? The counts alone cannot say: rate λ with reporting p gives the same counts as rate λp fully reported.",
+      "href": "../slides/day2.html#reported-not-happened"
+    },
+    {
+      "deck": "day2",
+      "id": "measurement-model",
+      "n": 32,
+      "session": 4,
+      "title": "Model what was recorded as a share of what happened",
+      "text": "Under-reporting as measurement error Model what was recorded as a share of what happened True bursts Poisson(km × rate) → Each one reported with probability p → Recorded bursts Poisson(km × rate × p) p = jnp.where(sensors, 1.0, p_raw) # p_raw ~ Beta(14, 6) y ~ Poisson(exp(log_km + eta[d] + log(p)[d]))",
+      "href": "../slides/day2.html#measurement-model"
+    },
+    {
+      "deck": "day2",
+      "id": "audit-prior",
+      "n": 33,
+      "session": 4,
+      "title": "The 2024 audit sets the prior the data cannot replace",
+      "text": "An informative prior, with its source The 2024 audit sets the prior the data cannot replace Ouda's team listened to 6 districts without sensors for a season: 28 of 40 bursts found had been reported. Beta(14, 6): mean 0.70, 90% interval 0.52 to 0.85; the audit at half weight. Half weight because six districts in one season may not represent all 76. The reason for this prior Cites a measurement, its size and why it was discounted: the standard of Day 1, applied to an informative prior.",
+      "href": "../slides/day2.html#audit-prior"
+    },
+    {
+      "deck": "day2",
+      "id": "bias-removed",
+      "n": 34,
+      "session": 4,
+      "title": "The reporting term removes the bias of the districts without sensors",
+      "text": "Lab 2.4, task 4 The reporting term removes the bias of the districts without sensors Without sensors, mean log(estimate / truth) Lab 2.2 model With reporting term Rural -0.28 -0.02 Suburban -0.27 0.03 Urban -0.37 -0.05 Urban districts without sensors had precise counts; their relative interval widens from 0.55 to 0.69. The reporting share is now their main uncertainty.",
+      "href": "../slides/day2.html#bias-removed"
+    },
+    {
+      "deck": "day2",
+      "id": "prior-carries-it",
+      "n": 35,
+      "session": 4,
+      "title": "The counts taught the model almost nothing about reporting",
+      "text": "Lab 2.4, task 5 The counts taught the model almost nothing about reporting 0.98 posterior sd of the reporting share over its prior sd, districts without sensors The correction is exactly as good as the audit. The memo must say so, and name the districts that depend on it. Better data on reporting is what Day 4's survey would buy.",
+      "href": "../slides/day2.html#prior-carries-it"
+    },
+    {
+      "deck": "day2",
+      "id": "check-reporting",
+      "n": 36,
+      "session": 4,
+      "title": "Reading the correction",
+      "text": "Checkpoint Reading the correction After adding the reporting term, a rural district without sensors moves from 0.18 to 0.26 bursts per km-year. Juhaina asks what the increase rests on. On the district's own burst counts, which reveal its reporting rate Mainly on the audit prior: the counts cannot separate rate from reporting On the sampler having more draws On an error in the burst register that the model fixed",
+      "href": "../slides/day2.html#check-reporting"
+    },
+    {
+      "deck": "day2",
+      "id": "lab-2-4",
+      "n": 37,
+      "session": 4,
+      "title": "A reporting rate for districts without sensors",
+      "text": "Lab 2.4 · 25 min A reporting rate for districts without sensors Add a reporting-rate term with an audit-based prior for districts without sensors and compare their corrected rates with the uncorrected ones. D2_4_add_reporting_rate.ipynb Reported bursts with and without sensors 4 min The audit prior on the reporting share 5 min Add the reporting term 7 min Corrected rates for districts without sensors 6 min What the data cannot tell apart 3 min ✱ Stretch: Change the audit prior and watch the corrected rates follow it",
+      "href": "../slides/day2.html#lab-2-4"
+    },
+    {
+      "deck": "day2",
+      "id": "wrap-up",
+      "n": 38,
+      "session": 4,
+      "title": "Three things to keep",
+      "text": "Day 2 · wrap-up Three things to keep Say whom pooling moves Small districts borrow most; check whether they borrow from the right population. Fix the geometry Divergences at small τ: non-centre the model, then check again. Model the recording What was reported is not what happened; an audit-based prior carries what the counts cannot.",
+      "href": "../slides/day2.html#wrap-up"
+    },
+    {
+      "deck": "day2",
+      "id": "next",
+      "n": 39,
+      "session": 4,
+      "title": "Day 3: Is the model good enough",
+      "text": "Next Day 3: Is the model good enough Tomorrow's first lab is AI-off: you write the negative binomial version of today's model. Reread Lab 2.4's model before you come.",
+      "href": "../slides/day2.html#next"
+    },
+    {
+      "deck": "day3",
+      "id": "title",
+      "n": 1,
+      "session": 0,
+      "title": "Is the model good enough",
+      "text": "SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty Is the model good enough Day 3: Check the model against its own data, compare candidates by prediction, prove the code right and measure what the priors decide Data Science Track4 teaching days + capstone day4 sessions · 4 labsDS-401",
+      "href": "../slides/day3.html#title"
+    },
+    {
+      "deck": "day3",
+      "id": "agenda",
+      "n": 2,
+      "session": 0,
+      "title": "Is the model good enough",
+      "text": "Today Is the model good enough Session 1 · Posterior predictive checks Replicated data from the posterior, and the test statistics that expose a misfit Session 2 · Comparing models by predictive accuracy Expected log predictive density, approximate leave-one-out and its diagnostics Session 3 · Is the code right Parameter recovery and simulation-based calibration as tests of a model implementation Session 4 · How much the priors matter Prior sensitivity by refitting and by power-scaling, reported on the quantities the decision uses",
+      "href": "../slides/day3.html#agenda"
+    },
+    {
+      "deck": "day3",
+      "id": "review-day2",
+      "n": 3,
+      "session": 0,
+      "title": "What a pooled estimate rests on",
+      "text": "Review of Day 2 What a pooled estimate rests on A rural district of 1.5 km recorded one burst in five years. Its posterior rate under the Lab 2.4 model is 0.21. What contributes most to that number? Its own record: 1 burst over 7.5 km-years The rate predicted for its material and age, plus the audit prior on reporting The sampler's starting values The common rate of all 140 districts",
+      "href": "../slides/day3.html#review-day2"
+    },
+    {
+      "deck": "day3",
+      "id": "s1",
+      "n": 4,
+      "session": 1,
+      "title": "Posterior predictive checks",
+      "text": "Session 1 Posterior predictive checks Simulate replicated data from a fitted model Choose test statistics that target the decision, such as the share of zeros Replace a model whose checks fail and check the replacement 01",
+      "href": "../slides/day3.html#s1"
+    },
+    {
+      "deck": "day3",
+      "id": "ppc-idea",
+      "n": 5,
+      "session": 1,
+      "title": "A model that fits should be able to produce data like yours",
+      "text": "Posterior predictive checks A model that fits should be able to produce data like yours 1 · Draw parameters from the posterior → 2 · Replicate 700 district-years from the model with those parameters → 3 · Compare a statistic of the replicates with the same statistic of the data Choose the statistic for the decision. The total number of bursts fits almost any model; the variation from year to year decides how sure Day 4 can be.",
+      "href": "../slides/day3.html#ppc-idea"
+    },
+    {
+      "deck": "day3",
+      "id": "two-statistics",
+      "n": 6,
+      "session": 1,
+      "title": "The Poisson model cannot produce the year-to-year variation Yanabi records",
+      "text": "Lab 3.1, task 2 The Poisson model cannot produce the year-to-year variation Yanabi records Districts over 10 km Observed Poisson replicates, 90% p Dispersion: variance of the five yearly counts over their mean 2.32 0.87 to 1.13 0.000 Share of district-years with no burst 0.048 0.021 to 0.050 0.12 The dispersion fails outright. The quiet years sit at the edge of the Poisson range without leaving it: not every statistic exposes a misfit.",
+      "href": "../slides/day3.html#two-statistics"
+    },
+    {
+      "deck": "day3",
+      "id": "negbin",
+      "n": 7,
+      "session": 1,
+      "title": "A negative binomial lets each year vary more than a Poisson",
+      "text": "Lab 3.1, task 3 A negative binomial lets each year vary more than a Poisson phi = numpyro.sample(\"phi\", dist.Gamma(2.0, 0.2)) numpyro.sample(\"y\", dist.NegativeBinomial2(mean, phi), obs=y) # variance = mean + mean**2 / phi φ = 7.0, 90% interval 5.6 to 9.0 (the generating value was 6). Both statistics now sit inside the replicates: p = 0.34 and 0.48. Weather, pressure surges and repair campaigns move a district's year; the Poisson has no room for them.",
+      "href": "../slides/day3.html#negbin"
+    },
+    {
+      "deck": "day3",
+      "id": "rootogram",
+      "n": 8,
+      "session": 1,
+      "title": "A histogram of all district-years cannot tell the two models apart",
+      "text": "Lab 3.1, stretch A histogram of all district-years cannot tell the two models apart Observed counts against two models Poisson negative binomial bursts in a district-year (0 to 10) Square root of the frequencies, from the course's quick run. The dispersion within each district, 2.32 against Poisson replicates of 0.87 to 1.13, separates the same two models at once.",
+      "href": "../slides/day3.html#rootogram"
+    },
+    {
+      "deck": "day3",
+      "id": "check-ppc",
+      "n": 9,
+      "session": 1,
+      "title": "Choosing a test statistic",
+      "text": "Checkpoint Choosing a test statistic Shabib proposes checking the Poisson model on the total number of bursts per year across the network. What do you tell him? The model was fitted to reproduce totals; check the variation within districts from year to year instead A good check: if the totals match, the model fits Checks are only valid on data the model has not seen If p is near 0.5 the model is proven correct",
+      "href": "../slides/day3.html#check-ppc"
+    },
+    {
+      "deck": "day3",
+      "id": "lab-3-1",
+      "n": 10,
+      "session": 1,
+      "title": "Zeros and dispersion",
+      "text": "Lab 3.1 · 25 min Zeros and dispersion Expose the Poisson model’s misfit on district-years without a burst and on dispersion, then fit a negative binomial and check it the same way. D3_1_expose_poisson_misfit.ipynb Replicated data from the Poisson model 6 min Share of zeros and dispersion 6 min Fit a negative binomial 6 min The same checks for the negative binomial 5 min A verdict in two sentences 2 min ✱ Stretch: Draw a rootogram of both models",
+      "href": "../slides/day3.html#lab-3-1"
+    },
+    {
+      "deck": "day3",
+      "id": "s2",
+      "n": 11,
+      "session": 2,
+      "title": "Comparing models by predictive accuracy",
+      "text": "Session 2 Comparing models by predictive accuracy Estimate expected log predictive density by Pareto-smoothed importance sampling Compare models by the difference and its standard error, not by the ranking alone Find influential observations from Pareto k and decide what to do about them 02",
+      "href": "../slides/day3.html#s2"
+    },
+    {
+      "deck": "day3",
+      "id": "loo-idea",
+      "n": 12,
+      "session": 2,
+      "title": "Score each model on the district-years it did not see",
+      "text": "Comparing models by predictive accuracy Score each model on the district-years it did not see elpd : the expected log predictive density of a new district-year; higher is better. Leave-one-out refits 700 times; PSIS-LOO approximates all of them from one fit by importance sampling. Pareto k says, for each point, whether the approximation can be trusted (below about 0.7). Why not R² or the fit to the data Any model with more parameters fits the data it saw better. Predicting what it did not see is the fair contest.",
+      "href": "../slides/day3.html#loo-idea"
+    },
+    {
+      "deck": "day3",
+      "id": "loo-table",
+      "n": 13,
+      "session": 2,
+      "title": "The negative binomial hierarchy predicts best, by far more than its error",
+      "text": "Lab 3.2, tasks 2 and 3 The negative binomial hierarchy predicts best, by far more than its error Model elpd p_loo Difference from best SE of difference Hierarchical negative binomial -1,393 66 0 – Hierarchical Poisson -1,503 158 -110 23 Complete pooling, Poisson -1,710 22 -317 54 Read the difference against its own standard error, not against the elpd's: about 5 standard errors here.",
+      "href": "../slides/day3.html#loo-table"
+    },
+    {
+      "deck": "day3",
+      "id": "pareto-k",
+      "n": 14,
+      "session": 2,
+      "title": "D017's 2023 is the year a trunk main failed: keep it, choose a model it does not overturn",
+      "text": "Lab 3.2, task 4 D017's 2023 is the year a trunk main failed: keep it, choose a model it does not overturn The Poisson hierarchy flags six district-years above 0.7, D017 in 2023 among them: 54 bursts against 18 to 27 in its other years. The negative binomial expects some unusual years: it flags one, at 0.71. Shabib confirms the failure. The year is real; deleting it would understate risk. A flagged point is a question Ask what happened before deciding what to do. An error is corrected; an event is modelled.",
+      "href": "../slides/day3.html#pareto-k"
+    },
+    {
+      "deck": "day3",
+      "id": "check-loo",
+      "n": 15,
+      "session": 2,
+      "title": "Reading a model comparison",
+      "text": "Checkpoint Reading a model comparison Model A has elpd -1,402 (SE 35) and model B -1,408 (SE 36). The difference is 6 with a standard error of 5. Juhaina asks which to use. A: it has the higher elpd Neither can be told apart because 6 is small next to 35 No clear winner on prediction: choose by the checks, simplicity and what the decision needs The one with more parameters",
+      "href": "../slides/day3.html#check-loo"
+    },
+    {
+      "deck": "day3",
+      "id": "lab-3-2",
+      "n": 16,
+      "session": 2,
+      "title": "Three models by leave-one-out",
+      "text": "Lab 3.2 · 25 min Three models by leave-one-out Compare three candidate models by approximate leave-one-out, inspect the influential district-years, and choose one for the decision. D3_2_compare_three_models.ipynb Three candidates and their log likelihoods 5 min Approximate leave-one-out for each 5 min The difference and its standard error 5 min Pareto k: the influential district-years 6 min Choose a model for the decision 4 min ✱ Stretch: Leave out whole districts instead of district-years",
+      "href": "../slides/day3.html#lab-3-2"
+    },
+    {
+      "deck": "day3",
+      "id": "s3",
+      "n": 17,
+      "session": 3,
+      "title": "Is the code right",
+      "text": "Session 3 Is the code right Recover known parameters from data simulated by the model Run a short simulation-based calibration and read its rank histograms Locate and fix an implementation error from the parameter that fails 03",
+      "href": "../slides/day3.html#s3"
+    },
+    {
+      "deck": "day3",
+      "id": "one-run-proves-little",
+      "n": 18,
+      "session": 3,
+      "title": "One successful recovery proves little",
+      "text": "Is the code right One successful recovery proves little A colleague simulated one dataset and recovered both parameters: α and β inside their 90% intervals. The model still has an error. One run passes by luck as easily as by being right. A correct model misses the truth 10% of the time; a wrong one can cover it often. Lab 3.3's starting point 20 northern districts, 445 km, a Poisson rate with an age effect. The simulator is right; one line of the model is not.",
+      "href": "../slides/day3.html#one-run-proves-little"
+    },
+    {
+      "deck": "day3",
+      "id": "sbc-steps",
+      "n": 19,
+      "session": 3,
+      "title": "If the code is right, the truth's rank among the draws is uniform",
+      "text": "Simulation-based calibration If the code is right, the truth's rank among the draws is uniform 1 · Simulate parameters from the prior, then data → 2 · Fit the model to those data: 99 draws → 3 · Rank count draws below the true value: 0 to 99 → 4 · Repeat 100 times; plot each parameter's ranks Shapes to read. Flat: right. U: posterior too narrow. Hump: too wide. Slope: biased.",
+      "href": "../slides/day3.html#sbc-steps"
+    },
+    {
+      "deck": "day3",
+      "id": "sbc-result",
+      "n": 20,
+      "session": 3,
+      "title": "β's ranks pile up at both ends: its prior is five times too narrow",
+      "text": "Lab 3.3, tasks 3 to 5 β's ranks pile up at both ends: its prior is five times too narrow Share of ranks in the outer fifth (expected 20%) α β Colleague's model 33% (p = 0.09) 69% (p < 0.001) Fixed model 23% (p = 0.44) 25% (p = 0.66) beta = numpyro.sample(\"beta\", dist.Normal(0.3, 0.2 ** 2)) # a variance where the scale belongs",
+      "href": "../slides/day3.html#sbc-result"
+    },
+    {
+      "deck": "day3",
+      "id": "sbc-limits",
+      "n": 21,
+      "session": 3,
+      "title": "Calibration tests the code against the simulator, not the model against the world",
+      "text": "What calibration does not do Calibration tests the code against the simulator, not the model against the world It finds Coding errors, wrong parameterisations, a sampler that cannot fit the model. It misses The same mistake in both the simulator and the model; a model that is wrong about Yanabi. It costs 100 fits per calibration. Small models and short chains make it a few minutes on a laptop.",
+      "href": "../slides/day3.html#sbc-limits"
+    },
+    {
+      "deck": "day3",
+      "id": "check-sbc",
+      "n": 22,
+      "session": 3,
+      "title": "Reading rank histograms",
+      "text": "Checkpoint Reading rank histograms In a calibration of 200 simulations, a parameter's ranks form a hump: few near 0 or 99, many in the middle. What does it say? The posterior is approximately normal, as expected The posterior is too narrow The posterior is too wide: the truth sits near its middle too often The sampler needs more warm-up",
+      "href": "../slides/day3.html#check-sbc"
+    },
+    {
+      "deck": "day3",
+      "id": "lab-3-3",
+      "n": 23,
+      "session": 3,
+      "title": "Simulation-based calibration",
+      "text": "Lab 3.3 · 25 min Simulation-based calibration Run a short simulation-based calibration of a supplied model, locate its seeded coding error from the ranks, fix it and show the corrected model passes. D3_3_locate_seeded_error.ipynb Parameter recovery on one dataset 5 min The calibration loop 8 min Ranks for each parameter 5 min Find and fix the line 4 min Calibrate again 3 min ✱ Stretch: Calibrate a derived quantity: the rate of a district whose pipes average 40 years",
+      "href": "../slides/day3.html#lab-3-3"
+    },
+    {
+      "deck": "day3",
+      "id": "s4",
+      "n": 24,
+      "session": 4,
+      "title": "How much the priors matter",
+      "text": "Session 4 How much the priors matter Run a power-scaling sensitivity diagnostic Refit with alternative priors that someone could defend Summarise what changes for the decision and what does not 04",
+      "href": "../slides/day3.html#s4"
+    },
+    {
+      "deck": "day3",
+      "id": "power-scaling",
+      "n": 25,
+      "session": 4,
+      "title": "Make the priors a little weaker and a little stronger, and see what moves",
+      "text": "How much the priors matter Make the priors a little weaker and a little stronger, and see what moves Raise the prior density to a power: 0.8 weakens it, 1.25 strengthens it. Reweight the existing draws by importance sampling: no refit needed. Report the shift of each decision quantity in posterior standard deviations. 0.03 largest shift, in posterior sd (rural rate)",
+      "href": "../slides/day3.html#power-scaling"
+    },
+    {
+      "deck": "day3",
+      "id": "three-priors",
+      "n": 26,
+      "session": 4,
+      "title": "Three priors on the spread, one list of districts",
+      "text": "Lab 3.4, tasks 2 and 3 Three priors on the spread, one list of districts Prior on τ τ (median) Rural, no sensors, rate Top 15 shared with base HalfNormal(0.2) 0.31 0.235 15 HalfNormal(0.5), base 0.32 0.232 15 HalfNormal(2.0) 0.32 0.229 15 With 140 districts, the data pin τ; the prior on the spread does not change the plan.",
+      "href": "../slides/day3.html#three-priors"
+    },
+    {
+      "deck": "day3",
+      "id": "which-prior-matters",
+      "n": 27,
+      "session": 4,
+      "title": "The prior that matters is the one on reporting, and it rests on one audit",
+      "text": "The summary for Nouran The prior that matters is the one on reporting, and it rests on one audit The priors on spread and shape barely move the decision quantities. The reporting prior moves the rural no-sensor rates almost one for one (Lab 2.4's stretch). So the money for better information goes to reporting, not to refining the model: Day 4, session 3.",
+      "href": "../slides/day3.html#which-prior-matters"
+    },
+    {
+      "deck": "day3",
+      "id": "check-sensitivity",
+      "n": 28,
+      "session": 4,
+      "title": "Reporting sensitivity",
+      "text": "Checkpoint Reporting sensitivity Power-scaling shows that no quantity shifts by more than 0.03 posterior sd. Nouran asks whether the priors can now be ignored in the memo. Yes: the analysis is insensitive to its priors Yes, and the analysis could have used maximum likelihood instead No: sensitivity cannot be known until new data arrive No: state the priors tested, and name the reporting prior, which the data cannot check",
+      "href": "../slides/day3.html#check-sensitivity"
+    },
+    {
+      "deck": "day3",
+      "id": "lab-3-4",
+      "n": 29,
+      "session": 4,
+      "title": "Prior sensitivity",
+      "text": "Lab 3.4 · 25 min Prior sensitivity Run a power-scaling diagnostic, refit with two other priors on the district spread, and summarise what changes for the rural rates and the ranking of districts. D3_4_run_prior_sensitivity.ipynb The base fit and the power-scaling diagnostic 6 min Two alternative priors on the spread 7 min What changes: spread, rural rates, top 15 7 min A summary for the director 5 min ✱ Stretch: Do the same for the prior on the negative binomial shape",
+      "href": "../slides/day3.html#lab-3-4"
+    },
+    {
+      "deck": "day3",
+      "id": "wrap-up",
+      "n": 30,
+      "session": 4,
+      "title": "Three things to keep",
+      "text": "Day 3 · wrap-up Three things to keep Check what the decision needs Choose statistics the fit does not force; the variation from year to year sank the Poisson. Test the code, not one run Calibration over many simulations found a line that one recovery missed. Name the prior that matters Spread and shape priors barely move the plan; the reporting prior does.",
+      "href": "../slides/day3.html#wrap-up"
+    },
+    {
+      "deck": "day3",
+      "id": "next",
+      "n": 31,
+      "session": 4,
+      "title": "Day 4: From posterior to decision",
+      "text": "Next Day 4: From posterior to decision Tomorrow turns the posterior into a capital plan. Read the consultant's report in labs/data/review before you come: Lab 4.4 reviews it.",
+      "href": "../slides/day3.html#next"
+    },
+    {
+      "deck": "day4",
+      "id": "title",
+      "n": 1,
+      "session": 0,
+      "title": "From posterior to decision",
+      "text": "SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty From posterior to decision Day 4: Turn the posterior into a re-piping plan within budget, price the survey that would sharpen it, and review someone else’s analysis Data Science Track4 teaching days + capstone day4 sessions · 4 labsDS-401",
+      "href": "../slides/day4.html#title"
+    },
+    {
+      "deck": "day4",
+      "id": "agenda",
+      "n": 2,
+      "session": 0,
+      "title": "From posterior to decision",
+      "text": "Today From posterior to decision Session 1 · Loss, utility and the decision table Actions, costs and outcomes, and expected utility computed over posterior draws Session 2 · Choosing under a budget A plan for the capital budget with avoided bursts and their uncertainty Session 3 · What more data is worth Expected value of perfect and of sample information, against the price of the data Session 4 · Reviewing a Bayesian analysis A checklist for priors, computation, checking and reporting, and flaws ranked by their effect on the decision",
+      "href": "../slides/day4.html#agenda"
+    },
+    {
+      "deck": "day4",
+      "id": "review-day3",
+      "n": 3,
+      "session": 0,
+      "title": "What the model choice rests on",
+      "text": "Review of Day 3 What the model choice rests on Day 4 uses the hierarchical negative binomial with the reporting term. Which piece of yesterday's evidence would most change today's plan had it gone the other way? The replicated network total matching 3,894 bursts The power-scaling of the prior on τ The dispersion check: a Poisson would make every district look more certain than it is The calibration of the colleague's model",
+      "href": "../slides/day4.html#review-day3"
+    },
+    {
+      "deck": "day4",
+      "id": "s1",
+      "n": 4,
+      "session": 1,
+      "title": "Loss, utility and the decision table",
+      "text": "Session 1 Loss, utility and the decision table Write a decision table of actions, costs and consequences Compute expected cost over posterior draws for each action Show where a decision on the posterior mean differs from one on the whole posterior 01",
+      "href": "../slides/day4.html#s1"
+    },
+    {
+      "deck": "day4",
+      "id": "decision-table",
+      "n": 5,
+      "session": 1,
+      "title": "Three actions, one cost each, computed for every posterior draw",
+      "text": "Loss, utility and the decision table Three actions, one cost each, computed for every posterior draw cost(action) = cost_per_km * km + rate * km * 80_000 * (20 - years * reduction) Action SAR per km Fewer bursts For Wait 0 0% – Repair weak joints, manage pressure 40,000 30% 10 years Re-pipe the mains 400,000 90% 20 years Synthetic planning numbers (data/costs.json); a burst costs SAR 80,000; horizon 20 years.",
+      "href": "../slides/day4.html#decision-table"
+    },
+    {
+      "deck": "day4",
+      "id": "eu-steps",
+      "n": 6,
+      "session": 1,
+      "title": "Average the cost over the posterior, then choose",
+      "text": "Step by step Average the cost over the posterior, then choose 1 · Draws 2,000 posterior rates for each of 140 districts → 2 · Costs each action's cost in each draw: 3 × 2,000 × 140 → 3 · Choose the action with the lowest expected cost in each district Result. Wait in 87 districts, repair 38, re-pipe 15.",
+      "href": "../slides/day4.html#eu-steps"
+    },
+    {
+      "deck": "day4",
+      "id": "plug-in",
+      "n": 7,
+      "session": 1,
+      "title": "Deciding on the median rate gets three rural districts wrong",
+      "text": "Lab 4.1, tasks 4 and 5 Deciding on the median rate gets three rural districts wrong District Kind Sensors Median plug-in Expected utility Mean / median D045 rural yes wait repair 1.05 D069 rural no repair re-pipe 1.03 D091 rural no wait repair 1.03 The mean plug-in agrees everywhere: these costs are straight lines in the rate. The median sits below the mean of a skewed posterior.",
+      "href": "../slides/day4.html#plug-in"
+    },
+    {
+      "deck": "day4",
+      "id": "check-eu",
+      "n": 8,
+      "session": 1,
+      "title": "Expected cost or cost at the estimate",
+      "text": "Checkpoint Expected cost or cost at the estimate An extra cost applies only when a district exceeds 40 bursts in a year: a fine from the regulator. Does deciding on the posterior mean rate still give the expected-utility choice? Yes: the mean plug-in is always the same as expected utility Not in general: the fine is not linear in the rate, so its expectation depends on the whole posterior No, but the median plug-in would No decision can be made with a threshold cost",
+      "href": "../slides/day4.html#check-eu"
+    },
+    {
+      "deck": "day4",
+      "id": "lab-4-1",
+      "n": 9,
+      "session": 1,
+      "title": "Replace, repair or wait",
+      "text": "Lab 4.1 · 25 min Replace, repair or wait Compute the expected 20-year cost of replacing, repairing or waiting for every district over the supplied posterior and compare with decisions made on the posterior mean. D4_1_compute_expected_utility.ipynb Load the posterior and the costs 3 min The cost of each action in each draw 7 min Expected cost and the best action per district 6 min Plug-in decisions against expected utility 6 min Where the two disagree 3 min ✱ Stretch: Decide on the 90th percentile of cost instead of the mean, and say who would choose that",
+      "href": "../slides/day4.html#lab-4-1"
+    },
+    {
+      "deck": "day4",
+      "id": "s2",
+      "n": 10,
+      "session": 2,
+      "title": "Choosing under a budget",
+      "text": "Session 2 Choosing under a budget Rank actions by expected benefit per riyal Choose a plan that fits a capital budget Report avoided bursts with an interval, and who carries the remaining risk 02",
+      "href": "../slides/day4.html#s2"
+    },
+    {
+      "deck": "day4",
+      "id": "budget-bind",
+      "n": 11,
+      "session": 2,
+      "title": "The best plan for each district costs SAR 61 million; the budget is 40",
+      "text": "Choosing under a budget The best plan for each district costs SAR 61 million; the budget is 40 Each district's best action ignores the others; the budget couples them. Rank steps by expected net saving per riyal: wait to repair, repair to re-pipe. Fill the budget in that order; a district's second step comes only after its first. 61.4 SAR million for the unconstrained plan 40.0 SAR million capital budget",
+      "href": "../slides/day4.html#budget-bind"
+    },
+    {
+      "deck": "day4",
+      "id": "the-plan",
+      "n": 12,
+      "session": 2,
+      "title": "43 districts within the budget, with an interval on what they avoid",
+      "text": "Lab 4.2, tasks 3 and 4 43 districts within the budget, with an interval on what they avoid 34 + 9 repairs and re-pipings, SAR 40.0 million 18.2 SAR million expected net saving over 20 years 719 bursts avoided, 90% interval 607 to 870 The interval is part of the plan. A board that hears \"719\" will remember it; a board that hears \"between 600 and 870\" can plan for both.",
+      "href": "../slides/day4.html#the-plan"
+    },
+    {
+      "deck": "day4",
+      "id": "remaining-risk",
+      "n": 13,
+      "session": 2,
+      "title": "Name who carries the risk the plan leaves, and where the model knows least",
+      "text": "Responsible use: Lab 4.2, task 5 Name who carries the risk the plan leaves, and where the model knows least Largest unfunded risks Large urban districts with sensors (D116, D087, D014): many bursts expected, but each kilometre is cheap to leave. Their residents and crews carry the bursts the plan does not prevent. Least known Mostly rural districts without sensors: their rates rest on the audit prior. The memo names them, and session 3 prices finding out.",
+      "href": "../slides/day4.html#remaining-risk"
+    },
+    {
+      "deck": "day4",
+      "id": "check-budget",
+      "n": 14,
+      "session": 2,
+      "title": "Filling a budget",
+      "text": "Checkpoint Filling a budget District A: repair costs 1 million and saves 1.5 million; re-piping costs 10 million and saves 4 million in all. Funds are short. Which step is ranked by which ratio? Re-pipe at 0.4 per riyal, as one step Only the repair is ever considered Re-pipe first because it saves the most Repair at 1.5 per riyal; then the upgrade to re-pipe at 2.5 / 9 ≈ 0.28 per riyal",
+      "href": "../slides/day4.html#check-budget"
+    },
+    {
+      "deck": "day4",
+      "id": "lab-4-2",
+      "n": 15,
+      "session": 2,
+      "title": "A plan within the budget",
+      "text": "Lab 4.2 · 25 min A plan within the budget Choose the districts to re-pipe or repair within the capital budget, with avoided bursts and their uncertainty, and name the districts the model knows least about. D4_2_choose_districts_re.ipynb The plan without a budget, and its cost 4 min Benefit per riyal 5 min Fill the budget 6 min Avoided bursts with an interval 6 min Who carries the remaining risk 4 min ✱ Stretch: Solve the budget exactly by dynamic programming and compare with the greedy plan",
+      "href": "../slides/day4.html#lab-4-2"
+    },
+    {
+      "deck": "day4",
+      "id": "s3",
+      "n": 16,
+      "session": 3,
+      "title": "What more data is worth",
+      "text": "Session 3 What more data is worth Compute the expected value of perfect information for a decision Compute the expected value of a survey by preposterior simulation Give a verdict on an offer of data by comparing its value with its price 03",
+      "href": "../slides/day4.html#s3"
+    },
+    {
+      "deck": "day4",
+      "id": "voi-idea",
+      "n": 17,
+      "session": 3,
+      "title": "Information is worth what it would change in the decision",
+      "text": "What more data is worth Information is worth what it would change in the decision Perfect information Decide in each draw knowing the true rate; average; subtract today's best → The real survey Simulate its result (15% error), update, decide, average → Against its price Buy where the value exceeds SAR 45,000 per district No change, no value. A district whose best action holds across its whole posterior gains nothing from a survey.",
+      "href": "../slides/day4.html#voi-idea"
+    },
+    {
+      "deck": "day4",
+      "id": "survey-numbers",
+      "n": 18,
+      "session": 3,
+      "title": "Decline the full survey; propose 16 districts",
+      "text": "Lab 4.3, tasks 2 to 4 Decline the full survey; propose 16 districts Price, SAR million Value, SAR million Perfect information, 76 districts – 2.38 Full survey as offered, 76 districts 3.42 1.81 Targeted survey, 16 districts 0.72 1.21 The 16 are mostly rural districts close to a decision threshold, with uncertain rates.",
+      "href": "../slides/day4.html#survey-numbers"
+    },
+    {
+      "deck": "day4",
+      "id": "check-voi",
+      "n": 19,
+      "session": 3,
+      "title": "Which district to survey",
+      "text": "Checkpoint Which district to survey Two districts without sensors. X: rate very uncertain, but re-piping is best in every draw. Y: rate moderately uncertain, and repair or wait each wins in about half the draws. Where is a survey worth more? Y: the survey can change its decision; X's decision is already settled X: it is the more uncertain Both the same: a survey costs the same in each Neither: surveys only confirm a model",
+      "href": "../slides/day4.html#check-voi"
+    },
+    {
+      "deck": "day4",
+      "id": "lab-4-3",
+      "n": 20,
+      "session": 3,
+      "title": "The price of the leak survey",
+      "text": "Lab 4.3 · 25 min The price of the leak survey Price the acoustic leak survey offered for districts without sensors by its value of information and give a verdict on the offer. D4_3_price_leak_survey.ipynb The districts the survey covers 3 min Perfect information, district by district 6 min Simulate the survey before buying it 8 min The survey’s value against its price 5 min The verdict 3 min ✱ Stretch: Buy the survey only where its value exceeds its price, and price that smaller offer",
+      "href": "../slides/day4.html#lab-4-3"
+    },
+    {
+      "deck": "day4",
+      "id": "s4",
+      "n": 21,
+      "session": 4,
+      "title": "Reviewing a Bayesian analysis",
+      "text": "Session 4 Reviewing a Bayesian analysis Review an analysis against a checklist of priors, computation, checking and reporting Rank flaws by their effect on the decision Choose and scope a capstone brief 04",
+      "href": "../slides/day4.html#s4"
+    },
+    {
+      "deck": "day4",
+      "id": "review-checklist",
+      "n": 22,
+      "session": 4,
+      "title": "Six questions, in the order of the workflow",
+      "text": "Reviewing a Bayesian analysis Six questions, in the order of the workflow Priors Stated, justified, checked by prior predictive simulation? Computation Four chains, R-hat under 1.01, ESS, divergences explained? Structure Pooling suited to unequal groups, and defended? Measurement Is what was recorded what happened? Checking Predictive checks and a comparison of models? Decision Costs, uncertainty, remaining risk, value of data?",
+      "href": "../slides/day4.html#review-checklist"
+    },
+    {
+      "deck": "day4",
+      "id": "consultant-top",
+      "n": 23,
+      "session": 4,
+      "title": "The consultant's top six, raw and pooled",
+      "text": "Lab 4.4, task 3 The consultant's top six, raw and pooled District Kind Sensors Raw rate Posterior median (90%) D010 rural no 0.51 0.39 (0.26 to 0.60) D017 suburban yes 0.50 0.40 (0.30 to 0.54) D073 rural yes 0.50 0.25 (0.15 to 0.39) D113 rural no 0.42 0.32 (0.19 to 0.53) D067 rural no 0.41 0.38 (0.23 to 0.60) D118 rural no 0.40 0.41 (0.25 to 0.67)",
+      "href": "../slides/day4.html#consultant-top"
+    },
+    {
+      "deck": "day4",
+      "id": "rank-flaws",
+      "n": 24,
+      "session": 4,
+      "title": "Rank the flaws by what they do to the decision, not by how wrong they look",
+      "text": "Lab 4.4, task 3 Rank the flaws by what they do to the decision, not by how wrong they look Structure. No pooling: small districts top the list on noise; 13 zero-burst districts are declared safe. Measurement. Unrecorded bursts read as low risk in 76 districts. Decision. A ranking of means taken as the plan: no costs, intervals, remaining risk or survey price. Computation. Two chains, R-hat against 1.1, 37 divergences dismissed. Priors and checking: Normal(0, 100) called uninformative; R² as fit.",
+      "href": "../slides/day4.html#rank-flaws"
+    },
+    {
+      "deck": "day4",
+      "id": "check-review",
+      "n": 25,
+      "session": 4,
+      "title": "Writing one finding",
+      "text": "Checkpoint Writing one finding Which sentence is a usable review finding? The priors are not good enough The report uses Normal(0, 100) Each district is estimated alone, so D073 (a few bursts on a short network) ranks third; pooled, its rate halves and it leaves the list The analysis should have used NumPyro",
+      "href": "../slides/day4.html#check-review"
+    },
+    {
+      "deck": "day4",
+      "id": "lab-4-4",
+      "n": 26,
+      "session": 4,
+      "title": "Review an analysis, choose a brief",
+      "text": "Lab 4.4 · 25 min Review an analysis, choose a brief Review a consultant’s Bayesian analysis of Yanabi’s bursts by checklist, rank the flaws you find by their effect on the decision, and choose your capstone brief. D4_4_review_supplied_analysis.ipynb Read the analysis 6 min The checklist, item by item 8 min Rank the flaws by their effect on the decision 6 min Choose your capstone brief 5 min ✱ Stretch: Rerun one of the consultant’s claims and show the number changes",
+      "href": "../slides/day4.html#lab-4-4"
+    },
+    {
+      "deck": "day4",
+      "id": "wrap-up",
+      "n": 27,
+      "session": 4,
+      "title": "Three things to keep",
+      "text": "Day 4 · wrap-up Three things to keep Average the cost, then choose And report the plan's outcome as an interval, with who carries the risk it leaves. Price information by the decision Data are worth buying only where they can change what you do. Review by effect Quote, show the evidence, say what changes.",
+      "href": "../slides/day4.html#wrap-up"
+    },
+    {
+      "deck": "day4",
+      "id": "next",
+      "n": 28,
+      "session": 4,
+      "title": "Capstone: your own model and decision memo",
+      "text": "Next Capstone: your own model and decision memo Start your capstone repository on the brief you chose in Lab 4.4. Read labs/capstone/README.md for the structure and the rubric.",
+      "href": "../slides/day4.html#next"
+    },
+    {
+      "deck": "capstone",
+      "id": "title",
+      "n": 1,
+      "session": 0,
+      "title": "Capstone project presentations",
+      "text": "SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty Capstone project presentations Capstone: An eight-minute presentation of the model and the decision, then seven minutes of questions: the assessor changes a prior or a cost, and a peer reviews the model Data Science Track4 teaching days + capstone day8 min talk and demo · 7 min Q&ADS-401",
+      "href": "../slides/capstone.html#title"
+    },
+    {
+      "deck": "capstone",
+      "id": "agenda",
+      "n": 2,
+      "session": 0,
+      "title": "How the orals run",
+      "text": "Capstone How the orals run Expectations and final prep the rubric, the oral's two questions, a last rehearsal Orals a presentation, then questions with a changed prior or cost and the peer's review Review and closing the trainer's review and the follow-up task",
+      "href": "../slides/capstone.html#agenda"
+    },
+    {
+      "deck": "capstone",
+      "id": "rubric",
+      "n": 3,
+      "session": 0,
+      "title": "The rubric",
+      "text": "How the repository is scored The rubric Model and priors 20% Computation 20% Checking 25% Decision 25% Reproducibility 10% Every claim carries a number from the run log. R-hat, divergences, a predictive p-value, an elpd difference with its standard error, an interval on the decision.",
+      "href": "../slides/capstone.html#rubric"
+    },
+    {
+      "deck": "capstone",
+      "id": "format",
+      "n": 4,
+      "session": 0,
+      "title": "8 minutes to present, 7 to defend",
+      "text": "Format 8 minutes to present, 7 to defend 1 · Brief and model The decision maker's question; the structure and the priors you would defend. 2 · Evidence Diagnostics, the check that mattered, the comparison of models. 3 · Decision The choice, its interval, the remaining risk, what more data is worth. The questions. The assessor changes one prior or one cost; you predict the effect on the decision, then rerun. Then your peer asks the question from their review of your model.",
+      "href": "../slides/capstone.html#format"
+    },
+    {
+      "deck": "capstone",
+      "id": "what-good-looks-like",
+      "n": 5,
+      "session": 0,
+      "title": "Predict in words first, then check with the model",
+      "text": "What a strong defence sounds like Predict in words first, then check with the model Strong \"Doubling the value of a serious finding raises the stakes in schools with one visit; I expect three or four of them to enter the 30 visits, at the cost of large schools with known moderate rates.\" Then the rerun. Weak \"The results should be robust.\" Or: rerunning before saying anything, then describing what changed.",
+      "href": "../slides/capstone.html#what-good-looks-like"
+    },
+    {
+      "deck": "capstone",
+      "id": "running-order",
+      "n": 6,
+      "session": 0,
+      "title": "Who presents when, and who reviews whom",
+      "text": "Running order Who presents when, and who reviews whom # Presenter Brief Peer reviewer 1 2 3 4 5 6 7 8",
+      "href": "../slides/capstone.html#running-order"
+    },
+    {
+      "deck": "capstone",
+      "id": "final-prep",
+      "n": 7,
+      "session": 0,
+      "title": "Final prep · 20 minutes",
+      "text": "Before the first oral Final prep · 20 minutes Rehearse once; check that one cell of your notebook reruns in under two minutes with a changed prior or cost.",
+      "href": "../slides/capstone.html#final-prep"
+    },
+    {
+      "deck": "capstone",
+      "id": "now-presenting",
+      "n": 8,
+      "session": 0,
+      "title": "Presentation",
+      "text": "Now presenting Presentation Questions",
+      "href": "../slides/capstone.html#now-presenting"
+    },
+    {
+      "deck": "capstone",
+      "id": "review",
+      "n": 9,
+      "session": 0,
+      "title": "What the orals showed",
+      "text": "Trainer review What the orals showed Strongest patterns What several participants got right. Common gaps What most repositories would fix next. One surprise A prediction that the rerun overturned.",
+      "href": "../slides/capstone.html#review"
+    },
+    {
+      "deck": "capstone",
+      "id": "what-next",
+      "n": 10,
+      "session": 0,
+      "title": "The follow-up task, within three weeks",
+      "text": "After the course The follow-up task, within three weeks Review one real uncertainty analysis from your workplace or a public report, with the checklist of Lab 4.4. Submit at most 800 words: the findings, quoting the analysis, ranked by their effect on the decision, and a three-sentence verdict. labs/followup/README.md has the details. Keep your capstone repository reproducible: it is the evidence of the course's outcomes.",
+      "href": "../slides/capstone.html#what-next"
+    },
+    {
+      "deck": "capstone",
+      "id": "thanks",
+      "n": 11,
+      "session": 0,
+      "title": "Thank you",
+      "text": "SDAIA Academy Thank you Bayesian Modelling and Decisions under Uncertainty",
+      "href": "../slides/capstone.html#thanks"
+    }
+  ]
+}

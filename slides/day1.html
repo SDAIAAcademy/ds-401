@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="deck" data-track="data-science">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 1 · From priors to posteriors · Bayesian Modelling and Decisions under Uncertainty</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<link rel="icon" href="../_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="day1.md">
+<link rel="describedby" href="../llms.txt">
+<link rel="stylesheet" href="../_engine/academy.css">
+</head>
+<body>
+<div class="deck" data-course="Bayesian Modelling and Decisions under Uncertainty" data-track="data-science" data-day="Day 1">
+<section class="slide title" id="title" data-auto="title" data-label="Welcome" data-n="1">
+  <div class="kicker">SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty</div>
+  <h1>From priors to posteriors</h1>
+  <p class="lead mt">Day 1: Write the story that makes the data, test the priors by simulation, fit with Hamiltonian Monte Carlo and read whether the computation can be trusted</p>
+  <div class="meta"><span class="track">Data Science Track</span><span>4 teaching days + capstone day</span><span>4 sessions · 4 labs</span><span>DS-401</span></div>
+  <aside class="notes"><p>Welcome. Ask the room one calibration question: who has fitted a model with a sampler before, and who has read R-hat in someone else's output? The answers set how fast session 3 goes. The rhythm of each day: four sessions of about 50 minutes, each ending with a 25-minute lab. Breaks are on the B key, not on slides.</p></aside>
+</section>
+
+<section class="slide" id="agenda" data-auto="agenda" data-label="Agenda" data-n="2">
+  <div class="kicker">Today</div>
+  <h2>From priors to posteriors</h2>
+  <div class="agenda"><div class="item"><div><b>Session 1 · Models that generate data</b><small>A burst count as a generative story, and Bayes’ rule computed on a grid</small></div></div><div class="item"><div><b>Session 2 · Priors you can defend</b><small>Priors judged by what they predict, before any outcome is seen</small></div></div><div class="item"><div><b>Session 3 · Fitting with Hamiltonian Monte Carlo</b><small>Why sampling replaces the grid, and how HMC and NUTS move through a posterior</small></div></div><div class="item"><div><b>Session 4 · Reading the computation</b><small>The diagnostics that decide whether a fit can be read, and when an approximation is enough</small></div></div></div>
+</section>
+
+<section class="slide" id="the-decision" data-label="The decision" data-lo="LO1 LO5" data-n="3">
+  <div class="kicker">Yanabi Water Authority</div>
+  <h2>Every model this week ends in one decision about pipes</h2>
+  <div class="cols cols-3">
+    <div class="card c-navy"><h4>The question</h4><p class="small mb0">Dr. Nouran Al-Ateeq, director of asset management, must choose which of 140 districts to re-pipe or repair within a capital budget.</p></div>
+    <div class="card c-teal"><h4>The data</h4><p class="small mb0">Five years of reported bursts, 2021 to 2025, from networks of 1.2 km to 198 km. Synthetic, with known generating values.</p></div>
+    <div class="card c-coral"><h4>The difficulty</h4><p class="small mb0">A third of the districts recorded fewer than five bursts in five years, and most rural districts have no sensors.</p></div>
+  </div>
+  <p class="small mt">Day 1 builds the workflow on one model. Day 2 pools districts, Day 3 checks the models, Day 4 decides.</p>
+  <aside class="notes"><p>Introduce the cast once: Nouran owns the decision; Shabib Al-Ruqaish, the pipe network engineer, owns the burst records; Juhaina Al-Zahim owns the costs and the budget; Ouda Al-Shahwan brings an acoustic survey offer on Day 4; Wurud Al-Samhan is the data protection officer. Participants play Zaina Al-Habdan, the senior data scientist.</p><p>Everything is synthetic: labs/prepare_data.py writes the files with seed 401, and data/truth.json holds the values that generated them. Real data never has that file, which is why the course keeps asking "how would you know without it?"</p></aside>
+</section>
+
+<section class="slide" id="prework-classification" data-label="Pre-work" data-lo="LO1" data-n="4">
+  <div class="kicker">From the pre-work</div>
+  <h2>Real asset and customer records stay out of a hosted notebook until classified</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>The pre-work asked you to classify Yanabi's real burst and customer files under the national data classification levels.</li>
+      <li>Burst counts per district: an internal record. Customer addresses on a burst ticket: personal data under the Personal Data Protection Law.</li>
+      <li>This course uses only synthetic files, so Colab is allowed here. At work, the classification decides where a notebook may run.</li>
+    </ul>
+    <div class="card c-purple flat"><h4>Ask Wurud first</h4><p class="small mb0">Wurud Al-Samhan, the data protection officer, signs off before a real extract leaves Yanabi's systems.</p></div>
+  </div>
+  <aside class="notes"><p>Take two answers from the pre-work's entry quiz on this point. The usual mistake is treating burst counts as harmless while the ticket text holds names and addresses.</p><p>Sources: NDMO Data Classification Policy; Personal Data Protection Law and its implementing regulation (addresses in the README). Do not quote clauses from memory.</p></aside>
+</section>
+
+<section class="slide" id="setup-check" data-label="Setup" data-lo="LO1" data-n="5">
+  <div class="kicker">Before the first lab</div>
+  <h2>One notebook proves your setup: run it now</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="terminal"><code class="language-bash"><span class="hljs-built_in">cd</span> ds-401/labs
+uv <span class="hljs-built_in">sync</span>
+uv run jupyter execute 00_setup_check.ipynb</code></pre>
+    <ul class="bullets small">
+      <li>Or open <code>00_setup_check.ipynb</code> in Colab and run all cells.</li>
+      <li>It imports NumPyro, JAX and ArviZ, fits a tiny model and prints the versions.</li>
+      <li>Everything runs on a laptop processor. No model is downloaded and no key is needed.</li>
+    </ul>
+  </div>
+  <div class="callout note small mt"><b>AI policy.</b> The first model of each day (Labs 1.1, 2.1, 3.1, 4.1) is written without AI. In the other labs the tutor Mirsad explains diagnostics and errors; it writes no model code.</div>
+  <aside class="notes"><p>The first fit compiles: half a minute is normal. On Windows with a deep folder, set UV_PROJECT_ENVIRONMENT to a short path before uv sync (labs/README.md). Mirsad is a set of instructions in labs/tutor_instruction.md that participants paste into an approved assistant; it runs on no service of its own.</p></aside>
+</section>
+
+<!-- Session 1 -->
+
+<section class="slide section" id="s1" data-auto="section" data-session="1" data-n="6">
+  <div class="kicker">Session 1</div>
+  <h1>Models that generate data</h1>
+  <ul class="bullets outcomes"><li>Write a generative model of burst counts with network length as exposure</li><li>Compute a posterior on a grid from a prior and a likelihood</li><li>Explain why the posterior of a small district leans on its prior</li></ul>
+  <div class="sess-no">01</div>
+</section>
+
+<section class="slide" id="recap-glm" data-label="Recap" data-lo="LO1" data-n="7" data-session="1">
+  <div class="kicker">Recap from DS-301</div>
+  <h2>You have fitted this count model before, by maximum likelihood</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Counts with an exposure: log E[bursts] = log km + α + Xβ.</li>
+      <li>The offset fixes the coefficient of log km at 1, so β describes a rate.</li>
+      <li>Overdispersion and the negative binomial: Day 3 returns to them.</li>
+    </ul>
+    <div class="card c-teal flat"><h4>What changes this week</h4><p class="small mb0">Each unknown gets a distribution, not one best value. The decision on Day 4 uses the whole distribution.</p></div>
+  </div>
+  <aside class="notes"><p>This is a pointer, not a lesson: DS-301 Day 2 sessions 3 and 4 teach exposure and dispersion. If several participants have not taken DS-301, point them to its Lab 2.3 for the evening.</p></aside>
+</section>
+
+<section class="slide" id="generative-story" data-label="Generative story" data-lo="LO1" data-n="8" data-session="1">
+  <div class="kicker">A model is a simulator</div>
+  <h2>Write the story that produces the bursts, then run it forwards</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>1 · Rate</b>bursts per km of main per year</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>2 · Exposure</b>times the district's km, for one year</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>3 · Count</b>a Poisson draw with that mean</div>
+    <div class="arrow">→</div>
+    <div class="step c-coral"><b>4 · Record</b>what was reported (Day 2)</div>
+  </div>
+  <p class="small mt">If you can simulate the data, you can test every later step against a truth you chose.</p>
+  <aside class="notes"><p>Ask: which step is missing for districts without sensors? The record step: not every burst is reported. Leave it open; session 2.4 models it. Lab 1.1 task 1 is this flow in one line of NumPy.</p></aside>
+</section>
+
+<section class="slide" id="bayes-rule" data-label="Bayes' rule" data-lo="LO1" data-n="9" data-session="1">
+  <div class="kicker">Prior times likelihood</div>
+  <h2>The posterior weighs every candidate rate by prior and data</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 1.1, task 3"><code class="language-python">lp = log_prior(grid) + log_lik(grid, counts, km)
+w = np.exp(lp - lp.<span class="hljs-built_in">max</span>())
+w = w / w.<span class="hljs-built_in">sum</span>()   <span class="hljs-comment"># posterior weights on the grid</span></code></pre>
+    <ul class="bullets small">
+      <li>Work on the log scale: products of many probabilities underflow.</li>
+      <li>Subtract the maximum before exponentiating.</li>
+      <li>The normalising constant is the sum of the weights.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Write p(rate | data) ∝ p(rate) × p(data | rate) on the board and point at each term in the code. The prior is a lognormal centred on 0.10 bursts per km-year with a log-scale spread of 1: Shabib's "about one burst per 10 km a year". Session 2 tests that prior.</p></aside>
+</section>
+
+<section class="slide" id="small-and-large" data-label="Small and large" data-lo="LO1 LO2" data-n="10" data-session="1">
+  <div class="kicker">Lab 1.1, task 4</div>
+  <h2>Five years say little about a 1.2 km district</h2>
+  <table class="t small">
+    <tr><th>District</th><th class="num">km</th><th class="num">Bursts, 5 years</th><th class="num">Median rate</th><th class="num">90% interval</th></tr>
+    <tr><td>D043, rural</td><td class="num">1.2</td><td class="num">2</td><td class="num">0.194</td><td class="num">0.058 to 0.523</td></tr>
+    <tr><td>D011, urban</td><td class="num">198.0</td><td class="num">87</td><td class="num">0.087</td><td class="num">0.073 to 0.104</td></tr>
+  </table>
+  <p class="small mt">Same prior, same five years: the small district's interval is 15 times wider, and its median still leans on the prior's centre.</p>
+  <aside class="notes"><p>Numbers from the course's run of Lab 1.1. The true rates, known because the data are synthetic, are 0.413 for D043 and 0.071 for D011: D043's posterior is pulled towards the prior's 0.10. Day 2's question is what to do for the 51 districts like D043.</p></aside>
+</section>
+
+<section class="slide" id="grid-limit" data-label="Grid limit" data-lo="LO1" data-n="11" data-session="1">
+  <div class="kicker">Why we need a sampler</div>
+  <h2>A grid works for one rate and fails for 140</h2>
+  <div class="cols cols-2 mid">
+    <div class="stat center"><div class="big">10^280</div><div class="lbl">grid points for 140 rates at 100 points each</div></div>
+    <ul class="bullets small">
+      <li>The grid grows exponentially with the number of unknowns.</li>
+      <li>Almost all of its points have negligible posterior weight.</li>
+      <li>A sampler spends its effort where the weight is: session 3.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Lab 1.1 task 5 computes the exponent. Ask for a guess before showing it. The point is not the number but the idea of "typical set": in high dimension the posterior mass sits in a thin shell, which is why Hamiltonian Monte Carlo follows the geometry instead of guessing.</p></aside>
+</section>
+
+<section class="slide" id="workflow-map" data-label="Workflow" data-lo="LO1 LO3" data-n="12" data-session="1">
+  <div class="kicker">The week as a workflow</div>
+  <h2>A Bayesian workflow is a loop, not a fit</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>Prior predictive</b>Day 1</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>Fit and diagnose</b>Days 1 and 2</div>
+    <div class="arrow">→</div>
+    <div class="step c-cyan"><b>Check and compare</b>Day 3</div>
+    <div class="arrow">→</div>
+    <div class="step c-purple"><b>Calibrate the code</b>Day 3</div>
+    <div class="arrow">→</div>
+    <div class="step c-coral"><b>Decide</b>Day 4</div>
+  </div>
+  <div class="callout tip small mt"><b>A failed check sends you back.</b> A model is expanded or replaced, and every step runs again.</div>
+  <aside class="notes"><p>Sources: Gelman et al. (2020), Bayesian Workflow. The capstone README is graded on this loop: prior reasons, diagnostics, checks, comparison and the decision (rubric: model and priors 20, computation 20, checking 25, decision 25, reproducibility 10).</p></aside>
+</section>
+
+<section class="slide" id="check-grid" data-lo="LO1" data-n="13" data-session="1">
+  <div class="kicker">Checkpoint</div>
+  <h2>A narrow posterior</h2>
+  <div class="quiz" data-type="single" data-lo="LO1" data-id="check-grid-q1">
+    <p class="lead">Two districts share the prior. District P has 200 km and 90 bursts in five years; district Q has 2 km and 3 bursts. Which statement about their posteriors holds?</p>
+    <div class="opts">
+      <div class="opt" data-why="Thinks the prior dominates when data are plentiful, the reverse of what happens" data-k="A">P's posterior depends more on the prior than Q's</div>
+      <div class="opt" data-ok data-k="B">Q's posterior is wider and closer to the prior's centre</div>
+      <div class="opt" data-why="Reads the interval width as a property of the prior alone, ignoring the data" data-k="C">Both have the same width because the prior is the same</div>
+      <div class="opt" data-why="Confuses a small count with a known rate: few bursts leave the rate uncertain" data-k="D">Q's posterior is narrow because 3 bursts is a small number</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Q's likelihood is flat over a wide range of rates, so the prior shapes its posterior; P's likelihood is sharp and overwhelms the prior.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. If the room picks D, return to the table of D043 and D011: 2 bursts gave an interval from 0.058 to 0.523.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-1-1" data-auto="lab" data-lab="1.1" data-label="Lab 1.1" data-n="14" data-session="1">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 1.1 · 25 min</div><h2>Simulate and recover a burst rate</h2><p class="lead small">Simulate burst counts from a rate you choose, recover it on a grid, then compare the posteriors of a small and a large district.</p><a class="nb" href="../labs/D1_1_simulate_burst_counts.ipynb">D1_1_simulate_burst_counts.ipynb</a></div><ul class="checklist"><li>The generative story as a simulator <span class="min">6 min</span></li><li>The log likelihood on a grid of rates <span class="min">5 min</span></li><li>Prior times likelihood: the grid posterior <span class="min">5 min</span></li><li>A small district and a large one <span class="min">6 min</span></li><li>Where the grid stops working <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Simulate with year-to-year variation and see the grid posterior become too sure</li></ul></div>
+  <aside class="notes"><p>AI-off lab: no assistant, the tutor included. Walk the room. Usual problems: forgetting the exposure in the Poisson mean; exponentiating without subtracting the maximum (all weights become zero); a grid that starts at 0 (log of zero in the prior). The stretch shows that ignoring year-to-year variation makes intervals too narrow: about 85% coverage in the course's run instead of 90%.</p></aside>
+</section>
+
+<!-- Session 2 -->
+
+<section class="slide section" id="s2" data-auto="section" data-session="2" data-n="15">
+  <div class="kicker">Session 2</div>
+  <h1>Priors you can defend</h1>
+  <ul class="bullets outcomes"><li>Translate a prior on a log scale into the units the engineers use</li><li>Run a prior predictive simulation for every district</li><li>Write a reason for each prior a model carries</li></ul>
+  <div class="sess-no">02</div>
+</section>
+
+<section class="slide" id="log-scale" data-label="Log scale" data-lo="LO1" data-n="16" data-session="2">
+  <div class="kicker">Reading a prior</div>
+  <h2>A prior on the log rate means something only on the rate scale</h2>
+  <table class="t small">
+    <tr><th>Prior on the log rate</th><th class="num">5th percentile</th><th class="num">Median</th><th class="num">95th percentile</th></tr>
+    <tr><td>N(0, 10), "flat-looking"</td><td class="num">0.00000013</td><td class="num">0.78</td><td class="num">17,000,000</td></tr>
+    <tr class="hl"><td>N(log 0.1, 1), weakly informative</td><td class="num">0.019</td><td class="num">0.10</td><td class="num">0.52</td></tr>
+    <tr><td>N(log 0.5, 0.05), tight</td><td class="num">0.46</td><td class="num">0.50</td><td class="num">0.54</td></tr>
+  </table>
+  <p class="caption">Bursts per km of main per year, from 1,000 prior draws (Lab 1.2, task 1, quick run).</p>
+  <aside class="notes"><p>Ask the room to read the first row aloud in words: a 5% chance that the rate exceeds 17 million bursts per kilometre per year. A prior that looks vague on one scale is extreme on another.</p></aside>
+</section>
+
+<section class="slide" id="flat-not-harmless" data-label="Flat priors" data-lo="LO1" data-n="17" data-session="2">
+  <div class="kicker">Lab 1.2, tasks 2 and 3</div>
+  <h2>The "harmless" flat prior predicts impossible district-years</h2>
+  <div class="cols cols-2 mid">
+    <div class="stat center"><div class="big">37%</div><div class="lbl">of simulated district-years above 500 bursts under N(0, 10)</div></div>
+    <ul class="bullets small">
+      <li>No district in the region has ever had 500 bursts in a year.</li>
+      <li>With little data, such a prior pulls small districts towards absurd values.</li>
+      <li>With a lot of data it hardly matters, which is how it hides.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's run: share over 500 is 0.366 for the flat prior and 0.000 for the weakly informative one. Link back to D043: with 2 bursts, the prior decides much of the answer.</p></aside>
+</section>
+
+<section class="slide" id="prior-predictive" data-label="Prior predictive" data-lo="LO1" data-n="18" data-session="2">
+  <div class="kicker">Prior predictive simulation</div>
+  <h2>Simulate data from the prior alone, then ask an engineer</h2>
+  <div class="flow">
+    <div class="step c-teal"><b>1 · Draw</b>parameters from the prior</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Simulate</b>a year in all 140 districts</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-coral frag" data-frag="c"><b>3 · Compare</b>with statements written before the data</div>
+  </div>
+  <div class="callout warn small mt frag"><b>Not the burst counts.</b> Tuning a prior to the observed data uses the data twice and makes the posterior too sure.</div>
+  <aside class="notes"><p>Press once per step. The statements in Lab 1.2 are Shabib's: no district-year above 500 bursts; between 300 and 3,000 bursts a year across the network is plausible. They were written down before anyone opened bursts.csv.</p><p>Sources: Gabry et al. (2017), Visualization in Bayesian workflow.</p></aside>
+</section>
+
+<section class="slide" id="too-tight" data-label="Too tight" data-lo="LO1" data-n="19" data-session="2">
+  <div class="kicker">The other failure</div>
+  <h2>A prior can also be wrong by being too sure</h2>
+  <table class="t small">
+    <tr><th>Prior</th><th class="num">District-years above 500</th><th class="num">Network totals in 300 to 3,000</th></tr>
+    <tr><td>N(0, 10)</td><td class="num">37%</td><td class="num">10%</td></tr>
+    <tr class="hl"><td>N(log 0.1, 1)</td><td class="num">0%</td><td class="num">73%</td></tr>
+    <tr><td>N(log 0.5, 0.05)</td><td class="num">0%</td><td class="num">0%</td></tr>
+  </table>
+  <p class="small mt">The vendor's tight prior never breaks the first statement, yet it rules out every network total the engineers call plausible.</p>
+  <aside class="notes"><p>From Lab 1.2 task 3, quick run. The tight prior came with a vendor template "calibrated on another utility". Ask: what would you need to see before borrowing another utility's rate this precisely? Evidence that the networks are alike, which nobody has.</p></aside>
+</section>
+
+<section class="slide" id="reason-per-prior" data-label="Reasons" data-lo="LO1" data-n="20" data-session="2">
+  <div class="kicker">The evidence LO1 asks for</div>
+  <h2>Every prior in the notebook carries one sentence of reason</h2>
+  <div class="cols cols-2">
+    <div class="card c-teal"><h4>α ~ Normal(log 0.1, 1)</h4><p class="small mb0">Centred on the engineers' "one burst per 10 km a year"; 73% of simulated network totals within their plausible range.</p></div>
+    <div class="card c-cyan"><h4>β age ~ Normal(0, 0.5)</h4><p class="small mb0">Median rate ratio 1.0 per 10 years, 95th percentile 2.3: "might double, never five times".</p></div>
+  </div>
+  <div class="callout tip small mt"><b>A reason quotes a number or a statement.</b> "Weakly informative" alone is a label, not a reason.</div>
+  <aside class="notes"><p>Lab 1.2 task 5 asks for the age prior. Some will pick Normal(0.3, 0.2) from what they expect; that is defensible if they write why, but it uses a belief about the direction that the engineers did not state. Discuss both.</p></aside>
+</section>
+
+<section class="slide" id="weakly-informative" data-label="Weakly informative" data-lo="LO1" data-n="21" data-session="2">
+  <div class="kicker">A working definition</div>
+  <h2>Weakly informative: rules out the impossible, stays open on the plausible</h2>
+  <div class="cols cols-3">
+    <div class="card c-coral flat"><h4>Too vague</h4><p class="small mb0">Puts weight on rates no pipe ever had. Harms small districts.</p></div>
+    <div class="card c-teal flat"><h4>Weakly informative</h4><p class="small mb0">Spans every rate an engineer would accept, and little beyond.</p></div>
+    <div class="card c-purple flat"><h4>Informative</h4><p class="small mb0">Carries a measurement: an audit, an earlier study. Day 2 uses one for reporting.</p></div>
+  </div>
+  <aside class="notes"><p>Point forward: Lab 2.4 uses an informative prior on the share of bursts reported, from a 2024 audit, because the data cannot identify it. That prior must be defended by the audit, not by convenience.</p></aside>
+</section>
+
+<section class="slide" id="check-prior" data-lo="LO1" data-n="22" data-session="2">
+  <div class="kicker">Checkpoint</div>
+  <h2>Choosing the prior</h2>
+  <div class="quiz" data-type="single" data-lo="LO1" data-id="check-prior-q1">
+    <p class="lead">A colleague sets the prior on the log burst rate by fitting it to the five years of observed counts, then fits the model to the same counts. What is the problem?</p>
+    <div class="opts">
+      <div class="opt" data-why="Thinks any data-based prior is invalid, which would also rule out an independent audit" data-k="A">Priors may never use data of any kind</div>
+      <div class="opt" data-why="Believes the prior has no effect once there are 700 counts, which fails for small districts" data-k="B">Nothing: with 700 counts the prior does not matter</div>
+      <div class="opt" data-ok data-k="C">The data are used twice, so the posterior is too sure</div>
+      <div class="opt" data-why="Mistakes the issue for a computational one" data-k="D">The sampler cannot handle a prior estimated from data</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The same counts enter through the prior and through the likelihood, so the posterior counts them twice and its intervals are too narrow.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. Data independent of the likelihood (an audit, another period, an engineer's prior statement) may inform a prior; the same counts may not.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-1-2" data-auto="lab" data-lab="1.2" data-label="Lab 1.2" data-n="23" data-session="2">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 1.2 · 25 min</div><h2>Prior predictive checks</h2><p class="lead small">Simulate a year of bursts in all 140 districts from three candidate priors, compare with the engineers’ statements, keep one and reject two with reasons.</p><a class="nb" href="../labs/D1_2_run_prior_predictive.ipynb">D1_2_run_prior_predictive.ipynb</a></div><ul class="checklist"><li>Three priors in bursts per km-year <span class="min">5 min</span></li><li>Simulate a year in every district from each prior <span class="min">6 min</span></li><li>Compare with what the engineers know <span class="min">5 min</span></li><li>Keep one prior, reject two, with a reason each <span class="min">5 min</span></li><li>The prior of the age effect <span class="min">4 min</span></li><li class="stretch">✱ Stretch: Prior predictive share of district-years without a burst</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain. Usual problems: forgetting to clip the Poisson mean (NumPy overflows under the flat prior); sharing one rate across districts and then wondering why totals are so variable (that is right here: no district effects yet). Ask two participants to read their reason for the age prior.</p></aside>
+</section>
+
+<!-- Session 3 -->
+
+<section class="slide section" id="s3" data-auto="section" data-session="3" data-n="24">
+  <div class="kicker">Session 3</div>
+  <h1>Fitting with Hamiltonian Monte Carlo</h1>
+  <ul class="bullets outcomes"><li>Explain how Hamiltonian Monte Carlo uses the gradient of the log posterior</li><li>Write a Poisson model with an offset in a probabilistic programming language</li><li>Report rate ratios with posterior intervals</li></ul>
+  <div class="sess-no">03</div>
+</section>
+
+<section class="slide" id="draws-not-formulas" data-label="Draws" data-lo="LO1" data-n="25" data-session="3">
+  <div class="kicker">Monte Carlo</div>
+  <h2>A pile of posterior draws answers any question you can compute</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>A median, an interval, a probability: functions of the draws.</li>
+      <li>A derived quantity, such as next year's bursts in D017, is computed draw by draw.</li>
+      <li>The decision on Day 4 is a cost computed in every draw, then averaged.</li>
+    </ul>
+    <pre class="code s" data-file="Lab 1.3, task 5"><code class="language-python">mu = np.exp(a + b @ X[j]) * km[j]   <span class="hljs-comment"># one value per draw</span>
+np.quantile(mu, [<span class="hljs-number">0.5</span>, <span class="hljs-number">0.05</span>, <span class="hljs-number">0.95</span>])</code></pre>
+  </div>
+  <aside class="notes"><p>Stress the habit: never summarise early. Compute the quantity in each draw, then summarise. Averaging the rate first and then computing costs gives the wrong expected cost when the cost is not linear (Day 4).</p></aside>
+</section>
+
+<section class="slide" id="hmc-intuition" data-label="HMC" data-lo="LO1" data-n="26" data-session="3">
+  <div class="kicker">Hamiltonian Monte Carlo</div>
+  <h2>HMC rolls a particle across the posterior using its gradient</h2>
+  <div class="cols cols-3">
+    <div class="card c-navy"><h4>Position</h4><p class="small mb0">The current values of all parameters.</p></div>
+    <div class="card c-teal"><h4>Momentum</h4><p class="small mb0">A random push, drawn fresh at each iteration.</p></div>
+    <div class="card c-coral"><h4>Gradient</h4><p class="small mb0">The slope of the log posterior steers the path towards high density.</p></div>
+  </div>
+  <p class="small mt">The path is followed in small leapfrog steps; the end point is accepted or rejected so that the draws come from the posterior.</p>
+  <aside class="notes"><p>The physics analogy: a frictionless puck on a surface whose height is minus the log posterior. Momentum carries it far in one iteration, which is why HMC explores many dimensions where random-walk samplers stall. The gradient comes from automatic differentiation (JAX in NumPyro, Stan's own in Stan).</p><p>Sources: Betancourt (2017), A Conceptual Introduction to Hamiltonian Monte Carlo.</p></aside>
+</section>
+
+<section class="slide" id="nuts" data-label="NUTS" data-lo="LO1" data-n="27" data-session="3">
+  <div class="kicker">The No-U-Turn sampler</div>
+  <h2>NUTS chooses the path length; warm-up chooses the step size</h2>
+  <table class="t small">
+    <tr><th>Setting</th><th>Who sets it</th><th>What goes wrong</th></tr>
+    <tr><td>Path length</td><td>NUTS: doubles the path until it turns back</td><td>Paths that hit the maximum tree depth: slow</td></tr>
+    <tr><td>Step size</td><td>Warm-up: tuned to a target acceptance rate</td><td>Too large for a curved region: divergences</td></tr>
+    <tr><td>Mass matrix</td><td>Warm-up: the scale of each parameter</td><td>Very different scales: slow mixing</td></tr>
+  </table>
+  <aside class="notes"><p>Warm-up draws are discarded: they are tuning, not samples. NumPyro's default target acceptance is 0.8; raising it shrinks the step size, which sometimes hides a geometry problem without fixing it (Lab 2.3 stretch).</p></aside>
+</section>
+
+<section class="slide" id="numpyro-model" data-label="The model" data-lo="LO1" data-n="28" data-session="3">
+  <div class="kicker">Lab 1.3, task 1</div>
+  <h2>The model is the generative story, written as code</h2>
+  <pre class="code s" data-file="Lab 1.3"><code class="language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">pooled_model</span>(<span class="hljs-params">d, log_km, X, y=<span class="hljs-literal">None</span></span>):
+    alpha = numpyro.sample(<span class="hljs-string">&quot;alpha&quot;</span>, dist.Normal(np.log(<span class="hljs-number">0.10</span>), <span class="hljs-number">1.0</span>))
+    beta = numpyro.sample(<span class="hljs-string">&quot;beta&quot;</span>, dist.Normal(<span class="hljs-number">0.0</span>, <span class="hljs-number">0.5</span>).expand([<span class="hljs-number">4</span>]).to_event(<span class="hljs-number">1</span>))
+    eta = alpha + X @ beta                      <span class="hljs-comment"># log rate per district</span>
+    numpyro.sample(<span class="hljs-string">&quot;y&quot;</span>, dist.Poisson(jnp.exp(log_km + eta[d])), obs=y)</code></pre>
+  <p class="small mt">The same function simulates data when <code>y</code> is missing and conditions on it when <code>y</code> is given.</p>
+  <aside class="notes"><p>Walk the lines in order of the story: prior on the base rate, prior on the effects, the log rate, the exposure as an offset, the count. The other probabilistic programming languages (Stan, PyMC, brms) write the same five lines in their own syntax; the tool slot on the next slide lists them as interchangeable.</p></aside>
+</section>
+
+<section class="slide" id="tool-slot" data-label="Tools" data-lo="LO1" data-n="29" data-session="3">
+  <div class="kicker">Probabilistic programming: interchangeable examples</div>
+  <h2>The labs use NumPyro; the workflow is the same in every tool</h2>
+  <div class="cols cols-4 gap-s">
+    <div class="card c-teal"><h4>Stan</h4><p class="small mb0">Through CmdStanPy or CmdStanR; compiles a model to C++.</p></div>
+    <div class="card c-cyan"><h4>PyMC</h4><p class="small mb0">With Bambi for formula-style models.</p></div>
+    <div class="card c-navy"><h4>NumPyro</h4><p class="small mb0">On JAX; installs without a compiler, runs on a laptop or Colab.</p></div>
+    <div class="card c-purple"><h4>brms</h4><p class="small mb0">Formula models in R, fitted by Stan.</p></div>
+  </div>
+  <p class="small mt">Diagnostics and comparison: ArviZ in Python; loo and bayesplot in R. Your capstone may use any of them.</p>
+  <aside class="notes"><p>Tool names are examples, not endorsements. The labs chose NumPyro because it installs through uv on Windows, macOS and Linux and in Colab with no C++ toolchain. Versions used to build the course: NumPyro 0.22 on JAX 0.12, ArviZ 1.3. ArviZ 1.x returns DataTree objects; older tutorials show the 0.x interface.</p></aside>
+</section>
+
+<section class="slide" id="pooled-result" data-label="Result" data-lo="LO1" data-n="30" data-session="3">
+  <div class="kicker">Lab 1.3, task 3</div>
+  <h2>Asbestos cement bursts nearly twice as often as PVC of the same age</h2>
+  <div class="bars">
+    <div class="row"><span>Asbestos cement</span><div class="bar c-coral" style="--w:92%"></div><span class="val">1.85 (1.70 to 2.02)</span></div>
+    <div class="row"><span>Age, per 10 years</span><div class="bar c-amber" style="--w:67%"></div><span class="val">1.35 (1.30 to 1.39)</span></div>
+    <div class="row"><span>Cast iron</span><div class="bar c-cyan" style="--w:66%"></div><span class="val">1.33 (1.23 to 1.44)</span></div>
+    <div class="row"><span>Ductile iron</span><div class="bar c-teal" style="--w:61%"></div><span class="val">1.22 (1.13 to 1.31)</span></div>
+  </div>
+  <p class="caption">Rate ratios against PVC, posterior medians with 90% intervals, complete-pooling Poisson model (quick run).</p>
+  <aside class="notes"><p>The generating values were exp(0.70) = 2.01 for asbestos cement, exp(0.30) = 1.35 per 10 years, exp(0.45) = 1.57 for cast iron, exp(0.15) = 1.16 for ductile iron. Three of the five generating values fall inside the 90% intervals. The intervals are too narrow: this model has no district effects and no extra variation. Day 2 adds them.</p></aside>
+</section>
+
+<section class="slide" id="check-offset" data-lo="LO1" data-n="31" data-session="3">
+  <div class="kicker">Checkpoint</div>
+  <h2>The offset</h2>
+  <div class="quiz" data-type="single" data-lo="LO1" data-id="check-offset-q1">
+    <p class="lead">Juhaina asks why the model does not estimate a coefficient for log km, as it does for age. What do you answer?</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">Because bursts are assumed proportional to length, so its coefficient is fixed at 1</div>
+      <div class="opt" data-why="Believes length has no effect on bursts, which the stretch item disproves" data-k="B">Because network length does not affect the number of bursts</div>
+      <div class="opt" data-why="Mistakes an offset for a computational shortcut" data-k="C">Because the sampler cannot estimate a coefficient on a logarithm</div>
+      <div class="opt" data-why="Confuses a fixed coefficient with a prior centred on 1" data-k="D">Because its prior is centred on 1 and the data agree</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Twice the kilometres at the same rate gives twice the expected bursts; the other coefficients then describe a rate per kilometre-year.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. The stretch item fits the model without the offset: the asbestos-cement ratio falls from 1.85 to 0.64, because short rural networks are often asbestos cement and the model reads material through length.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-1-3" data-auto="lab" data-lab="1.3" data-label="Lab 1.3" data-n="32" data-session="3">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 1.3 · 25 min</div><h2>A Poisson model with an offset</h2><p class="lead small">Write the burst model with network length as exposure in NumPyro, run four chains, and read material and age effects as rate ratios with intervals.</p><a class="nb" href="../labs/D1_3_fit_poisson_model.ipynb">D1_3_fit_poisson_model.ipynb</a></div><ul class="checklist"><li>Write the model <span class="min">8 min</span></li><li>Run four chains <span class="min">4 min</span></li><li>Rate ratios with intervals <span class="min">6 min</span></li><li>Against the generating values <span class="min">3 min</span></li><li>Expected bursts next year for two districts <span class="min">4 min</span></li><li class="stretch">✱ Stretch: Remove the offset and see what the model then says</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain NumPyro errors; it writes no model code. Usual problems: the shape error from a beta prior without to_event; passing km instead of log km; reading the posterior before the diagnostics. The first run compiles for about half a minute; a second run is faster.</p></aside>
+</section>
+
+<!-- Session 4 -->
+
+<section class="slide section" id="s4" data-auto="section" data-session="4" data-n="33">
+  <div class="kicker">Session 4</div>
+  <h1>Reading the computation</h1>
+  <ul class="bullets outcomes"><li>Read R-hat, bulk and tail effective sample size and divergences</li><li>Tell an efficiency warning from a validity failure</li><li>Judge when approximate inference is good enough for a question</li></ul>
+  <div class="sess-no">04</div>
+</section>
+
+<section class="slide" id="four-checks" data-label="Four checks" data-lo="LO1" data-n="34" data-session="4">
+  <div class="kicker">Before reading any posterior</div>
+  <h2>Four numbers decide whether a fit can be read</h2>
+  <table class="t small">
+    <tr><th>Diagnostic</th><th>Course threshold, four chains</th><th>What it detects</th></tr>
+    <tr><td>Rank-normalised R-hat</td><td>below 1.01</td><td>chains that disagree</td></tr>
+    <tr><td>Bulk and tail ESS</td><td>at least 400</td><td>too few independent draws for the centre or the tails</td></tr>
+    <tr><td>Divergences</td><td>zero, or explained</td><td>regions the integrator could not follow</td></tr>
+    <tr><td>E-BFMI</td><td>above 0.3</td><td>momentum that cannot cross energy levels</td></tr>
+  </table>
+  <aside class="notes"><p>Thresholds from Vehtari et al. (2019) for R-hat and ESS, and the Stan User's Guide for the others. They are conventions, not laws; a refresh of this course re-checks the defaults of the current ArviZ release. Sources: Vehtari et al. (2019), Rank-normalization, folding, and localization.</p></aside>
+</section>
+
+<section class="slide" id="rhat-story" data-label="R-hat" data-lo="LO1" data-n="35" data-session="4">
+  <div class="kicker">Fit C</div>
+  <h2>No divergence, and still one chain is somewhere else</h2>
+  <div class="cols cols-2 mid">
+    <table class="t small">
+      <tr><th>Chain</th><th class="num">Mean of α</th></tr>
+      <tr><td>1</td><td class="num">-2.417</td></tr>
+      <tr><td>2</td><td class="num">-2.411</td></tr>
+      <tr><td>3</td><td class="num">-2.403</td></tr>
+      <tr class="hl"><td>4</td><td class="num">-1.229</td></tr>
+    </table>
+    <div class="stat center"><div class="big">1.60</div><div class="lbl">R-hat of fit C</div></div>
+  </div>
+  <aside class="notes"><p>From Lab 1.4. The contractor restarted chain 4 "from a saved state" without warm-up; the chain barely moved. Ask: if you had run one chain only, what would you have seen? Nothing wrong. That is why four chains from different starts are the default.</p></aside>
+</section>
+
+<section class="slide" id="divergences" data-label="Divergences" data-lo="LO1 LO2" data-n="36" data-session="4">
+  <div class="kicker">Fit B</div>
+  <h2>741 divergences: the sampler could not reach part of the posterior</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>A divergence is a path whose energy blew up: the step size was too large for the curvature there.</li>
+      <li>The draws then miss that region, and every summary is biased.</li>
+      <li>Fit B is the centred hierarchical model on the small districts: a funnel.</li>
+    </ul>
+    <div class="callout warn small"><b>Do not just raise target_accept.</b> It shrinks the step size, often leaving fewer divergences and the same bias. Lab 2.3 changes the model instead.</div>
+  </div>
+  <aside class="notes"><p>Fit B: 741 divergences in 4,000 draws, R-hat 1.37, tail ESS 8, E-BFMI 0.05. Every warning at once. Keep the funnel picture for Day 2 session 3; today the point is only that divergences invalidate a fit.</p></aside>
+</section>
+
+<section class="slide" id="efficiency-validity" data-label="Efficiency" data-lo="LO1" data-n="37" data-session="4">
+  <div class="kicker">Fit D</div>
+  <h2>A capped tree costs time; it does not make the draws wrong</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">33%</div><div class="lbl">of draws hit the tree-depth cap of 4</div></div>
+    <div class="stat"><div class="big">1.002</div><div class="lbl">R-hat</div></div>
+    <div class="stat"><div class="big">1,452</div><div class="lbl">smallest bulk ESS</div></div>
+  </div>
+  <p class="small mt">Zaina capped the tree depth to save time. The chains still mixed, so fit D can be read.</p>
+  <aside class="notes"><p>Validity failures: chains that disagree, divergences, low E-BFMI. Efficiency warnings: capped trees, a long run time. An efficiency warning becomes a validity problem only when it leaves too few effective draws, which the ESS shows.</p></aside>
+</section>
+
+<section class="slide" id="rank-plots" data-label="Rank plots" data-lo="LO1" data-n="38" data-session="4">
+  <div class="kicker">Looking at chains</div>
+  <h2>Rank plots show chains that disagree better than trace plots do</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Rank all draws of a parameter together, then plot each chain's ranks as a histogram.</li>
+      <li>Chains from the same distribution: flat, similar histograms.</li>
+      <li>A chain stuck high or low: a histogram piled at one end.</li>
+    </ul>
+    <pre class="code s" data-file="Lab 1.4, task 4"><code class="language-python">pc = az.plot_rank(fits[<span class="hljs-string">&quot;fit_C&quot;</span>], var_names=[<span class="hljs-string">&quot;alpha&quot;</span>, <span class="hljs-string">&quot;tau&quot;</span>])
+pc.savefig(<span class="hljs-string">&quot;artifacts/rank_fit_C.png&quot;</span>)</code></pre>
+  </div>
+  <aside class="notes"><p>Show the two saved rank plots from a participant's run. In fit C, chain 4's ranks pile at the top for alpha. In ArviZ 1.x plotting functions return a PlotCollection; savefig writes it.</p></aside>
+</section>
+
+<section class="slide" id="approximate-inference" data-label="Approximation" data-lo="LO1" data-n="39" data-session="4">
+  <div class="kicker">When approximate inference suffices</div>
+  <h2>An approximation is fine when the posterior is simple and the question is its centre</h2>
+  <table class="t small">
+    <tr><th>90% interval of β</th><th>NUTS</th><th>Variational (AutoNormal)</th></tr>
+    <tr><td>Age per 10 years</td><td>0.265 to 0.334</td><td>0.253 to 0.326</td></tr>
+    <tr><td>Asbestos cement</td><td>0.533 to 0.699</td><td>0.551 to 0.698</td></tr>
+  </table>
+  <p class="small mt">Five parameters and 700 counts: close enough for a rate ratio. For 140 district effects, skewed spreads and tail decisions, sample.</p>
+  <aside class="notes"><p>From the Lab 1.4 stretch, quick run. Variational inference fits a simple distribution to the posterior; it tends to understate uncertainty and cannot represent a funnel. Use it for a quick first look, for very large data, or inside a loop where speed matters; check it against a sampler at least once.</p></aside>
+</section>
+
+<section class="slide" id="check-diagnostics" data-lo="LO1" data-n="40" data-session="4">
+  <div class="kicker">Checkpoint</div>
+  <h2>Which fit to send back</h2>
+  <div class="quiz" data-type="single" data-lo="LO1" data-id="check-diagnostics-q1">
+    <p class="lead">A fit reports R-hat 1.003, bulk ESS 2,100, no divergences, and 40% of draws at the maximum tree depth. Another reports no divergences and R-hat 1.21. Which do you send back?</p>
+    <div class="opts">
+      <div class="opt" data-why="Treats an efficiency warning as a validity failure" data-k="A">The first, because 40% of trees are capped</div>
+      <div class="opt" data-why="Assumes a fit is sound whenever no divergence is reported" data-k="B">Neither, because neither has divergences</div>
+      <div class="opt" data-why="Lets one warning disqualify a fit whose mixing is sound" data-k="C">Both, because each has a warning</div>
+      <div class="opt" data-ok data-k="D">The second, because its chains disagree</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> An R-hat of 1.21 means the chains explore different distributions; capped trees in the first fit cost time but its chains mixed.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. This is the shape of the supervised check: read diagnostics without AI and decide. Ask the room what they would request from the second fit's author: more warm-up and four fresh starts, then the four checks again.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-1-4" data-auto="lab" data-lab="1.4" data-label="Lab 1.4" data-n="41" data-session="4">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 1.4 · 25 min</div><h2>Four fits, two untrustworthy</h2><p class="lead small">Compute the diagnostics of four supplied fits, flag the two that cannot be trusted and write the reason for each verdict.</p><a class="nb" href="../labs/D1_4_flag_two_untrustworthy.ipynb">D1_4_flag_two_untrustworthy.ipynb</a></div><ul class="checklist"><li>Load the fits and read the run log <span class="min">3 min</span></li><li>R-hat and effective sample sizes <span class="min">6 min</span></li><li>Divergences, tree depth and energy <span class="min">6 min</span></li><li>Rank plots of the two suspects <span class="min">5 min</span></li><li>A verdict per fit, with its reason <span class="min">5 min</span></li><li class="stretch">✱ Stretch: Fit Lab 1.3’s model with a variational approximation and compare the intervals with NUTS</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain diagnostics; the verdicts are the participant's. Usual problems: reading the 0.x ArviZ tutorials (ess with a different signature); calling fit D untrustworthy because of the capped trees; missing fit C because they only looked at divergences. Collect the verdicts by show of hands: most rooms split on D, which is the discussion you want.</p></aside>
+</section>
+
+<section class="slide" id="wrap-up" data-n="42" data-session="4">
+  <div class="kicker">Day 1 · wrap-up</div>
+  <h2>Three things to keep</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Simulate first</h4><p class="small mb0">A model you can run forwards can be tested against a truth you chose, and its priors against what engineers know.</p></div>
+    <div class="card c-coral"><h4>Diagnose before reading</h4><p class="small mb0">R-hat, ESS, divergences and E-BFMI, every fit, before any number leaves the notebook.</p></div>
+    <div class="card c-purple"><h4>Small districts lean on the prior</h4><p class="small mb0">Five years of 2 bursts say little; tomorrow they borrow from the other districts.</p></div>
+  </div>
+  <aside class="notes"><p>Ask each table for the one diagnostic they will check first in someone else's notebook. Then point to tomorrow: 51 districts recorded fewer than five bursts in five years.</p></aside>
+</section>
+
+<section class="slide dark" id="next" data-label="Next" data-n="43" data-session="4">
+  <div class="kicker">Next</div>
+  <h2>Day 2: Pooling across districts</h2>
+  <p class="lead">Finish any lab you did not complete; each one starts from the supplied files. Read the run log of fit B again: tomorrow you repair it.</p>
+  <aside class="notes"><p>Nothing to install. Participants who struggled with NumPyro syntax can read U.burst_model in labs/yanabi.py: every Day 2 model is a keyword of that function.</p></aside>
+</section>
+</div>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T23:05:21Z","version":"2027.1.0","commit":"c70a408"},"course":{"id":"ds-401","code":"DS-401","title":"Bayesian Modelling and Decisions under Uncertainty","track":"data-science","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ds-401/","repo":"SDAIAAcademy/ds-401","home":"../index.html"},"deck":{"id":"day1","kind":"day","day":1,"label":"Day 1","title":"From priors to posteriors","prev":null,"next":"day2.html","md":"day1.md","alt":{}},"sessions":[{"n":1,"label":"Session 1","title":"Models that generate data","slide":"s1","outcomes":["Write a generative model of burst counts with network length as exposure","Compute a posterior on a grid from a prior and a likelihood","Explain why the posterior of a small district leans on its prior"],"minutes":50,"lab":{"id":"1.1","title":"Simulate and recover a burst rate","minutes":25,"href":"../labs/D1_1_simulate_burst_counts.ipynb"}},{"n":2,"label":"Session 2","title":"Priors you can defend","slide":"s2","outcomes":["Translate a prior on a log scale into the units the engineers use","Run a prior predictive simulation for every district","Write a reason for each prior a model carries"],"minutes":50,"lab":{"id":"1.2","title":"Prior predictive checks","minutes":25,"href":"../labs/D1_2_run_prior_predictive.ipynb"}},{"n":3,"label":"Session 3","title":"Fitting with Hamiltonian Monte Carlo","slide":"s3","outcomes":["Explain how Hamiltonian Monte Carlo uses the gradient of the log posterior","Write a Poisson model with an offset in a probabilistic programming language","Report rate ratios with posterior intervals"],"minutes":50,"lab":{"id":"1.3","title":"A Poisson model with an offset","minutes":25,"href":"../labs/D1_3_fit_poisson_model.ipynb"}},{"n":4,"label":"Session 4","title":"Reading the computation","slide":"s4","outcomes":["Read R-hat, bulk and tail effective sample size and divergences","Tell an efficiency warning from a validity failure","Judge when approximate inference is good enough for a question"],"minutes":50,"lab":{"id":"1.4","title":"Four fits, two untrustworthy","minutes":25,"href":"../labs/D1_4_flag_two_untrustworthy.ipynb"}}],"slides":[{"id":"title","n":1,"title":"From priors to posteriors","kind":"title","session":0,"hash":"522f440b","md":"#### [day1#title] From priors to posteriors\n\n*SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty*\n\nDay 1: Write the story that makes the data, test the priors by simulation, fit with Hamiltonian Monte Carlo and read whether the computation can be trusted\n\nData Science Track · 4 teaching days + capstone day · 4 sessions · 4 labs · DS-401","notes":"Welcome. Ask the room one calibration question: who has fitted a model with a sampler before, and who has read R-hat in someone else's output? The answers set how fast session 3 goes. The rhythm of each day: four sessions of about 50 minutes, each ending with a 25-minute lab. Breaks are on the B key, not on slides.","minutes":null,"lo":[]},{"id":"agenda","n":2,"title":"From priors to posteriors","kind":"content","session":0,"hash":"4de5a484","md":"#### [day1#agenda] From priors to posteriors\n\n*Today*\n\n- **Session 1 · Models that generate data**: A burst count as a generative story, and Bayes’ rule computed on a grid\n- **Session 2 · Priors you can defend**: Priors judged by what they predict, before any outcome is seen\n- **Session 3 · Fitting with Hamiltonian Monte Carlo**: Why sampling replaces the grid, and how HMC and NUTS move through a posterior\n- **Session 4 · Reading the computation**: The diagnostics that decide whether a fit can be read, and when an approximation is enough","notes":"","minutes":null,"lo":[]},{"id":"the-decision","n":3,"title":"Every model this week ends in one decision about pipes","kind":"content","session":0,"hash":"b632f0a5","md":"#### [day1#the-decision] Every model this week ends in one decision about pipes\n\n*Yanabi Water Authority*\n\n- **The question.** Dr. Nouran Al-Ateeq, director of asset management, must choose which of 140 districts to re-pipe or repair within a capital budget.\n- **The data.** Five years of reported bursts, 2021 to 2025, from networks of 1.2 km to 198 km. Synthetic, with known generating values.\n- **The difficulty.** A third of the districts recorded fewer than five bursts in five years, and most rural districts have no sensors.\n\nDay 1 builds the workflow on one model. Day 2 pools districts, Day 3 checks the models, Day 4 decides.","notes":"Introduce the cast once: Nouran owns the decision; Shabib Al-Ruqaish, the pipe network engineer, owns the burst records; Juhaina Al-Zahim owns the costs and the budget; Ouda Al-Shahwan brings an acoustic survey offer on Day 4; Wurud Al-Samhan is the data protection officer. Participants play Zaina Al-Habdan, the senior data scientist.\n\nEverything is synthetic: labs/prepare_data.py writes the files with seed 401, and data/truth.json holds the values that generated them. Real data never has that file, which is why the course keeps asking \"how would you know without it?\"","minutes":null,"lo":["LO1","LO5"]},{"id":"prework-classification","n":4,"title":"Real asset and customer records stay out of a hosted notebook until classified","kind":"content","session":0,"hash":"57bc8752","md":"#### [day1#prework-classification] Real asset and customer records stay out of a hosted notebook until classified\n\n*From the pre-work*\n\n- The pre-work asked you to classify Yanabi's real burst and customer files under the national data classification levels.\n- Burst counts per district: an internal record. Customer addresses on a burst ticket: personal data under the Personal Data Protection Law.\n- This course uses only synthetic files, so Colab is allowed here. At work, the classification decides where a notebook may run.\n\n- **Ask Wurud first.** Wurud Al-Samhan, the data protection officer, signs off before a real extract leaves Yanabi's systems.","notes":"Take two answers from the pre-work's entry quiz on this point. The usual mistake is treating burst counts as harmless while the ticket text holds names and addresses.\n\nSources: NDMO Data Classification Policy; Personal Data Protection Law and its implementing regulation (addresses in the README). Do not quote clauses from memory.","minutes":null,"lo":["LO1"]},{"id":"setup-check","n":5,"title":"One notebook proves your setup: run it now","kind":"content","session":0,"hash":"f26ba074","md":"#### [day1#setup-check] One notebook proves your setup: run it now\n\n*Before the first lab*\n\n```bash\n# file: terminal\ncd ds-401/labs\nuv sync\nuv run jupyter execute 00_setup_check.ipynb\n```\n\n- Or open `00_setup_check.ipynb` in Colab and run all cells.\n- It imports NumPyro, JAX and ArviZ, fits a tiny model and prints the versions.\n- Everything runs on a laptop processor. No model is downloaded and no key is needed.\n\n> **AI policy.** The first model of each day (Labs 1.1, 2.1, 3.1, 4.1) is written without AI. In the other labs the tutor Mirsad explains diagnostics and errors; it writes no model code.","notes":"The first fit compiles: half a minute is normal. On Windows with a deep folder, set UV_PROJECT_ENVIRONMENT to a short path before uv sync (labs/README.md). Mirsad is a set of instructions in labs/tutor_instruction.md that participants paste into an approved assistant; it runs on no service of its own.","minutes":null,"lo":["LO1"]},{"id":"s1","n":6,"title":"Models that generate data","kind":"section","session":1,"hash":"9f59a64a","md":"#### [day1#s1] Models that generate data\n\n*Session 1*\n\n- Write a generative model of burst counts with network length as exposure\n- Compute a posterior on a grid from a prior and a likelihood\n- Explain why the posterior of a small district leans on its prior","notes":"","minutes":null,"lo":["LO1"]},{"id":"recap-glm","n":7,"title":"You have fitted this count model before, by maximum likelihood","kind":"content","session":1,"hash":"5982f651","md":"#### [day1#recap-glm] You have fitted this count model before, by maximum likelihood\n\n*Recap from DS-301*\n\n- Counts with an exposure: log E[bursts] = log km + α + Xβ.\n- The offset fixes the coefficient of log km at 1, so β describes a rate.\n- Overdispersion and the negative binomial: Day 3 returns to them.\n\n- **What changes this week.** Each unknown gets a distribution, not one best value. The decision on Day 4 uses the whole distribution.","notes":"This is a pointer, not a lesson: DS-301 Day 2 sessions 3 and 4 teach exposure and dispersion. If several participants have not taken DS-301, point them to its Lab 2.3 for the evening.","minutes":null,"lo":["LO1"]},{"id":"generative-story","n":8,"title":"Write the story that produces the bursts, then run it forwards","kind":"content","session":1,"hash":"a949ccb8","md":"#### [day1#generative-story] Write the story that produces the bursts, then run it forwards\n\n*A model is a simulator*\n\n1. **1 · Rate** bursts per km of main per year\n2. **2 · Exposure** times the district's km, for one year\n3. **3 · Count** a Poisson draw with that mean\n4. **4 · Record** what was reported (Day 2)\n\nIf you can simulate the data, you can test every later step against a truth you chose.","notes":"Ask: which step is missing for districts without sensors? The record step: not every burst is reported. Leave it open; session 2.4 models it. Lab 1.1 task 1 is this flow in one line of NumPy.","minutes":null,"lo":["LO1"]},{"id":"bayes-rule","n":9,"title":"The posterior weighs every candidate rate by prior and data","kind":"content","session":1,"hash":"e6c712be","md":"#### [day1#bayes-rule] The posterior weighs every candidate rate by prior and data\n\n*Prior times likelihood*\n\n```python\n# file: Lab 1.1, task 3\nlp = log_prior(grid) + log_lik(grid, counts, km)\nw = np.exp(lp - lp.max())\nw = w / w.sum()   # posterior weights on the grid\n```\n\n- Work on the log scale: products of many probabilities underflow.\n- Subtract the maximum before exponentiating.\n- The normalising constant is the sum of the weights.","notes":"Write p(rate | data) ∝ p(rate) × p(data | rate) on the board and point at each term in the code. The prior is a lognormal centred on 0.10 bursts per km-year with a log-scale spread of 1: Shabib's \"about one burst per 10 km a year\". Session 2 tests that prior.","minutes":null,"lo":["LO1"]},{"id":"small-and-large","n":10,"title":"Five years say little about a 1.2 km district","kind":"content","session":1,"hash":"054afc8f","md":"#### [day1#small-and-large] Five years say little about a 1.2 km district\n\n*Lab 1.1, task 4*\n\n| District | km | Bursts, 5 years | Median rate | 90% interval |\n| --- | --- | --- | --- | --- |\n| D043, rural | 1.2 | 2 | 0.194 | 0.058 to 0.523 |\n| D011, urban | 198.0 | 87 | 0.087 | 0.073 to 0.104 |\n\nSame prior, same five years: the small district's interval is 15 times wider, and its median still leans on the prior's centre.","notes":"Numbers from the course's run of Lab 1.1. The true rates, known because the data are synthetic, are 0.413 for D043 and 0.071 for D011: D043's posterior is pulled towards the prior's 0.10. Day 2's question is what to do for the 51 districts like D043.","minutes":null,"lo":["LO1","LO2"]},{"id":"grid-limit","n":11,"title":"A grid works for one rate and fails for 140","kind":"content","session":1,"hash":"e1edfe57","md":"#### [day1#grid-limit] A grid works for one rate and fails for 140\n\n*Why we need a sampler*\n\n**10^280** grid points for 140 rates at 100 points each\n\n- The grid grows exponentially with the number of unknowns.\n- Almost all of its points have negligible posterior weight.\n- A sampler spends its effort where the weight is: session 3.","notes":"Lab 1.1 task 5 computes the exponent. Ask for a guess before showing it. The point is not the number but the idea of \"typical set\": in high dimension the posterior mass sits in a thin shell, which is why Hamiltonian Monte Carlo follows the geometry instead of guessing.","minutes":null,"lo":["LO1"]},{"id":"workflow-map","n":12,"title":"A Bayesian workflow is a loop, not a fit","kind":"content","session":1,"hash":"c9ca58cf","md":"#### [day1#workflow-map] A Bayesian workflow is a loop, not a fit\n\n*The week as a workflow*\n\n1. **Prior predictive** Day 1\n2. **Fit and diagnose** Days 1 and 2\n3. **Check and compare** Day 3\n4. **Calibrate the code** Day 3\n5. **Decide** Day 4\n\n> **A failed check sends you back.** A model is expanded or replaced, and every step runs again.","notes":"Sources: Gelman et al. (2020), Bayesian Workflow. The capstone README is graded on this loop: prior reasons, diagnostics, checks, comparison and the decision (rubric: model and priors 20, computation 20, checking 25, decision 25, reproducibility 10).","minutes":null,"lo":["LO1","LO3"]},{"id":"check-grid","n":13,"title":"A narrow posterior","kind":"quiz","session":1,"hash":"3826dfae","md":"#### [day1#check-grid] A narrow posterior\n\n*Checkpoint*\n\n**Question:** Two districts share the prior. District P has 200 km and 90 bursts in five years; district Q has 2 km and 3 bursts. Which statement about their posteriors holds?\n\n- A. P's posterior depends more on the prior than Q's\n- B. Q's posterior is wider and closer to the prior's centre\n- C. Both have the same width because the prior is the same\n- D. Q's posterior is narrow because 3 bursts is a small number","notes":"Answer: B. If the room picks D, return to the table of D043 and D011: 2 bursts gave an interval from 0.058 to 0.523.","minutes":null,"lo":["LO1"]},{"id":"lab-1-1","n":14,"title":"Simulate and recover a burst rate","kind":"lab","session":1,"hash":"2044b155","md":"#### [day1#lab-1-1] Simulate and recover a burst rate\n\nLab 1.1 · 25 min\n\nSimulate burst counts from a rate you choose, recover it on a grid, then compare the posteriors of a small and a large district.\n\n[D1_1_simulate_burst_counts.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D1_1_simulate_burst_counts.ipynb)\n\n- [ ] The generative story as a simulator (6 min)\n- [ ] The log likelihood on a grid of rates (5 min)\n- [ ] Prior times likelihood: the grid posterior (5 min)\n- [ ] A small district and a large one (6 min)\n- [ ] Where the grid stops working (3 min)\n- [ ] ✱ Stretch: Simulate with year-to-year variation and see the grid posterior become too sure","notes":"AI-off lab: no assistant, the tutor included. Walk the room. Usual problems: forgetting the exposure in the Poisson mean; exponentiating without subtracting the maximum (all weights become zero); a grid that starts at 0 (log of zero in the prior). The stretch shows that ignoring year-to-year variation makes intervals too narrow: about 85% coverage in the course's run instead of 90%.","minutes":null,"lo":[]},{"id":"s2","n":15,"title":"Priors you can defend","kind":"section","session":2,"hash":"a2952eeb","md":"#### [day1#s2] Priors you can defend\n\n*Session 2*\n\n- Translate a prior on a log scale into the units the engineers use\n- Run a prior predictive simulation for every district\n- Write a reason for each prior a model carries","notes":"","minutes":null,"lo":["LO1"]},{"id":"log-scale","n":16,"title":"A prior on the log rate means something only on the rate scale","kind":"content","session":2,"hash":"84848d4e","md":"#### [day1#log-scale] A prior on the log rate means something only on the rate scale\n\n*Reading a prior*\n\n| Prior on the log rate | 5th percentile | Median | 95th percentile |\n| --- | --- | --- | --- |\n| N(0, 10), \"flat-looking\" | 0.00000013 | 0.78 | 17,000,000 |\n| N(log 0.1, 1), weakly informative | 0.019 | 0.10 | 0.52 |\n| N(log 0.5, 0.05), tight | 0.46 | 0.50 | 0.54 |\n\nBursts per km of main per year, from 1,000 prior draws (Lab 1.2, task 1, quick run).","notes":"Ask the room to read the first row aloud in words: a 5% chance that the rate exceeds 17 million bursts per kilometre per year. A prior that looks vague on one scale is extreme on another.","minutes":null,"lo":["LO1"]},{"id":"flat-not-harmless","n":17,"title":"The \"harmless\" flat prior predicts impossible district-years","kind":"content","session":2,"hash":"dc19aae9","md":"#### [day1#flat-not-harmless] The \"harmless\" flat prior predicts impossible district-years\n\n*Lab 1.2, tasks 2 and 3*\n\n**37%** of simulated district-years above 500 bursts under N(0, 10)\n\n- No district in the region has ever had 500 bursts in a year.\n- With little data, such a prior pulls small districts towards absurd values.\n- With a lot of data it hardly matters, which is how it hides.","notes":"From the course's run: share over 500 is 0.366 for the flat prior and 0.000 for the weakly informative one. Link back to D043: with 2 bursts, the prior decides much of the answer.","minutes":null,"lo":["LO1"]},{"id":"prior-predictive","n":18,"title":"Simulate data from the prior alone, then ask an engineer","kind":"content","session":2,"hash":"c5caeffd","md":"#### [day1#prior-predictive] Simulate data from the prior alone, then ask an engineer\n\n*Prior predictive simulation*\n\n1. **1 · Draw** parameters from the prior\n2. **2 · Simulate** a year in all 140 districts\n3. **3 · Compare** with statements written before the data\n\n> **Not the burst counts.** Tuning a prior to the observed data uses the data twice and makes the posterior too sure.","notes":"Press once per step. The statements in Lab 1.2 are Shabib's: no district-year above 500 bursts; between 300 and 3,000 bursts a year across the network is plausible. They were written down before anyone opened bursts.csv.\n\nSources: Gabry et al. (2017), Visualization in Bayesian workflow.","minutes":null,"lo":["LO1"]},{"id":"too-tight","n":19,"title":"A prior can also be wrong by being too sure","kind":"content","session":2,"hash":"3c95094e","md":"#### [day1#too-tight] A prior can also be wrong by being too sure\n\n*The other failure*\n\n| Prior | District-years above 500 | Network totals in 300 to 3,000 |\n| --- | --- | --- |\n| N(0, 10) | 37% | 10% |\n| N(log 0.1, 1) | 0% | 73% |\n| N(log 0.5, 0.05) | 0% | 0% |\n\nThe vendor's tight prior never breaks the first statement, yet it rules out every network total the engineers call plausible.","notes":"From Lab 1.2 task 3, quick run. The tight prior came with a vendor template \"calibrated on another utility\". Ask: what would you need to see before borrowing another utility's rate this precisely? Evidence that the networks are alike, which nobody has.","minutes":null,"lo":["LO1"]},{"id":"reason-per-prior","n":20,"title":"Every prior in the notebook carries one sentence of reason","kind":"content","session":2,"hash":"ebdb2dc9","md":"#### [day1#reason-per-prior] Every prior in the notebook carries one sentence of reason\n\n*The evidence LO1 asks for*\n\n- **α ~ Normal(log 0.1, 1).** Centred on the engineers' \"one burst per 10 km a year\"; 73% of simulated network totals within their plausible range.\n- **β age ~ Normal(0, 0.5).** Median rate ratio 1.0 per 10 years, 95th percentile 2.3: \"might double, never five times\".\n\n> **A reason quotes a number or a statement.** \"Weakly informative\" alone is a label, not a reason.","notes":"Lab 1.2 task 5 asks for the age prior. Some will pick Normal(0.3, 0.2) from what they expect; that is defensible if they write why, but it uses a belief about the direction that the engineers did not state. Discuss both.","minutes":null,"lo":["LO1"]},{"id":"weakly-informative","n":21,"title":"Weakly informative: rules out the impossible, stays open on the plausible","kind":"content","session":2,"hash":"935052f7","md":"#### [day1#weakly-informative] Weakly informative: rules out the impossible, stays open on the plausible\n\n*A working definition*\n\n- **Too vague.** Puts weight on rates no pipe ever had. Harms small districts.\n- **Weakly informative.** Spans every rate an engineer would accept, and little beyond.\n- **Informative.** Carries a measurement: an audit, an earlier study. Day 2 uses one for reporting.","notes":"Point forward: Lab 2.4 uses an informative prior on the share of bursts reported, from a 2024 audit, because the data cannot identify it. That prior must be defended by the audit, not by convenience.","minutes":null,"lo":["LO1"]},{"id":"check-prior","n":22,"title":"Choosing the prior","kind":"quiz","session":2,"hash":"70a16ad8","md":"#### [day1#check-prior] Choosing the prior\n\n*Checkpoint*\n\n**Question:** A colleague sets the prior on the log burst rate by fitting it to the five years of observed counts, then fits the model to the same counts. What is the problem?\n\n- A. Priors may never use data of any kind\n- B. Nothing: with 700 counts the prior does not matter\n- C. The data are used twice, so the posterior is too sure\n- D. The sampler cannot handle a prior estimated from data","notes":"Answer: C. Data independent of the likelihood (an audit, another period, an engineer's prior statement) may inform a prior; the same counts may not.","minutes":null,"lo":["LO1"]},{"id":"lab-1-2","n":23,"title":"Prior predictive checks","kind":"lab","session":2,"hash":"7b72de52","md":"#### [day1#lab-1-2] Prior predictive checks\n\nLab 1.2 · 25 min\n\nSimulate a year of bursts in all 140 districts from three candidate priors, compare with the engineers’ statements, keep one and reject two with reasons.\n\n[D1_2_run_prior_predictive.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D1_2_run_prior_predictive.ipynb)\n\n- [ ] Three priors in bursts per km-year (5 min)\n- [ ] Simulate a year in every district from each prior (6 min)\n- [ ] Compare with what the engineers know (5 min)\n- [ ] Keep one prior, reject two, with a reason each (5 min)\n- [ ] The prior of the age effect (4 min)\n- [ ] ✱ Stretch: Prior predictive share of district-years without a burst","notes":"Mirsad may explain. Usual problems: forgetting to clip the Poisson mean (NumPy overflows under the flat prior); sharing one rate across districts and then wondering why totals are so variable (that is right here: no district effects yet). Ask two participants to read their reason for the age prior.","minutes":null,"lo":[]},{"id":"s3","n":24,"title":"Fitting with Hamiltonian Monte Carlo","kind":"section","session":3,"hash":"f412ad40","md":"#### [day1#s3] Fitting with Hamiltonian Monte Carlo\n\n*Session 3*\n\n- Explain how Hamiltonian Monte Carlo uses the gradient of the log posterior\n- Write a Poisson model with an offset in a probabilistic programming language\n- Report rate ratios with posterior intervals","notes":"","minutes":null,"lo":["LO1"]},{"id":"draws-not-formulas","n":25,"title":"A pile of posterior draws answers any question you can compute","kind":"content","session":3,"hash":"fb743ca6","md":"#### [day1#draws-not-formulas] A pile of posterior draws answers any question you can compute\n\n*Monte Carlo*\n\n- A median, an interval, a probability: functions of the draws.\n- A derived quantity, such as next year's bursts in D017, is computed draw by draw.\n- The decision on Day 4 is a cost computed in every draw, then averaged.\n\n```python\n# file: Lab 1.3, task 5\nmu = np.exp(a + b @ X[j]) * km[j]   # one value per draw\nnp.quantile(mu, [0.5, 0.05, 0.95])\n```","notes":"Stress the habit: never summarise early. Compute the quantity in each draw, then summarise. Averaging the rate first and then computing costs gives the wrong expected cost when the cost is not linear (Day 4).","minutes":null,"lo":["LO1"]},{"id":"hmc-intuition","n":26,"title":"HMC rolls a particle across the posterior using its gradient","kind":"content","session":3,"hash":"74eec9ef","md":"#### [day1#hmc-intuition] HMC rolls a particle across the posterior using its gradient\n\n*Hamiltonian Monte Carlo*\n\n- **Position.** The current values of all parameters.\n- **Momentum.** A random push, drawn fresh at each iteration.\n- **Gradient.** The slope of the log posterior steers the path towards high density.\n\nThe path is followed in small leapfrog steps; the end point is accepted or rejected so that the draws come from the posterior.","notes":"The physics analogy: a frictionless puck on a surface whose height is minus the log posterior. Momentum carries it far in one iteration, which is why HMC explores many dimensions where random-walk samplers stall. The gradient comes from automatic differentiation (JAX in NumPyro, Stan's own in Stan).\n\nSources: Betancourt (2017), A Conceptual Introduction to Hamiltonian Monte Carlo.","minutes":null,"lo":["LO1"]},{"id":"nuts","n":27,"title":"NUTS chooses the path length; warm-up chooses the step size","kind":"content","session":3,"hash":"2fd17c6e","md":"#### [day1#nuts] NUTS chooses the path length; warm-up chooses the step size\n\n*The No-U-Turn sampler*\n\n| Setting | Who sets it | What goes wrong |\n| --- | --- | --- |\n| Path length | NUTS: doubles the path until it turns back | Paths that hit the maximum tree depth: slow |\n| Step size | Warm-up: tuned to a target acceptance rate | Too large for a curved region: divergences |\n| Mass matrix | Warm-up: the scale of each parameter | Very different scales: slow mixing |","notes":"Warm-up draws are discarded: they are tuning, not samples. NumPyro's default target acceptance is 0.8; raising it shrinks the step size, which sometimes hides a geometry problem without fixing it (Lab 2.3 stretch).","minutes":null,"lo":["LO1"]},{"id":"numpyro-model","n":28,"title":"The model is the generative story, written as code","kind":"content","session":3,"hash":"79fc2f1f","md":"#### [day1#numpyro-model] The model is the generative story, written as code\n\n*Lab 1.3, task 1*\n\n```python\n# file: Lab 1.3\ndef pooled_model(d, log_km, X, y=None):\n    alpha = numpyro.sample(\"alpha\", dist.Normal(np.log(0.10), 1.0))\n    beta = numpyro.sample(\"beta\", dist.Normal(0.0, 0.5).expand([4]).to_event(1))\n    eta = alpha + X @ beta                      # log rate per district\n    numpyro.sample(\"y\", dist.Poisson(jnp.exp(log_km + eta[d])), obs=y)\n```\n\nThe same function simulates data when `y` is missing and conditions on it when `y` is given.","notes":"Walk the lines in order of the story: prior on the base rate, prior on the effects, the log rate, the exposure as an offset, the count. The other probabilistic programming languages (Stan, PyMC, brms) write the same five lines in their own syntax; the tool slot on the next slide lists them as interchangeable.","minutes":null,"lo":["LO1"]},{"id":"tool-slot","n":29,"title":"The labs use NumPyro; the workflow is the same in every tool","kind":"content","session":3,"hash":"075907e4","md":"#### [day1#tool-slot] The labs use NumPyro; the workflow is the same in every tool\n\n*Probabilistic programming: interchangeable examples*\n\n- **Stan.** Through CmdStanPy or CmdStanR; compiles a model to C++.\n- **PyMC.** With Bambi for formula-style models.\n- **NumPyro.** On JAX; installs without a compiler, runs on a laptop or Colab.\n- **brms.** Formula models in R, fitted by Stan.\n\nDiagnostics and comparison: ArviZ in Python; loo and bayesplot in R. Your capstone may use any of them.","notes":"Tool names are examples, not endorsements. The labs chose NumPyro because it installs through uv on Windows, macOS and Linux and in Colab with no C++ toolchain. Versions used to build the course: NumPyro 0.22 on JAX 0.12, ArviZ 1.3. ArviZ 1.x returns DataTree objects; older tutorials show the 0.x interface.","minutes":null,"lo":["LO1"]},{"id":"pooled-result","n":30,"title":"Asbestos cement bursts nearly twice as often as PVC of the same age","kind":"content","session":3,"hash":"4b572982","md":"#### [day1#pooled-result] Asbestos cement bursts nearly twice as often as PVC of the same age\n\n*Lab 1.3, task 3*\n\n| Item | Value |\n| --- | --- |\n| Asbestos cement | 1.85 (1.70 to 2.02) |\n| Age, per 10 years | 1.35 (1.30 to 1.39) |\n| Cast iron | 1.33 (1.23 to 1.44) |\n| Ductile iron | 1.22 (1.13 to 1.31) |\n\nRate ratios against PVC, posterior medians with 90% intervals, complete-pooling Poisson model (quick run).","notes":"The generating values were exp(0.70) = 2.01 for asbestos cement, exp(0.30) = 1.35 per 10 years, exp(0.45) = 1.57 for cast iron, exp(0.15) = 1.16 for ductile iron. Three of the five generating values fall inside the 90% intervals. The intervals are too narrow: this model has no district effects and no extra variation. Day 2 adds them.","minutes":null,"lo":["LO1"]},{"id":"check-offset","n":31,"title":"The offset","kind":"quiz","session":3,"hash":"3783d458","md":"#### [day1#check-offset] The offset\n\n*Checkpoint*\n\n**Question:** Juhaina asks why the model does not estimate a coefficient for log km, as it does for age. What do you answer?\n\n- A. Because bursts are assumed proportional to length, so its coefficient is fixed at 1\n- B. Because network length does not affect the number of bursts\n- C. Because the sampler cannot estimate a coefficient on a logarithm\n- D. Because its prior is centred on 1 and the data agree","notes":"Answer: A. The stretch item fits the model without the offset: the asbestos-cement ratio falls from 1.85 to 0.64, because short rural networks are often asbestos cement and the model reads material through length.","minutes":null,"lo":["LO1"]},{"id":"lab-1-3","n":32,"title":"A Poisson model with an offset","kind":"lab","session":3,"hash":"d4917de9","md":"#### [day1#lab-1-3] A Poisson model with an offset\n\nLab 1.3 · 25 min\n\nWrite the burst model with network length as exposure in NumPyro, run four chains, and read material and age effects as rate ratios with intervals.\n\n[D1_3_fit_poisson_model.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D1_3_fit_poisson_model.ipynb)\n\n- [ ] Write the model (8 min)\n- [ ] Run four chains (4 min)\n- [ ] Rate ratios with intervals (6 min)\n- [ ] Against the generating values (3 min)\n- [ ] Expected bursts next year for two districts (4 min)\n- [ ] ✱ Stretch: Remove the offset and see what the model then says","notes":"Mirsad may explain NumPyro errors; it writes no model code. Usual problems: the shape error from a beta prior without to_event; passing km instead of log km; reading the posterior before the diagnostics. The first run compiles for about half a minute; a second run is faster.","minutes":null,"lo":[]},{"id":"s4","n":33,"title":"Reading the computation","kind":"section","session":4,"hash":"68dc301d","md":"#### [day1#s4] Reading the computation\n\n*Session 4*\n\n- Read R-hat, bulk and tail effective sample size and divergences\n- Tell an efficiency warning from a validity failure\n- Judge when approximate inference is good enough for a question","notes":"","minutes":null,"lo":["LO1"]},{"id":"four-checks","n":34,"title":"Four numbers decide whether a fit can be read","kind":"content","session":4,"hash":"edacc6a8","md":"#### [day1#four-checks] Four numbers decide whether a fit can be read\n\n*Before reading any posterior*\n\n| Diagnostic | Course threshold, four chains | What it detects |\n| --- | --- | --- |\n| Rank-normalised R-hat | below 1.01 | chains that disagree |\n| Bulk and tail ESS | at least 400 | too few independent draws for the centre or the tails |\n| Divergences | zero, or explained | regions the integrator could not follow |\n| E-BFMI | above 0.3 | momentum that cannot cross energy levels |","notes":"Thresholds from Vehtari et al. (2019) for R-hat and ESS, and the Stan User's Guide for the others. They are conventions, not laws; a refresh of this course re-checks the defaults of the current ArviZ release. Sources: Vehtari et al. (2019), Rank-normalization, folding, and localization.","minutes":null,"lo":["LO1"]},{"id":"rhat-story","n":35,"title":"No divergence, and still one chain is somewhere else","kind":"content","session":4,"hash":"ea233339","md":"#### [day1#rhat-story] No divergence, and still one chain is somewhere else\n\n*Fit C*\n\n| Chain | Mean of α |\n| --- | --- |\n| 1 | -2.417 |\n| 2 | -2.411 |\n| 3 | -2.403 |\n| 4 | -1.229 |\n\n**1.60** R-hat of fit C","notes":"From Lab 1.4. The contractor restarted chain 4 \"from a saved state\" without warm-up; the chain barely moved. Ask: if you had run one chain only, what would you have seen? Nothing wrong. That is why four chains from different starts are the default.","minutes":null,"lo":["LO1"]},{"id":"divergences","n":36,"title":"741 divergences: the sampler could not reach part of the posterior","kind":"content","session":4,"hash":"0f354c3f","md":"#### [day1#divergences] 741 divergences: the sampler could not reach part of the posterior\n\n*Fit B*\n\n- A divergence is a path whose energy blew up: the step size was too large for the curvature there.\n- The draws then miss that region, and every summary is biased.\n- Fit B is the centred hierarchical model on the small districts: a funnel.\n\n> **Do not just raise target_accept.** It shrinks the step size, often leaving fewer divergences and the same bias. Lab 2.3 changes the model instead.","notes":"Fit B: 741 divergences in 4,000 draws, R-hat 1.37, tail ESS 8, E-BFMI 0.05. Every warning at once. Keep the funnel picture for Day 2 session 3; today the point is only that divergences invalidate a fit.","minutes":null,"lo":["LO1","LO2"]},{"id":"efficiency-validity","n":37,"title":"A capped tree costs time; it does not make the draws wrong","kind":"content","session":4,"hash":"d61b630a","md":"#### [day1#efficiency-validity] A capped tree costs time; it does not make the draws wrong\n\n*Fit D*\n\n- **33%** of draws hit the tree-depth cap of 4\n- **1.002** R-hat\n- **1,452** smallest bulk ESS\n\nZaina capped the tree depth to save time. The chains still mixed, so fit D can be read.","notes":"Validity failures: chains that disagree, divergences, low E-BFMI. Efficiency warnings: capped trees, a long run time. An efficiency warning becomes a validity problem only when it leaves too few effective draws, which the ESS shows.","minutes":null,"lo":["LO1"]},{"id":"rank-plots","n":38,"title":"Rank plots show chains that disagree better than trace plots do","kind":"content","session":4,"hash":"0cf4b85f","md":"#### [day1#rank-plots] Rank plots show chains that disagree better than trace plots do\n\n*Looking at chains*\n\n- Rank all draws of a parameter together, then plot each chain's ranks as a histogram.\n- Chains from the same distribution: flat, similar histograms.\n- A chain stuck high or low: a histogram piled at one end.\n\n```python\n# file: Lab 1.4, task 4\npc = az.plot_rank(fits[\"fit_C\"], var_names=[\"alpha\", \"tau\"])\npc.savefig(\"artifacts/rank_fit_C.png\")\n```","notes":"Show the two saved rank plots from a participant's run. In fit C, chain 4's ranks pile at the top for alpha. In ArviZ 1.x plotting functions return a PlotCollection; savefig writes it.","minutes":null,"lo":["LO1"]},{"id":"approximate-inference","n":39,"title":"An approximation is fine when the posterior is simple and the question is its centre","kind":"content","session":4,"hash":"2bf450c8","md":"#### [day1#approximate-inference] An approximation is fine when the posterior is simple and the question is its centre\n\n*When approximate inference suffices*\n\n| 90% interval of β | NUTS | Variational (AutoNormal) |\n| --- | --- | --- |\n| Age per 10 years | 0.265 to 0.334 | 0.253 to 0.326 |\n| Asbestos cement | 0.533 to 0.699 | 0.551 to 0.698 |\n\nFive parameters and 700 counts: close enough for a rate ratio. For 140 district effects, skewed spreads and tail decisions, sample.","notes":"From the Lab 1.4 stretch, quick run. Variational inference fits a simple distribution to the posterior; it tends to understate uncertainty and cannot represent a funnel. Use it for a quick first look, for very large data, or inside a loop where speed matters; check it against a sampler at least once.","minutes":null,"lo":["LO1"]},{"id":"check-diagnostics","n":40,"title":"Which fit to send back","kind":"quiz","session":4,"hash":"da9a2305","md":"#### [day1#check-diagnostics] Which fit to send back\n\n*Checkpoint*\n\n**Question:** A fit reports R-hat 1.003, bulk ESS 2,100, no divergences, and 40% of draws at the maximum tree depth. Another reports no divergences and R-hat 1.21. Which do you send back?\n\n- A. The first, because 40% of trees are capped\n- B. Neither, because neither has divergences\n- C. Both, because each has a warning\n- D. The second, because its chains disagree","notes":"Answer: D. This is the shape of the supervised check: read diagnostics without AI and decide. Ask the room what they would request from the second fit's author: more warm-up and four fresh starts, then the four checks again.","minutes":null,"lo":["LO1"]},{"id":"lab-1-4","n":41,"title":"Four fits, two untrustworthy","kind":"lab","session":4,"hash":"e892a95e","md":"#### [day1#lab-1-4] Four fits, two untrustworthy\n\nLab 1.4 · 25 min\n\nCompute the diagnostics of four supplied fits, flag the two that cannot be trusted and write the reason for each verdict.\n\n[D1_4_flag_two_untrustworthy.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D1_4_flag_two_untrustworthy.ipynb)\n\n- [ ] Load the fits and read the run log (3 min)\n- [ ] R-hat and effective sample sizes (6 min)\n- [ ] Divergences, tree depth and energy (6 min)\n- [ ] Rank plots of the two suspects (5 min)\n- [ ] A verdict per fit, with its reason (5 min)\n- [ ] ✱ Stretch: Fit Lab 1.3’s model with a variational approximation and compare the intervals with NUTS","notes":"Mirsad may explain diagnostics; the verdicts are the participant's. Usual problems: reading the 0.x ArviZ tutorials (ess with a different signature); calling fit D untrustworthy because of the capped trees; missing fit C because they only looked at divergences. Collect the verdicts by show of hands: most rooms split on D, which is the discussion you want.","minutes":null,"lo":[]},{"id":"wrap-up","n":42,"title":"Three things to keep","kind":"content","session":4,"hash":"923060dc","md":"#### [day1#wrap-up] Three things to keep\n\n*Day 1 · wrap-up*\n\n- **Simulate first.** A model you can run forwards can be tested against a truth you chose, and its priors against what engineers know.\n- **Diagnose before reading.** R-hat, ESS, divergences and E-BFMI, every fit, before any number leaves the notebook.\n- **Small districts lean on the prior.** Five years of 2 bursts say little; tomorrow they borrow from the other districts.","notes":"Ask each table for the one diagnostic they will check first in someone else's notebook. Then point to tomorrow: 51 districts recorded fewer than five bursts in five years.","minutes":null,"lo":[]},{"id":"next","n":43,"title":"Day 2: Pooling across districts","kind":"content","session":4,"hash":"6bdb5345","md":"#### [day1#next] Day 2: Pooling across districts\n\n*Next*\n\nFinish any lab you did not complete; each one starts from the supplied files. Read the run log of fit B again: tomorrow you repair it.","notes":"Nothing to install. Participants who struggled with NumPyro syntax can read U.burst_model in labs/yanabi.py: every Day 2 model is a keyword of that function.","minutes":null,"lo":[]}],"activities":[{"id":"check-grid-q1","slide":"check-grid","type":"single","prompt":"Two districts share the prior. District P has 200 km and 90 bursts in five years; district Q has 2 km and 3 bursts. Which statement about their posteriors holds?","options":[{"key":"A","text":"P's posterior depends more on the prior than Q's"},{"key":"B","text":"Q's posterior is wider and closer to the prior's centre"},{"key":"C","text":"Both have the same width because the prior is the same"},{"key":"D","text":"Q's posterior is narrow because 3 bursts is a small number"}],"correct":[1],"explanation":"Q's likelihood is flat over a wide range of rates, so the prior shapes its posterior; P's likelihood is sharp and overwhelms the prior.","misconceptions":["Thinks the prior dominates when data are plentiful, the reverse of what happens","","Reads the interval width as a property of the prior alone, ignoring the data","Confuses a small count with a known rate: few bursts leave the rate uncertain"],"lo":["LO1"]},{"id":"check-prior-q1","slide":"check-prior","type":"single","prompt":"A colleague sets the prior on the log burst rate by fitting it to the five years of observed counts, then fits the model to the same counts. What is the problem?","options":[{"key":"A","text":"Priors may never use data of any kind"},{"key":"B","text":"Nothing: with 700 counts the prior does not matter"},{"key":"C","text":"The data are used twice, so the posterior is too sure"},{"key":"D","text":"The sampler cannot handle a prior estimated from data"}],"correct":[2],"explanation":"The same counts enter through the prior and through the likelihood, so the posterior counts them twice and its intervals are too narrow.","misconceptions":["Thinks any data-based prior is invalid, which would also rule out an independent audit","Believes the prior has no effect once there are 700 counts, which fails for small districts","","Mistakes the issue for a computational one"],"lo":["LO1"]},{"id":"check-offset-q1","slide":"check-offset","type":"single","prompt":"Juhaina asks why the model does not estimate a coefficient for log km, as it does for age. What do you answer?","options":[{"key":"A","text":"Because bursts are assumed proportional to length, so its coefficient is fixed at 1"},{"key":"B","text":"Because network length does not affect the number of bursts"},{"key":"C","text":"Because the sampler cannot estimate a coefficient on a logarithm"},{"key":"D","text":"Because its prior is centred on 1 and the data agree"}],"correct":[0],"explanation":"Twice the kilometres at the same rate gives twice the expected bursts; the other coefficients then describe a rate per kilometre-year.","misconceptions":["","Believes length has no effect on bursts, which the stretch item disproves","Mistakes an offset for a computational shortcut","Confuses a fixed coefficient with a prior centred on 1"],"lo":["LO1"]},{"id":"check-diagnostics-q1","slide":"check-diagnostics","type":"single","prompt":"A fit reports R-hat 1.003, bulk ESS 2,100, no divergences, and 40% of draws at the maximum tree depth. Another reports no divergences and R-hat 1.21. Which do you send back?","options":[{"key":"A","text":"The first, because 40% of trees are capped"},{"key":"B","text":"Neither, because neither has divergences"},{"key":"C","text":"Both, because each has a warning"},{"key":"D","text":"The second, because its chains disagree"}],"correct":[3],"explanation":"An R-hat of 1.21 means the chains explore different distributions; capped trees in the first fit cost time but its chains mixed.","misconceptions":["Treats an efficiency warning as a validity failure","Assumes a fit is sound whenever no divergence is reported","Lets one warning disqualify a fit whose mixing is sound",""],"lo":["LO1"]}],"ai":{"context":{"course":"../context/course.md","courseJs":"../context/course.js","day":"day1.md","llms":"../llms.txt"},"tasks":[],"tools":[]},"bridge":{"allowedOrigins":[]},"features":{},"strings":{}}</script>
+<script src="../_engine/academy.js"></script>
+</body>
+</html>

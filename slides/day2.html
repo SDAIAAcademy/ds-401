@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="deck" data-track="data-science">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 2 · Pooling across districts · Bayesian Modelling and Decisions under Uncertainty</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<link rel="icon" href="../_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="day2.md">
+<link rel="describedby" href="../llms.txt">
+<link rel="stylesheet" href="../_engine/academy.css">
+</head>
+<body>
+<div class="deck" data-course="Bayesian Modelling and Decisions under Uncertainty" data-track="data-science" data-day="Day 2">
+<section class="slide title" id="title" data-auto="title" data-label="Welcome" data-n="1">
+  <div class="kicker">SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty</div>
+  <h1>Pooling across districts</h1>
+  <p class="lead mt">Day 2: Let districts with little data borrow strength from the others, and say what that borrowing does to the rural ones</p>
+  <div class="meta"><span class="track">Data Science Track</span><span>4 teaching days + capstone day</span><span>4 sessions · 4 labs</span><span>DS-401</span></div>
+  <aside class="notes"><p>Open with yesterday's small-and-large table: D043, 1.2 km and 2 bursts, an interval from 0.06 to 0.52. Today is about the 51 districts like it. Remind the room that Lab 2.1 is AI-off.</p></aside>
+</section>
+
+<section class="slide" id="agenda" data-auto="agenda" data-label="Agenda" data-n="2">
+  <div class="kicker">Today</div>
+  <h2>Pooling across districts</h2>
+  <div class="agenda"><div class="item"><div><b>Session 1 · No, complete and partial pooling</b><small>Three ways to treat 140 districts, and the shrinkage a hierarchy implies</small></div></div><div class="item"><div><b>Session 2 · Group-level predictors</b><small>Shrinking towards a prediction instead of towards one grand mean</small></div></div><div class="item"><div><b>Session 3 · The funnel and non-centred models</b><small>Why hierarchical models diverge when data are thin, and the reparameterisation that repairs them</small></div></div><div class="item"><div><b>Session 4 · Under-reporting as measurement error</b><small>Bursts that happen but are not recorded, modelled instead of ignored</small></div></div></div>
+</section>
+
+<section class="slide" id="review-day1" data-lo="LO1" data-n="3">
+  <div class="kicker">Review of Day 1</div>
+  <h2>Before reading a fit</h2>
+  <div class="quiz" data-type="single" data-lo="LO1" data-id="review-day1-q1">
+    <p class="lead">A colleague's fit reports R-hat 1.004 and bulk ESS 900, but 23 divergences. She wants to publish the rate ratios. What do you advise?</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">Not yet: find where the divergences sit and change the model or its form, then refit</div>
+      <div class="opt" data-why="Lets good mixing numbers excuse a validity warning" data-k="B">Publish: R-hat and ESS are fine</div>
+      <div class="opt" data-why="Treats divergences as noise that more draws average away" data-k="C">Run twice as many draws and publish</div>
+      <div class="opt" data-why="Discards the evidence instead of fixing its cause" data-k="D">Drop the divergent draws and publish the rest</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Divergences mean part of the posterior was not reached; the summaries can be biased whatever R-hat says. Session 3 shows the usual cause and the fix.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. Dropping divergent draws is a common and wrong reflex: the problem is the draws that were never made, not the ones that were.</p></aside>
+</section>
+
+<!-- Session 1 -->
+
+<section class="slide section" id="s1" data-auto="section" data-session="1" data-n="4">
+  <div class="kicker">Session 1</div>
+  <h1>No, complete and partial pooling</h1>
+  <ul class="bullets outcomes"><li>Fit no-pooling, complete-pooling and partial-pooling models of the same counts</li><li>Read shrinkage as a function of how much data a district has</li><li>Check whether pooling pulls one group of districts towards another’s average</li></ul>
+  <div class="sess-no">01</div>
+</section>
+
+<section class="slide" id="recap-random-intercepts" data-label="Recap" data-lo="LO2" data-n="5" data-session="1">
+  <div class="kicker">Recap from DS-301</div>
+  <h2>You met random intercepts in DS-301; today they get priors and a defence</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>DS-301 Day 4 fitted random intercepts by maximum likelihood for 30 districts.</li>
+      <li>Here: 140 districts, a prior on the spread τ, the whole posterior of every district.</li>
+      <li>New today: predictors at the district level, the funnel, and measurement error.</li>
+    </ul>
+    <div class="card c-teal flat"><h4>The question LO2 asks</h4><p class="small mb0">Not "is pooling allowed?" but "what does this pooling do to which districts, and can you defend it?"</p></div>
+  </div>
+  <aside class="notes"><p>A pointer, not a lesson: DS-301 Day 4 session 2 is the frequentist version. Participants who skipped it can still follow; the three poolings are defined on the next slide.</p></aside>
+</section>
+
+<section class="slide" id="three-poolings" data-label="Three poolings" data-lo="LO2" data-n="6" data-session="1">
+  <div class="kicker">Three ways to treat 140 districts</div>
+  <h2>No pooling trusts each district; complete pooling trusts none</h2>
+  <div class="cols cols-3">
+    <div class="card c-coral"><h4>No pooling</h4><p class="small mb0">One rate per district, each from its own record. Tiny districts get wild estimates; 13 with no recorded burst look perfectly safe.</p></div>
+    <div class="card c-navy"><h4>Complete pooling</h4><p class="small mb0">One rate for all (Lab 1.3). Every district is average, including the old asbestos-cement ones.</p></div>
+    <div class="card c-teal"><h4>Partial pooling</h4><p class="small mb0">District rates drawn from a common distribution with spread τ. The data decide how much each district borrows.</p></div>
+  </div>
+  <aside class="notes"><p>Ask the room which of the three the consultant on Day 4 used (no pooling). Partial pooling is the only one where how much a district is pulled is estimated rather than decided by the analyst.</p></aside>
+</section>
+
+<section class="slide" id="hierarchy-code" data-label="The model" data-lo="LO2" data-n="7" data-session="1">
+  <div class="kicker">Lab 2.1, task 1</div>
+  <h2>One line makes the districts a population</h2>
+  <pre class="code s" data-file="Lab 2.1"><code class="language-python">alpha = numpyro.sample(<span class="hljs-string">&quot;alpha&quot;</span>, dist.Normal(np.log(<span class="hljs-number">0.10</span>), <span class="hljs-number">1.0</span>))
+tau = numpyro.sample(<span class="hljs-string">&quot;tau&quot;</span>, dist.HalfNormal(<span class="hljs-number">0.5</span>))
+<span class="hljs-keyword">with</span> numpyro.plate(<span class="hljs-string">&quot;district&quot;</span>, J):
+    eta = numpyro.sample(<span class="hljs-string">&quot;eta&quot;</span>, dist.Normal(alpha, tau))   <span class="hljs-comment"># the population</span>
+numpyro.sample(<span class="hljs-string">&quot;y&quot;</span>, dist.Poisson(jnp.exp(log_km + eta[d])), obs=y)</code></pre>
+  <p class="small mt">τ near 0 is complete pooling; τ very large is no pooling. The posterior of τ chooses between them.</p>
+  <aside class="notes"><p>The prior on τ, HalfNormal(0.5), puts 95% of its weight on τ below about 1: the typical district (one standard deviation) rarely sits more than a factor of e (2.7) away from what the mean predicts. Lab 3.4 tests how much that choice matters. This is the centred form; it samples well on all 140 districts, and session 3 shows where it does not.</p></aside>
+</section>
+
+<section class="slide" id="shrinkage-by-kind" data-label="Shrinkage" data-lo="LO2" data-n="8" data-session="1">
+  <div class="kicker">Lab 2.1, task 3</div>
+  <h2>Rural districts borrow most of their estimate; urban ones keep their own</h2>
+  <div class="bars">
+    <div class="row"><span>Rural</span><div class="bar c-coral" style="--w:55%"></div><span class="val">0.55</span></div>
+    <div class="row"><span>Suburban</span><div class="bar c-amber" style="--w:12%"></div><span class="val">0.12</span></div>
+    <div class="row"><span>Urban</span><div class="bar c-teal" style="--w:4%"></div><span class="val">0.04</span></div>
+  </div>
+  <p class="caption">Median shrinkage towards the common rate (0: own estimate, 1: common rate). τ = 0.56, 90% interval 0.49 to 0.65 (quick run).</p>
+  <aside class="notes"><p>Shrinkage correlates at -0.94 with the log of a district's recorded bursts (the lab's stretch item). This is the mechanism working as designed: districts with little data lean on the population. The next slide asks whether the population they lean on is the right one.</p></aside>
+</section>
+
+<section class="slide" id="rural-pull" data-label="Rural pull" data-lo="LO2" data-n="9" data-session="1">
+  <div class="kicker">Responsible use: Lab 2.1, task 4</div>
+  <h2>Pooling towards one rate hides how much riskier the rural districts are</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">0.73</div><div class="lbl">true gap of rural districts above the common rate (log scale)</div></div>
+    <div class="stat"><div class="big">0.11</div><div class="lbl">the gap the estimates keep</div></div>
+    <div class="stat"><div class="big">16%</div><div class="lbl">of the real difference survives</div></div>
+  </div>
+  <div class="callout warn small mt"><b>Who is harmed.</b> Most kilometres are urban, so the common rate is an urban rate. A plan built on these estimates under-invests where the pipes are oldest.</div>
+  <aside class="notes"><p>The true gap uses data/truth.json, which real data never has. On real data the warning sign is the shrinkage table: rural estimates are mostly borrowed, so ask whether they are borrowed from the right population. This check is the one the catalog entry names for responsible use on Day 2.</p></aside>
+</section>
+
+<section class="slide" id="defend-pooling" data-label="Defence" data-lo="LO2" data-n="10" data-session="1">
+  <div class="kicker">LO2's evidence</div>
+  <h2>A defence of pooling says what it does to whom</h2>
+  <ol class="bullets small">
+    <li>Why partial pooling: 51 districts recorded fewer than five bursts; alone, their estimates are noise.</li>
+    <li>What it does: small districts borrow from the population, here up to half their estimate.</li>
+    <li>Whom it affects: the rural districts, whose risk it understates while one urban-dominated rate is the target.</li>
+    <li>What changes next: shrink towards a prediction for each district's material and age.</li>
+  </ol>
+  <aside class="notes"><p>Lab 2.1 task 5 asks for three sentences; this slide is a fuller version for the capstone README. A defence that only says "partial pooling is the standard choice" earns nothing on the rubric's model criterion.</p></aside>
+</section>
+
+<section class="slide" id="check-pooling" data-lo="LO2" data-n="11" data-session="1">
+  <div class="kicker">Checkpoint</div>
+  <h2>A district with no recorded burst</h2>
+  <div class="quiz" data-type="single" data-lo="LO2" data-id="check-pooling-q1">
+    <p class="lead">D120 is a rural district of 2 km with no burst recorded in five years. What does each model say about its rate?</p>
+    <div class="opts">
+      <div class="opt" data-why="Thinks complete pooling responds to the district's own record" data-k="A">No pooling and complete pooling both give it a rate near zero</div>
+      <div class="opt" data-why="Confuses shrinkage with ignoring the district's data" data-k="B">Partial pooling gives it exactly the common rate</div>
+      <div class="opt" data-ok data-k="C">No pooling: near zero; complete: the common rate; partial: between, close to the common rate</div>
+      <div class="opt" data-why="Believes a zero count cannot be modelled" data-k="D">No model can say anything until it has a burst</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> With little data, partial pooling leans heavily on the population, but its own zero still pulls it a little below the common rate.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. The consultant's report on Day 4 declares 13 such districts safe: the no-pooling answer.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-1" data-auto="lab" data-lab="2.1" data-label="Lab 2.1" data-n="12" data-session="1">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.1 · 25 min</div><h2>Three poolings and the rural districts</h2><p class="lead small">Fit the three models, plot how far each district’s estimate moves, and test whether partial pooling pulls rural districts towards the urban average.</p><a class="nb" href="../labs/D2_1_fit_all_three.ipynb">D2_1_fit_all_three.ipynb</a></div><ul class="checklist"><li>Three models from one function <span class="min">5 min</span></li><li>Fit no, complete and partial pooling <span class="min">6 min</span></li><li>The shrinkage plot <span class="min">5 min</span></li><li>Are rural districts pulled towards the urban average? <span class="min">6 min</span></li><li>A defence of the pooling in three sentences <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Plot shrinkage against each district’s number of recorded bursts</li></ul></div>
+  <aside class="notes"><p>AI-off lab. Usual problems: computing shrinkage on the rate scale instead of the log scale; dividing by a near-zero denominator for districts whose own estimate equals the common rate (clip the plot); reading the true gap as available on real data. Fallback: none needed, the lab loads the data files.</p></aside>
+</section>
+
+<!-- Session 2 -->
+
+<section class="slide section" id="s2" data-auto="section" data-session="2" data-n="13">
+  <div class="kicker">Session 2</div>
+  <h1>Group-level predictors</h1>
+  <ul class="bullets outcomes"><li>Add district-level predictors to the mean of a hierarchical model</li><li>Compare the between-district spread before and after</li><li>Explain why predictors change who is shrunk towards what</li></ul>
+  <div class="sess-no">02</div>
+</section>
+
+<section class="slide" id="shrink-to-prediction" data-label="Predictors" data-lo="LO2" data-n="14" data-session="2">
+  <div class="kicker">Group-level predictors</div>
+  <h2>Shrink each district towards what its pipes predict, not towards the average</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 2.2"><code class="language-python">mu = alpha + X @ beta          <span class="hljs-comment"># material and age</span>
+eta = mu + tau * z             <span class="hljs-comment"># district effect around it</span></code></pre>
+    <ul class="bullets small">
+      <li>A rural asbestos-cement district of 40 years is now pulled towards the rate of such networks.</li>
+      <li>τ now measures what material and age leave unexplained.</li>
+      <li>The district-level predictors cost no data from the small districts: they are known for all 140.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The code is written in non-centred form, as the lab asks; session 3 explains why. X has four columns: age in decades above 30, and indicators for ductile iron, cast iron and asbestos cement, PVC being the base.</p></aside>
+</section>
+
+<section class="slide" id="tau-falls" data-label="τ falls" data-lo="LO2" data-n="15" data-session="2">
+  <div class="kicker">Lab 2.2, task 3</div>
+  <h2>Material and age explain about half of what made districts differ</h2>
+  <div class="cols cols-3">
+    <div class="stat"><div class="big">0.56</div><div class="lbl">τ without predictors</div></div>
+    <div class="stat"><div class="big">0.41</div><div class="lbl">τ with material and age</div></div>
+    <div class="stat"><div class="big">47%</div><div class="lbl">of the variance between districts explained</div></div>
+  </div>
+  <aside class="notes"><p>Posterior medians from the course's quick run. The asbestos-cement rate ratio with district effects is 1.85, the same as Lab 1.3's; the age ratio is 1.31 per 10 years. The intervals are wider than Lab 1.3's: the district effects are now part of the uncertainty.</p></aside>
+</section>
+
+<section class="slide" id="rural-bias-table" data-label="Rural bias" data-lo="LO2" data-n="16" data-session="2">
+  <div class="kicker">Lab 2.2, task 4</div>
+  <h2>The predictors remove much of the rural bias, not all of it</h2>
+  <table class="t small">
+    <tr><th>Mean log(estimate / true rate)</th><th class="num">Without predictors</th><th class="num">With material and age</th></tr>
+    <tr class="hl"><td>Rural</td><td class="num">-0.61</td><td class="num">-0.25</td></tr>
+    <tr><td>Suburban</td><td class="num">-0.11</td><td class="num">-0.12</td></tr>
+    <tr><td>Urban</td><td class="num">-0.06</td><td class="num">-0.07</td></tr>
+  </table>
+  <p class="small mt">Rural estimates are still about 22% below the truth. Most rural districts have no sensors: session 4.</p>
+  <aside class="notes"><p>exp(-0.25) = 0.78. Ask the room for hypotheses before showing session 4's answer: a different pipe mix, a missing predictor, or bursts that were never recorded. The suburban and urban rows hide the same problem for their few districts without sensors.</p></aside>
+</section>
+
+<section class="slide" id="rural-indicator" data-label="A rural flag" data-lo="LO2" data-n="17" data-session="2">
+  <div class="kicker">Lab 2.2, stretch</div>
+  <h2>A "rural" predictor fits the records better and the truth worse</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Its coefficient comes out negative: -0.21, 90% interval -0.48 to 0.04.</li>
+      <li>It learns the low <em>reported</em> counts of rural districts, most without sensors.</li>
+      <li>Rural estimates move further from their true rates: -0.32 on the log scale.</li>
+    </ul>
+    <div class="card c-coral flat"><h4>A predictor that stands for a missing variable</h4><p class="small mb0">"Rural" here means "no sensors". Model the recording process instead (session 4).</p></div>
+  </div>
+  <aside class="notes"><p>Ask for predictions before the reveal: most rooms expect the rural flag to fix the bias. It does the opposite because the data it learns from are the under-reported counts. This is the same trap as reading a proxy as a cause.</p></aside>
+</section>
+
+<section class="slide" id="group-predictor-cost" data-label="Trade-offs" data-lo="LO2" data-n="18" data-session="2">
+  <div class="kicker">Choosing group-level predictors</div>
+  <h2>A good group-level predictor is known for every group and plausibly causal</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Material, age</h4><p class="small mb0">Known for all 140; engineering reasons to expect an effect.</p></div>
+    <div class="card c-amber"><h4>Pressure, soil</h4><p class="small mb0">Plausible; Yanabi has them for the urban districts only. A missing value is a modelling problem of its own.</p></div>
+    <div class="card c-coral"><h4>District kind</h4><p class="small mb0">Known for all, but stands for several things at once, including how bursts are recorded.</p></div>
+  </div>
+  <aside class="notes"><p>Pressure and soil are not in the course data: they are examples of the questions a capstone README should answer for its own predictors.</p></aside>
+</section>
+
+<section class="slide" id="check-predictors" data-lo="LO2" data-n="19" data-session="2">
+  <div class="kicker">Checkpoint</div>
+  <h2>What τ means now</h2>
+  <div class="quiz" data-type="single" data-lo="LO2" data-id="check-predictors-q1">
+    <p class="lead">After adding material and age, τ fell from 0.56 to 0.41. Nouran asks what that means for a rural asbestos-cement district with 3 recorded bursts.</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">It is now pulled towards the rate predicted for old asbestos-cement networks, and somewhat more strongly</div>
+      <div class="opt" data-why="Reads a smaller spread as less pooling, the reverse of what it implies" data-k="B">It is pooled less because the model now knows more</div>
+      <div class="opt" data-why="Thinks predictors replace the district's own data" data-k="C">Its own three bursts no longer matter</div>
+      <div class="opt" data-why="Confuses a fall in τ with a change in the data" data-k="D">Its rate has fallen by 0.15</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> The target of the shrinkage is now a prediction from its pipes; a smaller τ means districts sit closer to their predictions, so a district with little data is pulled more firmly towards a better target.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. The 0.15 in option D is the change in τ, not a rate: a deliberate trap for reading numbers out of context.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-2" data-auto="lab" data-lab="2.2" data-label="Lab 2.2" data-n="20" data-session="2">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.2 · 25 min</div><h2>Material and age at the district level</h2><p class="lead small">Add pipe material and age to the hierarchical model and compare the spread between districts and the rural shrinkage with Lab 2.1.</p><a class="nb" href="../labs/D2_2_add_pipe_material.ipynb">D2_2_add_pipe_material.ipynb</a></div><ul class="checklist"><li>District-level predictors in the mean <span class="min">6 min</span></li><li>Fit and diagnose <span class="min">5 min</span></li><li>The spread between districts, before and after <span class="min">4 min</span></li><li>The rural districts again <span class="min">6 min</span></li><li>What the predictors explain <span class="min">4 min</span></li><li class="stretch">✱ Stretch: Add the district kind as a predictor and discuss what it stands for</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain; it writes no model code. Usual problems: forgetting to_event on beta (a shape error); comparing τ from a centred and a non-centred model as if the forms changed it (they do not); reading the rural row without the true rates. Fallback: the baseline model is refitted inside the lab.</p></aside>
+</section>
+
+<!-- Session 3 -->
+
+<section class="slide section" id="s3" data-auto="section" data-session="3" data-n="21">
+  <div class="kicker">Session 3</div>
+  <h1>The funnel and non-centred models</h1>
+  <ul class="bullets outcomes"><li>Recognise the funnel geometry behind divergences in a hierarchical model</li><li>Rewrite a centred model in non-centred form</li><li>Show that the repaired model gives a trustworthy answer</li></ul>
+  <div class="sess-no">03</div>
+</section>
+
+<section class="slide" id="the-funnel" data-label="Funnel" data-lo="LO1 LO2" data-read="scaled" data-n="22" data-session="3">
+  <div class="kicker">Why fit B diverged</div>
+  <h2>When τ is small, every district effect must squeeze into a narrow neck</h2>
+  <div class="figure">
+    <svg viewBox="0 0 640 300" role="img" aria-label="A funnel: on the vertical axis log tau, on the horizontal axis one district effect; the cloud of draws is wide at the top where tau is large and narrows to a thin neck at the bottom where tau is small; divergent draws cluster in the neck">
+      <title>The funnel of a centred hierarchical model</title>
+      <path d="M120 30 C 260 150, 300 230, 315 285 L 325 285 C 340 230, 380 150, 520 30 Z" fill="currentColor" opacity="0.12"/>
+      <line x1="60" y1="285" x2="600" y2="285" stroke="currentColor" stroke-width="2"/>
+      <line x1="60" y1="285" x2="60" y2="20" stroke="currentColor" stroke-width="2"/>
+      <text x="330" y="300" font-size="16" text-anchor="middle" fill="currentColor">η of one small district</text>
+      <text x="40" y="160" font-size="16" text-anchor="middle" fill="currentColor" transform="rotate(-90 40 160)">log τ</text>
+      <circle cx="318" cy="262" r="6" fill="#e4572e"/><circle cx="322" cy="250" r="6" fill="#e4572e"/><circle cx="316" cy="240" r="6" fill="#e4572e"/><circle cx="324" cy="270" r="6" fill="#e4572e"/>
+      <text x="420" y="255" font-size="16" fill="#e4572e">divergences in the neck</text>
+      <text x="420" y="70" font-size="16" fill="currentColor">wide mouth: large τ</text>
+    </svg>
+    <div class="caption">Sketch. In Lab 2.3's run, every one of the centred model's 59 divergences had τ below its median.</div>
+  </div>
+  <aside class="notes"><p>The step size tuned in warm-up suits the wide mouth, where most of the volume is; in the neck it is far too large, the path's energy blows up, and the sampler reports a divergence and never explores the neck. Small τ is exactly the region that says "these districts are alike": missing it overstates the spread.</p><p>Sources: Betancourt and Girolami (2013), Hamiltonian Monte Carlo for Hierarchical Models.</p></aside>
+</section>
+
+<section class="slide" id="centred-vs-noncentred" data-label="Two forms" data-lo="LO1 LO2" data-n="23" data-session="3">
+  <div class="kicker">Same model, different coordinates</div>
+  <h2>Non-centred: sample standard district effects, then scale them by τ</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="centred"><code class="language-python">eta = sample(<span class="hljs-string">&quot;eta&quot;</span>, Normal(mu, tau))</code></pre>
+    <pre class="code s" data-file="non-centred"><code class="language-python">z = sample(<span class="hljs-string">&quot;z&quot;</span>, Normal(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>))
+eta = deterministic(<span class="hljs-string">&quot;eta&quot;</span>, mu + tau * z)</code></pre>
+  </div>
+  <p class="small mt">The joint distribution is identical. In z, the posterior has no funnel: its shape no longer depends on τ.</p>
+  <aside class="notes"><p>Stan's User's Guide calls this the non-centred parameterisation; NumPyro also offers it as a reparameterisation handler (LocScaleReparam), which participants may meet in the documentation. The lab asks them to write it by hand so they see it is three lines.</p></aside>
+</section>
+
+<section class="slide" id="repair-numbers" data-label="Repaired" data-lo="LO1 LO2" data-n="24" data-session="3">
+  <div class="kicker">Lab 2.3, task 4</div>
+  <h2>The non-centred model samples the 49 small districts cleanly</h2>
+  <table class="t small">
+    <tr><th></th><th class="num">Divergences</th><th class="num">R-hat</th><th class="num">Bulk ESS</th><th class="num">E-BFMI</th></tr>
+    <tr><td>Centred</td><td class="num">59</td><td class="num">1.037</td><td class="num">49</td><td class="num">0.10</td></tr>
+    <tr class="hl"><td>Non-centred</td><td class="num">0</td><td class="num">1.004</td><td class="num">563</td><td class="num">0.82</td></tr>
+  </table>
+  <p class="caption">Same priors, same 300 warm-up iterations, 2,000 kept draws (quick run).</p>
+  <aside class="notes"><p>Fit B of Day 1 was this centred model on the same small districts with the contractor's settings. The repair is the model's form, not more draws.</p></aside>
+</section>
+
+<section class="slide" id="tau-interval" data-label="What it missed" data-lo="LO2" data-n="25" data-session="3">
+  <div class="kicker">Lab 2.3, task 5</div>
+  <h2>The centred fit missed the small values of τ</h2>
+  <div class="bars">
+    <div class="row"><span>Centred</span><div class="bar c-coral" style="--w:79%"></div><span class="val">0.095 to 0.491</span></div>
+    <div class="row"><span>Non-centred</span><div class="bar c-teal" style="--w:97%"></div><span class="val">0.018 to 0.514</span></div>
+  </div>
+  <p class="small mt">90% intervals of τ for the small districts. Missing small τ means pooling them less than the data allow.</p>
+  <aside class="notes"><p>The bars show the length of each interval on a common scale. The centred interval starts at 0.095: the neck below it was never reached. A participant who reports the centred τ is overstating how different small districts are.</p></aside>
+</section>
+
+<section class="slide" id="target-accept-trap" data-label="target_accept" data-lo="LO1" data-n="26" data-session="3">
+  <div class="kicker">Lab 2.3, stretch</div>
+  <h2>Raising target_accept removed the divergences and not the problem</h2>
+  <div class="cols cols-2">
+    <div class="stack">
+      <div class="stat"><div class="big">0</div><div class="lbl">divergences at target_accept 0.99</div></div>
+      <div class="stat"><div class="big">1.144</div><div class="lbl">R-hat, still far above 1.01</div></div>
+    </div>
+    <ul class="bullets small">
+      <li>A smaller step reaches a little further into the neck, slowly.</li>
+      <li>The chains still disagree, and τ's interval still starts at 0.061.</li>
+      <li>Change the geometry; do not only shrink the step.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>From the course's quick run, 47 seconds against about 20 for the non-centred fit. Some tutorials present target_accept as the fix for divergences. It is a fix only when the divergences are few and the geometry is mild.</p></aside>
+</section>
+
+<section class="slide" id="when-centred" data-label="When centred" data-lo="LO2" data-n="27" data-session="3">
+  <div class="kicker">Not a rule of thumb</div>
+  <h2>With strong data in every group, the centred form can be the better one</h2>
+  <div class="cols cols-2">
+    <div class="card c-teal flat"><h4>All 140 districts, centred</h4><p class="small mb0">No divergence, bulk ESS above 1,000 in Lab 2.1: large districts pin their own effects, so there is no funnel.</p></div>
+    <div class="card c-coral flat"><h4>49 small districts, centred</h4><p class="small mb0">59 divergences: little data per district, the prior's funnel dominates.</p></div>
+  </div>
+  <div class="callout tip small mt"><b>Choose the form by the data, then check.</b> The diagnostics, not a habit, decide.</div>
+  <aside class="notes"><p>When every group has a lot of data, the non-centred form can show the opposite geometry and sample worse. The course defaults to non-centred because Yanabi's districts are mostly thin, and checks every fit.</p></aside>
+</section>
+
+<section class="slide" id="check-funnel" data-lo="LO1 LO2" data-n="28" data-session="3">
+  <div class="kicker">Checkpoint</div>
+  <h2>A divergent hierarchical model</h2>
+  <div class="quiz" data-type="single" data-lo="LO2" data-id="check-funnel-q1">
+    <p class="lead">A hierarchical model of 50 small districts gives 60 divergences, all at small τ. What is the best first step?</p>
+    <div class="opts">
+      <div class="opt" data-why="Treats the symptom: fewer divergences, same bias" data-k="A">Raise target_accept to 0.99 until the divergences stop</div>
+      <div class="opt" data-why="Removes the districts that need the model most" data-k="B">Drop the districts with fewer than three bursts</div>
+      <div class="opt" data-why="Changes what the model claims to avoid a computational problem" data-k="C">Switch to complete pooling, which never diverges</div>
+      <div class="opt" data-ok data-k="D">Rewrite the district effects in non-centred form and refit</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Divergences at small τ are the funnel of the centred form; the non-centred form removes the funnel without changing the model.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. Option C is tempting and changes the question: complete pooling says all districts are alike, which the data reject.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-3" data-auto="lab" data-lab="2.3" data-label="Lab 2.3" data-n="29" data-session="3">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.3 · 25 min</div><h2>Repair a divergent model</h2><p class="lead small">Reproduce the divergences of the centred model on the small districts, locate them in the funnel, and repair the model by non-centred parameterisation.</p><a class="nb" href="../labs/D2_3_repair_divergent_model.ipynb">D2_3_repair_divergent_model.ipynb</a></div><ul class="checklist"><li>Reproduce the divergences <span class="min">5 min</span></li><li>Where they sit: the spread against one district <span class="min">5 min</span></li><li>Write the non-centred model <span class="min">7 min</span></li><li>Refit and compare the diagnostics <span class="min">5 min</span></li><li>The same answer, now trustworthy? <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Raise the target acceptance rate of the centred model instead, and compare</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain the funnel. Usual problems: plotting τ instead of log τ (the neck is invisible); forgetting to keep eta as a deterministic site, so the two models cannot be compared; refitting the non-centred model with different priors. The stretch takes about a minute.</p></aside>
+</section>
+
+<!-- Session 4 -->
+
+<section class="slide section" id="s4" data-auto="section" data-session="4" data-n="30">
+  <div class="kicker">Session 4</div>
+  <h1>Under-reporting as measurement error</h1>
+  <ul class="bullets outcomes"><li>Write reported counts as true counts thinned by a reporting share</li><li>Use an audit to set an informative prior on what the data cannot identify</li><li>Report corrected rates for districts without sensors with their wider uncertainty</li></ul>
+  <div class="sess-no">04</div>
+</section>
+
+<section class="slide" id="reported-not-happened" data-label="Reporting" data-lo="LO2" data-n="31" data-session="4">
+  <div class="kicker">Lab 2.4, task 1</div>
+  <h2>Rural districts without sensors report 30% fewer bursts per kilometre</h2>
+  <div class="cols cols-2 mid">
+    <div class="bars">
+      <div class="row"><span>With sensors</span><div class="bar c-teal" style="--w:98%"></div><span class="val">0.244</span></div>
+      <div class="row"><span>Without sensors</span><div class="bar c-coral" style="--w:69%"></div><span class="val">0.173</span></div>
+    </div>
+    <ul class="bullets small">
+      <li>Reported bursts per km-year, rural districts only.</li>
+      <li>Real difference, or bursts nobody recorded?</li>
+      <li>The counts alone cannot say: rate λ with reporting p gives the same counts as rate λp fully reported.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>Of the 76 districts without sensors, 51 are rural. Ask the room how a burst gets into the register without a sensor: a customer calls, a crew sees it. Night-time bursts on a quiet rural main may never be reported.</p></aside>
+</section>
+
+<section class="slide" id="measurement-model" data-label="Measurement" data-lo="LO2" data-n="32" data-session="4">
+  <div class="kicker">Under-reporting as measurement error</div>
+  <h2>Model what was recorded as a share of what happened</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>True bursts</b>Poisson(km × rate)</div>
+    <div class="arrow">→</div>
+    <div class="step c-amber"><b>Each one reported</b>with probability p</div>
+    <div class="arrow">→</div>
+    <div class="step c-teal"><b>Recorded bursts</b>Poisson(km × rate × p)</div>
+  </div>
+  <pre class="code s mt" data-file="Lab 2.4"><code class="language-python">p = jnp.where(sensors, <span class="hljs-number">1.0</span>, p_raw)      <span class="hljs-comment"># p_raw ~ Beta(14, 6)</span>
+y ~ Poisson(exp(log_km + eta[d] + log(p)[d]))</code></pre>
+  <aside class="notes"><p>Thinning a Poisson count keeps it Poisson with the mean multiplied by p; the same holds for the negative binomial of Day 3. Districts with sensors have p = 1 by assumption: an assumption the memo states.</p></aside>
+</section>
+
+<section class="slide" id="audit-prior" data-label="Audit prior" data-lo="LO1 LO2" data-n="33" data-session="4">
+  <div class="kicker">An informative prior, with its source</div>
+  <h2>The 2024 audit sets the prior the data cannot replace</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Ouda's team listened to 6 districts without sensors for a season: 28 of 40 bursts found had been reported.</li>
+      <li>Beta(14, 6): mean 0.70, 90% interval 0.52 to 0.85; the audit at half weight.</li>
+      <li>Half weight because six districts in one season may not represent all 76.</li>
+    </ul>
+    <div class="card c-purple flat"><h4>The reason for this prior</h4><p class="small mb0">Cites a measurement, its size and why it was discounted: the standard of Day 1, applied to an informative prior.</p></div>
+  </div>
+  <aside class="notes"><p>Beta(28, 12), the audit at full weight, gives 0.58 to 0.81. The choice between them is a judgement to state, not to hide. The audit itself is part of the synthetic case.</p></aside>
+</section>
+
+<section class="slide" id="bias-removed" data-label="Corrected" data-lo="LO2" data-n="34" data-session="4">
+  <div class="kicker">Lab 2.4, task 4</div>
+  <h2>The reporting term removes the bias of the districts without sensors</h2>
+  <table class="t small">
+    <tr><th>Without sensors, mean log(estimate / truth)</th><th class="num">Lab 2.2 model</th><th class="num">With reporting term</th></tr>
+    <tr class="hl"><td>Rural</td><td class="num">-0.28</td><td class="num">-0.02</td></tr>
+    <tr><td>Suburban</td><td class="num">-0.27</td><td class="num">0.03</td></tr>
+    <tr><td>Urban</td><td class="num">-0.37</td><td class="num">-0.05</td></tr>
+  </table>
+  <p class="small mt">Urban districts without sensors had precise counts; their relative interval widens from 0.55 to 0.69. The reporting share is now their main uncertainty.</p>
+  <aside class="notes"><p>Rural districts' intervals were already wide from having few bursts, so the correction moves them up more than it widens them. The districts with sensors are almost unchanged, as they should be.</p></aside>
+</section>
+
+<section class="slide" id="prior-carries-it" data-label="Identification" data-lo="LO2" data-n="35" data-session="4">
+  <div class="kicker">Lab 2.4, task 5</div>
+  <h2>The counts taught the model almost nothing about reporting</h2>
+  <div class="cols cols-2 mid">
+    <div class="stat center"><div class="big">0.98</div><div class="lbl">posterior sd of the reporting share over its prior sd, districts without sensors</div></div>
+    <ul class="bullets small">
+      <li>The correction is exactly as good as the audit.</li>
+      <li>The memo must say so, and name the districts that depend on it.</li>
+      <li>Better data on reporting is what Day 4's survey would buy.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The ratio comes from the course's quick run of Lab 2.4. A participant who changes the audit prior in the stretch sees the corrected rural rates follow it almost one for one. That is not a flaw of the model; it is an honest statement that this question is answered by the audit, not by the burst register.</p></aside>
+</section>
+
+<section class="slide" id="check-reporting" data-lo="LO2" data-n="36" data-session="4">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reading the correction</h2>
+  <div class="quiz" data-type="single" data-lo="LO2" data-id="check-reporting-q1">
+    <p class="lead">After adding the reporting term, a rural district without sensors moves from 0.18 to 0.26 bursts per km-year. Juhaina asks what the increase rests on.</p>
+    <div class="opts">
+      <div class="opt" data-why="Thinks the model measured the district's own reporting" data-k="A">On the district's own burst counts, which reveal its reporting rate</div>
+      <div class="opt" data-ok data-k="B">Mainly on the audit prior: the counts cannot separate rate from reporting</div>
+      <div class="opt" data-why="Attributes the change to the sampler" data-k="C">On the sampler having more draws</div>
+      <div class="opt" data-why="Reads the change as a fault in the data rather than in the earlier model" data-k="D">On an error in the burst register that the model fixed</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Only rate times reporting share reaches the counts; the split between them comes from the audit-based prior.</div>
+  </div>
+  <aside class="notes"><p>Answer: B. 0.26 / 0.18 is about 1.4, close to 1 / 0.7: the prior's mean reporting share at work.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-2-4" data-auto="lab" data-lab="2.4" data-label="Lab 2.4" data-n="37" data-session="4">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 2.4 · 25 min</div><h2>A reporting rate for districts without sensors</h2><p class="lead small">Add a reporting-rate term with an audit-based prior for districts without sensors and compare their corrected rates with the uncorrected ones.</p><a class="nb" href="../labs/D2_4_add_reporting_rate.ipynb">D2_4_add_reporting_rate.ipynb</a></div><ul class="checklist"><li>Reported bursts with and without sensors <span class="min">4 min</span></li><li>The audit prior on the reporting share <span class="min">5 min</span></li><li>Add the reporting term <span class="min">7 min</span></li><li>Corrected rates for districts without sensors <span class="min">6 min</span></li><li>What the data cannot tell apart <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Change the audit prior and watch the corrected rates follow it</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain. Usual problems: applying the reporting share to districts with sensors too; putting p on the rate instead of on the mean of the reported count, so the deterministic "rate" is already thinned; comparing interval widths on the absolute instead of the relative scale. The stretch needs two extra fits, about two minutes.</p></aside>
+</section>
+
+<section class="slide" id="wrap-up" data-n="38" data-session="4">
+  <div class="kicker">Day 2 · wrap-up</div>
+  <h2>Three things to keep</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Say whom pooling moves</h4><p class="small mb0">Small districts borrow most; check whether they borrow from the right population.</p></div>
+    <div class="card c-coral"><h4>Fix the geometry</h4><p class="small mb0">Divergences at small τ: non-centre the model, then check again.</p></div>
+    <div class="card c-purple"><h4>Model the recording</h4><p class="small mb0">What was reported is not what happened; an audit-based prior carries what the counts cannot.</p></div>
+  </div>
+  <aside class="notes"><p>Ask each table which of today's findings belongs in the first paragraph of Nouran's memo. Most will say the rural under-estimate: that is the finding with the largest effect on the decision.</p></aside>
+</section>
+
+<section class="slide dark" id="next" data-label="Next" data-n="39" data-session="4">
+  <div class="kicker">Next</div>
+  <h2>Day 3: Is the model good enough</h2>
+  <p class="lead">Tomorrow's first lab is AI-off: you write the negative binomial version of today's model. Reread Lab 2.4's model before you come.</p>
+  <aside class="notes"><p>Nothing to install. Every Day 3 lab refits its models from U.burst_model, so a participant who did not finish Day 2 starts level.</p></aside>
+</section>
+</div>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T23:05:21Z","version":"2027.1.0","commit":"c70a408"},"course":{"id":"ds-401","code":"DS-401","title":"Bayesian Modelling and Decisions under Uncertainty","track":"data-science","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ds-401/","repo":"SDAIAAcademy/ds-401","home":"../index.html"},"deck":{"id":"day2","kind":"day","day":2,"label":"Day 2","title":"Pooling across districts","prev":"day1.html","next":"day3.html","md":"day2.md","alt":{}},"sessions":[{"n":1,"label":"Session 1","title":"No, complete and partial pooling","slide":"s1","outcomes":["Fit no-pooling, complete-pooling and partial-pooling models of the same counts","Read shrinkage as a function of how much data a district has","Check whether pooling pulls one group of districts towards another’s average"],"minutes":50,"lab":{"id":"2.1","title":"Three poolings and the rural districts","minutes":25,"href":"../labs/D2_1_fit_all_three.ipynb"}},{"n":2,"label":"Session 2","title":"Group-level predictors","slide":"s2","outcomes":["Add district-level predictors to the mean of a hierarchical model","Compare the between-district spread before and after","Explain why predictors change who is shrunk towards what"],"minutes":50,"lab":{"id":"2.2","title":"Material and age at the district level","minutes":25,"href":"../labs/D2_2_add_pipe_material.ipynb"}},{"n":3,"label":"Session 3","title":"The funnel and non-centred models","slide":"s3","outcomes":["Recognise the funnel geometry behind divergences in a hierarchical model","Rewrite a centred model in non-centred form","Show that the repaired model gives a trustworthy answer"],"minutes":50,"lab":{"id":"2.3","title":"Repair a divergent model","minutes":25,"href":"../labs/D2_3_repair_divergent_model.ipynb"}},{"n":4,"label":"Session 4","title":"Under-reporting as measurement error","slide":"s4","outcomes":["Write reported counts as true counts thinned by a reporting share","Use an audit to set an informative prior on what the data cannot identify","Report corrected rates for districts without sensors with their wider uncertainty"],"minutes":50,"lab":{"id":"2.4","title":"A reporting rate for districts without sensors","minutes":25,"href":"../labs/D2_4_add_reporting_rate.ipynb"}}],"slides":[{"id":"title","n":1,"title":"Pooling across districts","kind":"title","session":0,"hash":"eb30157d","md":"#### [day2#title] Pooling across districts\n\n*SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty*\n\nDay 2: Let districts with little data borrow strength from the others, and say what that borrowing does to the rural ones\n\nData Science Track · 4 teaching days + capstone day · 4 sessions · 4 labs · DS-401","notes":"Open with yesterday's small-and-large table: D043, 1.2 km and 2 bursts, an interval from 0.06 to 0.52. Today is about the 51 districts like it. Remind the room that Lab 2.1 is AI-off.","minutes":null,"lo":[]},{"id":"agenda","n":2,"title":"Pooling across districts","kind":"content","session":0,"hash":"8b542933","md":"#### [day2#agenda] Pooling across districts\n\n*Today*\n\n- **Session 1 · No, complete and partial pooling**: Three ways to treat 140 districts, and the shrinkage a hierarchy implies\n- **Session 2 · Group-level predictors**: Shrinking towards a prediction instead of towards one grand mean\n- **Session 3 · The funnel and non-centred models**: Why hierarchical models diverge when data are thin, and the reparameterisation that repairs them\n- **Session 4 · Under-reporting as measurement error**: Bursts that happen but are not recorded, modelled instead of ignored","notes":"","minutes":null,"lo":[]},{"id":"review-day1","n":3,"title":"Before reading a fit","kind":"quiz","session":0,"hash":"3f5d2537","md":"#### [day2#review-day1] Before reading a fit\n\n*Review of Day 1*\n\n**Question:** A colleague's fit reports R-hat 1.004 and bulk ESS 900, but 23 divergences. She wants to publish the rate ratios. What do you advise?\n\n- A. Not yet: find where the divergences sit and change the model or its form, then refit\n- B. Publish: R-hat and ESS are fine\n- C. Run twice as many draws and publish\n- D. Drop the divergent draws and publish the rest","notes":"Answer: A. Dropping divergent draws is a common and wrong reflex: the problem is the draws that were never made, not the ones that were.","minutes":null,"lo":["LO1"]},{"id":"s1","n":4,"title":"No, complete and partial pooling","kind":"section","session":1,"hash":"af710615","md":"#### [day2#s1] No, complete and partial pooling\n\n*Session 1*\n\n- Fit no-pooling, complete-pooling and partial-pooling models of the same counts\n- Read shrinkage as a function of how much data a district has\n- Check whether pooling pulls one group of districts towards another’s average","notes":"","minutes":null,"lo":["LO2"]},{"id":"recap-random-intercepts","n":5,"title":"You met random intercepts in DS-301; today they get priors and a defence","kind":"content","session":1,"hash":"dc9a200e","md":"#### [day2#recap-random-intercepts] You met random intercepts in DS-301; today they get priors and a defence\n\n*Recap from DS-301*\n\n- DS-301 Day 4 fitted random intercepts by maximum likelihood for 30 districts.\n- Here: 140 districts, a prior on the spread τ, the whole posterior of every district.\n- New today: predictors at the district level, the funnel, and measurement error.\n\n- **The question LO2 asks.** Not \"is pooling allowed?\" but \"what does this pooling do to which districts, and can you defend it?\"","notes":"A pointer, not a lesson: DS-301 Day 4 session 2 is the frequentist version. Participants who skipped it can still follow; the three poolings are defined on the next slide.","minutes":null,"lo":["LO2"]},{"id":"three-poolings","n":6,"title":"No pooling trusts each district; complete pooling trusts none","kind":"content","session":1,"hash":"acfb5750","md":"#### [day2#three-poolings] No pooling trusts each district; complete pooling trusts none\n\n*Three ways to treat 140 districts*\n\n- **No pooling.** One rate per district, each from its own record. Tiny districts get wild estimates; 13 with no recorded burst look perfectly safe.\n- **Complete pooling.** One rate for all (Lab 1.3). Every district is average, including the old asbestos-cement ones.\n- **Partial pooling.** District rates drawn from a common distribution with spread τ. The data decide how much each district borrows.","notes":"Ask the room which of the three the consultant on Day 4 used (no pooling). Partial pooling is the only one where how much a district is pulled is estimated rather than decided by the analyst.","minutes":null,"lo":["LO2"]},{"id":"hierarchy-code","n":7,"title":"One line makes the districts a population","kind":"content","session":1,"hash":"d5927fb4","md":"#### [day2#hierarchy-code] One line makes the districts a population\n\n*Lab 2.1, task 1*\n\n```python\n# file: Lab 2.1\nalpha = numpyro.sample(\"alpha\", dist.Normal(np.log(0.10), 1.0))\ntau = numpyro.sample(\"tau\", dist.HalfNormal(0.5))\nwith numpyro.plate(\"district\", J):\n    eta = numpyro.sample(\"eta\", dist.Normal(alpha, tau))   # the population\nnumpyro.sample(\"y\", dist.Poisson(jnp.exp(log_km + eta[d])), obs=y)\n```\n\nτ near 0 is complete pooling; τ very large is no pooling. The posterior of τ chooses between them.","notes":"The prior on τ, HalfNormal(0.5), puts 95% of its weight on τ below about 1: the typical district (one standard deviation) rarely sits more than a factor of e (2.7) away from what the mean predicts. Lab 3.4 tests how much that choice matters. This is the centred form; it samples well on all 140 districts, and session 3 shows where it does not.","minutes":null,"lo":["LO2"]},{"id":"shrinkage-by-kind","n":8,"title":"Rural districts borrow most of their estimate; urban ones keep their own","kind":"content","session":1,"hash":"27a26361","md":"#### [day2#shrinkage-by-kind] Rural districts borrow most of their estimate; urban ones keep their own\n\n*Lab 2.1, task 3*\n\n| Item | Value |\n| --- | --- |\n| Rural | 0.55 |\n| Suburban | 0.12 |\n| Urban | 0.04 |\n\nMedian shrinkage towards the common rate (0: own estimate, 1: common rate). τ = 0.56, 90% interval 0.49 to 0.65 (quick run).","notes":"Shrinkage correlates at -0.94 with the log of a district's recorded bursts (the lab's stretch item). This is the mechanism working as designed: districts with little data lean on the population. The next slide asks whether the population they lean on is the right one.","minutes":null,"lo":["LO2"]},{"id":"rural-pull","n":9,"title":"Pooling towards one rate hides how much riskier the rural districts are","kind":"content","session":1,"hash":"792b8df0","md":"#### [day2#rural-pull] Pooling towards one rate hides how much riskier the rural districts are\n\n*Responsible use: Lab 2.1, task 4*\n\n- **0.73** true gap of rural districts above the common rate (log scale)\n- **0.11** the gap the estimates keep\n- **16%** of the real difference survives\n\n> **Who is harmed.** Most kilometres are urban, so the common rate is an urban rate. A plan built on these estimates under-invests where the pipes are oldest.","notes":"The true gap uses data/truth.json, which real data never has. On real data the warning sign is the shrinkage table: rural estimates are mostly borrowed, so ask whether they are borrowed from the right population. This check is the one the catalog entry names for responsible use on Day 2.","minutes":null,"lo":["LO2"]},{"id":"defend-pooling","n":10,"title":"A defence of pooling says what it does to whom","kind":"content","session":1,"hash":"a46e2b8a","md":"#### [day2#defend-pooling] A defence of pooling says what it does to whom\n\n*LO2's evidence*\n\n1. Why partial pooling: 51 districts recorded fewer than five bursts; alone, their estimates are noise.\n2. What it does: small districts borrow from the population, here up to half their estimate.\n3. Whom it affects: the rural districts, whose risk it understates while one urban-dominated rate is the target.\n4. What changes next: shrink towards a prediction for each district's material and age.","notes":"Lab 2.1 task 5 asks for three sentences; this slide is a fuller version for the capstone README. A defence that only says \"partial pooling is the standard choice\" earns nothing on the rubric's model criterion.","minutes":null,"lo":["LO2"]},{"id":"check-pooling","n":11,"title":"A district with no recorded burst","kind":"quiz","session":1,"hash":"6052e385","md":"#### [day2#check-pooling] A district with no recorded burst\n\n*Checkpoint*\n\n**Question:** D120 is a rural district of 2 km with no burst recorded in five years. What does each model say about its rate?\n\n- A. No pooling and complete pooling both give it a rate near zero\n- B. Partial pooling gives it exactly the common rate\n- C. No pooling: near zero; complete: the common rate; partial: between, close to the common rate\n- D. No model can say anything until it has a burst","notes":"Answer: C. The consultant's report on Day 4 declares 13 such districts safe: the no-pooling answer.","minutes":null,"lo":["LO2"]},{"id":"lab-2-1","n":12,"title":"Three poolings and the rural districts","kind":"lab","session":1,"hash":"84389f07","md":"#### [day2#lab-2-1] Three poolings and the rural districts\n\nLab 2.1 · 25 min\n\nFit the three models, plot how far each district’s estimate moves, and test whether partial pooling pulls rural districts towards the urban average.\n\n[D2_1_fit_all_three.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D2_1_fit_all_three.ipynb)\n\n- [ ] Three models from one function (5 min)\n- [ ] Fit no, complete and partial pooling (6 min)\n- [ ] The shrinkage plot (5 min)\n- [ ] Are rural districts pulled towards the urban average? (6 min)\n- [ ] A defence of the pooling in three sentences (3 min)\n- [ ] ✱ Stretch: Plot shrinkage against each district’s number of recorded bursts","notes":"AI-off lab. Usual problems: computing shrinkage on the rate scale instead of the log scale; dividing by a near-zero denominator for districts whose own estimate equals the common rate (clip the plot); reading the true gap as available on real data. Fallback: none needed, the lab loads the data files.","minutes":null,"lo":[]},{"id":"s2","n":13,"title":"Group-level predictors","kind":"section","session":2,"hash":"8644f7f5","md":"#### [day2#s2] Group-level predictors\n\n*Session 2*\n\n- Add district-level predictors to the mean of a hierarchical model\n- Compare the between-district spread before and after\n- Explain why predictors change who is shrunk towards what","notes":"","minutes":null,"lo":["LO2"]},{"id":"shrink-to-prediction","n":14,"title":"Shrink each district towards what its pipes predict, not towards the average","kind":"content","session":2,"hash":"520acb64","md":"#### [day2#shrink-to-prediction] Shrink each district towards what its pipes predict, not towards the average\n\n*Group-level predictors*\n\n```python\n# file: Lab 2.2\nmu = alpha + X @ beta          # material and age\neta = mu + tau * z             # district effect around it\n```\n\n- A rural asbestos-cement district of 40 years is now pulled towards the rate of such networks.\n- τ now measures what material and age leave unexplained.\n- The district-level predictors cost no data from the small districts: they are known for all 140.","notes":"The code is written in non-centred form, as the lab asks; session 3 explains why. X has four columns: age in decades above 30, and indicators for ductile iron, cast iron and asbestos cement, PVC being the base.","minutes":null,"lo":["LO2"]},{"id":"tau-falls","n":15,"title":"Material and age explain about half of what made districts differ","kind":"content","session":2,"hash":"e0a01e2d","md":"#### [day2#tau-falls] Material and age explain about half of what made districts differ\n\n*Lab 2.2, task 3*\n\n- **0.56** τ without predictors\n- **0.41** τ with material and age\n- **47%** of the variance between districts explained","notes":"Posterior medians from the course's quick run. The asbestos-cement rate ratio with district effects is 1.85, the same as Lab 1.3's; the age ratio is 1.31 per 10 years. The intervals are wider than Lab 1.3's: the district effects are now part of the uncertainty.","minutes":null,"lo":["LO2"]},{"id":"rural-bias-table","n":16,"title":"The predictors remove much of the rural bias, not all of it","kind":"content","session":2,"hash":"40107dc4","md":"#### [day2#rural-bias-table] The predictors remove much of the rural bias, not all of it\n\n*Lab 2.2, task 4*\n\n| Mean log(estimate / true rate) | Without predictors | With material and age |\n| --- | --- | --- |\n| Rural | -0.61 | -0.25 |\n| Suburban | -0.11 | -0.12 |\n| Urban | -0.06 | -0.07 |\n\nRural estimates are still about 22% below the truth. Most rural districts have no sensors: session 4.","notes":"exp(-0.25) = 0.78. Ask the room for hypotheses before showing session 4's answer: a different pipe mix, a missing predictor, or bursts that were never recorded. The suburban and urban rows hide the same problem for their few districts without sensors.","minutes":null,"lo":["LO2"]},{"id":"rural-indicator","n":17,"title":"A \"rural\" predictor fits the records better and the truth worse","kind":"content","session":2,"hash":"f108feaf","md":"#### [day2#rural-indicator] A \"rural\" predictor fits the records better and the truth worse\n\n*Lab 2.2, stretch*\n\n- Its coefficient comes out negative: -0.21, 90% interval -0.48 to 0.04.\n- It learns the low *reported* counts of rural districts, most without sensors.\n- Rural estimates move further from their true rates: -0.32 on the log scale.\n\n- **A predictor that stands for a missing variable.** \"Rural\" here means \"no sensors\". Model the recording process instead (session 4).","notes":"Ask for predictions before the reveal: most rooms expect the rural flag to fix the bias. It does the opposite because the data it learns from are the under-reported counts. This is the same trap as reading a proxy as a cause.","minutes":null,"lo":["LO2"]},{"id":"group-predictor-cost","n":18,"title":"A good group-level predictor is known for every group and plausibly causal","kind":"content","session":2,"hash":"a70f3da6","md":"#### [day2#group-predictor-cost] A good group-level predictor is known for every group and plausibly causal\n\n*Choosing group-level predictors*\n\n- **Material, age.** Known for all 140; engineering reasons to expect an effect.\n- **Pressure, soil.** Plausible; Yanabi has them for the urban districts only. A missing value is a modelling problem of its own.\n- **District kind.** Known for all, but stands for several things at once, including how bursts are recorded.","notes":"Pressure and soil are not in the course data: they are examples of the questions a capstone README should answer for its own predictors.","minutes":null,"lo":["LO2"]},{"id":"check-predictors","n":19,"title":"What τ means now","kind":"quiz","session":2,"hash":"01725669","md":"#### [day2#check-predictors] What τ means now\n\n*Checkpoint*\n\n**Question:** After adding material and age, τ fell from 0.56 to 0.41. Nouran asks what that means for a rural asbestos-cement district with 3 recorded bursts.\n\n- A. It is now pulled towards the rate predicted for old asbestos-cement networks, and somewhat more strongly\n- B. It is pooled less because the model now knows more\n- C. Its own three bursts no longer matter\n- D. Its rate has fallen by 0.15","notes":"Answer: A. The 0.15 in option D is the change in τ, not a rate: a deliberate trap for reading numbers out of context.","minutes":null,"lo":["LO2"]},{"id":"lab-2-2","n":20,"title":"Material and age at the district level","kind":"lab","session":2,"hash":"2a003963","md":"#### [day2#lab-2-2] Material and age at the district level\n\nLab 2.2 · 25 min\n\nAdd pipe material and age to the hierarchical model and compare the spread between districts and the rural shrinkage with Lab 2.1.\n\n[D2_2_add_pipe_material.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D2_2_add_pipe_material.ipynb)\n\n- [ ] District-level predictors in the mean (6 min)\n- [ ] Fit and diagnose (5 min)\n- [ ] The spread between districts, before and after (4 min)\n- [ ] The rural districts again (6 min)\n- [ ] What the predictors explain (4 min)\n- [ ] ✱ Stretch: Add the district kind as a predictor and discuss what it stands for","notes":"Mirsad may explain; it writes no model code. Usual problems: forgetting to_event on beta (a shape error); comparing τ from a centred and a non-centred model as if the forms changed it (they do not); reading the rural row without the true rates. Fallback: the baseline model is refitted inside the lab.","minutes":null,"lo":[]},{"id":"s3","n":21,"title":"The funnel and non-centred models","kind":"section","session":3,"hash":"c1398c98","md":"#### [day2#s3] The funnel and non-centred models\n\n*Session 3*\n\n- Recognise the funnel geometry behind divergences in a hierarchical model\n- Rewrite a centred model in non-centred form\n- Show that the repaired model gives a trustworthy answer","notes":"","minutes":null,"lo":["LO1","LO2"]},{"id":"the-funnel","n":22,"title":"When τ is small, every district effect must squeeze into a narrow neck","kind":"content","session":3,"hash":"5a042cad","md":"#### [day2#the-funnel] When τ is small, every district effect must squeeze into a narrow neck\n\n*Why fit B diverged*\n\nFigure: Sketch. In Lab 2.3's run, every one of the centred model's 59 divergences had τ below its median.","notes":"The step size tuned in warm-up suits the wide mouth, where most of the volume is; in the neck it is far too large, the path's energy blows up, and the sampler reports a divergence and never explores the neck. Small τ is exactly the region that says \"these districts are alike\": missing it overstates the spread.\n\nSources: Betancourt and Girolami (2013), Hamiltonian Monte Carlo for Hierarchical Models.","minutes":null,"lo":["LO1","LO2"]},{"id":"centred-vs-noncentred","n":23,"title":"Non-centred: sample standard district effects, then scale them by τ","kind":"content","session":3,"hash":"3a689983","md":"#### [day2#centred-vs-noncentred] Non-centred: sample standard district effects, then scale them by τ\n\n*Same model, different coordinates*\n\n```python\n# file: centred\neta = sample(\"eta\", Normal(mu, tau))\n```\n\n```python\n# file: non-centred\nz = sample(\"z\", Normal(0, 1))\neta = deterministic(\"eta\", mu + tau * z)\n```\n\nThe joint distribution is identical. In z, the posterior has no funnel: its shape no longer depends on τ.","notes":"Stan's User's Guide calls this the non-centred parameterisation; NumPyro also offers it as a reparameterisation handler (LocScaleReparam), which participants may meet in the documentation. The lab asks them to write it by hand so they see it is three lines.","minutes":null,"lo":["LO1","LO2"]},{"id":"repair-numbers","n":24,"title":"The non-centred model samples the 49 small districts cleanly","kind":"content","session":3,"hash":"cd8797f1","md":"#### [day2#repair-numbers] The non-centred model samples the 49 small districts cleanly\n\n*Lab 2.3, task 4*\n\n|  | Divergences | R-hat | Bulk ESS | E-BFMI |\n| --- | --- | --- | --- | --- |\n| Centred | 59 | 1.037 | 49 | 0.10 |\n| Non-centred | 0 | 1.004 | 563 | 0.82 |\n\nSame priors, same 300 warm-up iterations, 2,000 kept draws (quick run).","notes":"Fit B of Day 1 was this centred model on the same small districts with the contractor's settings. The repair is the model's form, not more draws.","minutes":null,"lo":["LO1","LO2"]},{"id":"tau-interval","n":25,"title":"The centred fit missed the small values of τ","kind":"content","session":3,"hash":"27085225","md":"#### [day2#tau-interval] The centred fit missed the small values of τ\n\n*Lab 2.3, task 5*\n\n| Item | Value |\n| --- | --- |\n| Centred | 0.095 to 0.491 |\n| Non-centred | 0.018 to 0.514 |\n\n90% intervals of τ for the small districts. Missing small τ means pooling them less than the data allow.","notes":"The bars show the length of each interval on a common scale. The centred interval starts at 0.095: the neck below it was never reached. A participant who reports the centred τ is overstating how different small districts are.","minutes":null,"lo":["LO2"]},{"id":"target-accept-trap","n":26,"title":"Raising target_accept removed the divergences and not the problem","kind":"content","session":3,"hash":"f91dc2a8","md":"#### [day2#target-accept-trap] Raising target_accept removed the divergences and not the problem\n\n*Lab 2.3, stretch*\n\n- **0** divergences at target_accept 0.99\n- **1.144** R-hat, still far above 1.01\n\n- A smaller step reaches a little further into the neck, slowly.\n- The chains still disagree, and τ's interval still starts at 0.061.\n- Change the geometry; do not only shrink the step.","notes":"From the course's quick run, 47 seconds against about 20 for the non-centred fit. Some tutorials present target_accept as the fix for divergences. It is a fix only when the divergences are few and the geometry is mild.","minutes":null,"lo":["LO1"]},{"id":"when-centred","n":27,"title":"With strong data in every group, the centred form can be the better one","kind":"content","session":3,"hash":"93399e02","md":"#### [day2#when-centred] With strong data in every group, the centred form can be the better one\n\n*Not a rule of thumb*\n\n- **All 140 districts, centred.** No divergence, bulk ESS above 1,000 in Lab 2.1: large districts pin their own effects, so there is no funnel.\n- **49 small districts, centred.** 59 divergences: little data per district, the prior's funnel dominates.\n\n> **Choose the form by the data, then check.** The diagnostics, not a habit, decide.","notes":"When every group has a lot of data, the non-centred form can show the opposite geometry and sample worse. The course defaults to non-centred because Yanabi's districts are mostly thin, and checks every fit.","minutes":null,"lo":["LO2"]},{"id":"check-funnel","n":28,"title":"A divergent hierarchical model","kind":"quiz","session":3,"hash":"7e79236b","md":"#### [day2#check-funnel] A divergent hierarchical model\n\n*Checkpoint*\n\n**Question:** A hierarchical model of 50 small districts gives 60 divergences, all at small τ. What is the best first step?\n\n- A. Raise target_accept to 0.99 until the divergences stop\n- B. Drop the districts with fewer than three bursts\n- C. Switch to complete pooling, which never diverges\n- D. Rewrite the district effects in non-centred form and refit","notes":"Answer: D. Option C is tempting and changes the question: complete pooling says all districts are alike, which the data reject.","minutes":null,"lo":["LO1","LO2"]},{"id":"lab-2-3","n":29,"title":"Repair a divergent model","kind":"lab","session":3,"hash":"2a4fad49","md":"#### [day2#lab-2-3] Repair a divergent model\n\nLab 2.3 · 25 min\n\nReproduce the divergences of the centred model on the small districts, locate them in the funnel, and repair the model by non-centred parameterisation.\n\n[D2_3_repair_divergent_model.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D2_3_repair_divergent_model.ipynb)\n\n- [ ] Reproduce the divergences (5 min)\n- [ ] Where they sit: the spread against one district (5 min)\n- [ ] Write the non-centred model (7 min)\n- [ ] Refit and compare the diagnostics (5 min)\n- [ ] The same answer, now trustworthy? (3 min)\n- [ ] ✱ Stretch: Raise the target acceptance rate of the centred model instead, and compare","notes":"Mirsad may explain the funnel. Usual problems: plotting τ instead of log τ (the neck is invisible); forgetting to keep eta as a deterministic site, so the two models cannot be compared; refitting the non-centred model with different priors. The stretch takes about a minute.","minutes":null,"lo":[]},{"id":"s4","n":30,"title":"Under-reporting as measurement error","kind":"section","session":4,"hash":"a5dce0a3","md":"#### [day2#s4] Under-reporting as measurement error\n\n*Session 4*\n\n- Write reported counts as true counts thinned by a reporting share\n- Use an audit to set an informative prior on what the data cannot identify\n- Report corrected rates for districts without sensors with their wider uncertainty","notes":"","minutes":null,"lo":["LO2"]},{"id":"reported-not-happened","n":31,"title":"Rural districts without sensors report 30% fewer bursts per kilometre","kind":"content","session":4,"hash":"38b5e87d","md":"#### [day2#reported-not-happened] Rural districts without sensors report 30% fewer bursts per kilometre\n\n*Lab 2.4, task 1*\n\n| Item | Value |\n| --- | --- |\n| With sensors | 0.244 |\n| Without sensors | 0.173 |\n\n- Reported bursts per km-year, rural districts only.\n- Real difference, or bursts nobody recorded?\n- The counts alone cannot say: rate λ with reporting p gives the same counts as rate λp fully reported.","notes":"Of the 76 districts without sensors, 51 are rural. Ask the room how a burst gets into the register without a sensor: a customer calls, a crew sees it. Night-time bursts on a quiet rural main may never be reported.","minutes":null,"lo":["LO2"]},{"id":"measurement-model","n":32,"title":"Model what was recorded as a share of what happened","kind":"content","session":4,"hash":"77dcd8cd","md":"#### [day2#measurement-model] Model what was recorded as a share of what happened\n\n*Under-reporting as measurement error*\n\n1. **True bursts** Poisson(km × rate)\n2. **Each one reported** with probability p\n3. **Recorded bursts** Poisson(km × rate × p)\n\n```python\n# file: Lab 2.4\np = jnp.where(sensors, 1.0, p_raw)      # p_raw ~ Beta(14, 6)\ny ~ Poisson(exp(log_km + eta[d] + log(p)[d]))\n```","notes":"Thinning a Poisson count keeps it Poisson with the mean multiplied by p; the same holds for the negative binomial of Day 3. Districts with sensors have p = 1 by assumption: an assumption the memo states.","minutes":null,"lo":["LO2"]},{"id":"audit-prior","n":33,"title":"The 2024 audit sets the prior the data cannot replace","kind":"content","session":4,"hash":"2a203a26","md":"#### [day2#audit-prior] The 2024 audit sets the prior the data cannot replace\n\n*An informative prior, with its source*\n\n- Ouda's team listened to 6 districts without sensors for a season: 28 of 40 bursts found had been reported.\n- Beta(14, 6): mean 0.70, 90% interval 0.52 to 0.85; the audit at half weight.\n- Half weight because six districts in one season may not represent all 76.\n\n- **The reason for this prior.** Cites a measurement, its size and why it was discounted: the standard of Day 1, applied to an informative prior.","notes":"Beta(28, 12), the audit at full weight, gives 0.58 to 0.81. The choice between them is a judgement to state, not to hide. The audit itself is part of the synthetic case.","minutes":null,"lo":["LO1","LO2"]},{"id":"bias-removed","n":34,"title":"The reporting term removes the bias of the districts without sensors","kind":"content","session":4,"hash":"f8218ea7","md":"#### [day2#bias-removed] The reporting term removes the bias of the districts without sensors\n\n*Lab 2.4, task 4*\n\n| Without sensors, mean log(estimate / truth) | Lab 2.2 model | With reporting term |\n| --- | --- | --- |\n| Rural | -0.28 | -0.02 |\n| Suburban | -0.27 | 0.03 |\n| Urban | -0.37 | -0.05 |\n\nUrban districts without sensors had precise counts; their relative interval widens from 0.55 to 0.69. The reporting share is now their main uncertainty.","notes":"Rural districts' intervals were already wide from having few bursts, so the correction moves them up more than it widens them. The districts with sensors are almost unchanged, as they should be.","minutes":null,"lo":["LO2"]},{"id":"prior-carries-it","n":35,"title":"The counts taught the model almost nothing about reporting","kind":"content","session":4,"hash":"d0689bf1","md":"#### [day2#prior-carries-it] The counts taught the model almost nothing about reporting\n\n*Lab 2.4, task 5*\n\n**0.98** posterior sd of the reporting share over its prior sd, districts without sensors\n\n- The correction is exactly as good as the audit.\n- The memo must say so, and name the districts that depend on it.\n- Better data on reporting is what Day 4's survey would buy.","notes":"The ratio comes from the course's quick run of Lab 2.4. A participant who changes the audit prior in the stretch sees the corrected rural rates follow it almost one for one. That is not a flaw of the model; it is an honest statement that this question is answered by the audit, not by the burst register.","minutes":null,"lo":["LO2"]},{"id":"check-reporting","n":36,"title":"Reading the correction","kind":"quiz","session":4,"hash":"1c2f8a38","md":"#### [day2#check-reporting] Reading the correction\n\n*Checkpoint*\n\n**Question:** After adding the reporting term, a rural district without sensors moves from 0.18 to 0.26 bursts per km-year. Juhaina asks what the increase rests on.\n\n- A. On the district's own burst counts, which reveal its reporting rate\n- B. Mainly on the audit prior: the counts cannot separate rate from reporting\n- C. On the sampler having more draws\n- D. On an error in the burst register that the model fixed","notes":"Answer: B. 0.26 / 0.18 is about 1.4, close to 1 / 0.7: the prior's mean reporting share at work.","minutes":null,"lo":["LO2"]},{"id":"lab-2-4","n":37,"title":"A reporting rate for districts without sensors","kind":"lab","session":4,"hash":"40f7a926","md":"#### [day2#lab-2-4] A reporting rate for districts without sensors\n\nLab 2.4 · 25 min\n\nAdd a reporting-rate term with an audit-based prior for districts without sensors and compare their corrected rates with the uncorrected ones.\n\n[D2_4_add_reporting_rate.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D2_4_add_reporting_rate.ipynb)\n\n- [ ] Reported bursts with and without sensors (4 min)\n- [ ] The audit prior on the reporting share (5 min)\n- [ ] Add the reporting term (7 min)\n- [ ] Corrected rates for districts without sensors (6 min)\n- [ ] What the data cannot tell apart (3 min)\n- [ ] ✱ Stretch: Change the audit prior and watch the corrected rates follow it","notes":"Mirsad may explain. Usual problems: applying the reporting share to districts with sensors too; putting p on the rate instead of on the mean of the reported count, so the deterministic \"rate\" is already thinned; comparing interval widths on the absolute instead of the relative scale. The stretch needs two extra fits, about two minutes.","minutes":null,"lo":[]},{"id":"wrap-up","n":38,"title":"Three things to keep","kind":"content","session":4,"hash":"9ad8b06a","md":"#### [day2#wrap-up] Three things to keep\n\n*Day 2 · wrap-up*\n\n- **Say whom pooling moves.** Small districts borrow most; check whether they borrow from the right population.\n- **Fix the geometry.** Divergences at small τ: non-centre the model, then check again.\n- **Model the recording.** What was reported is not what happened; an audit-based prior carries what the counts cannot.","notes":"Ask each table which of today's findings belongs in the first paragraph of Nouran's memo. Most will say the rural under-estimate: that is the finding with the largest effect on the decision.","minutes":null,"lo":[]},{"id":"next","n":39,"title":"Day 3: Is the model good enough","kind":"content","session":4,"hash":"2bb12e81","md":"#### [day2#next] Day 3: Is the model good enough\n\n*Next*\n\nTomorrow's first lab is AI-off: you write the negative binomial version of today's model. Reread Lab 2.4's model before you come.","notes":"Nothing to install. Every Day 3 lab refits its models from U.burst_model, so a participant who did not finish Day 2 starts level.","minutes":null,"lo":[]}],"activities":[{"id":"review-day1-q1","slide":"review-day1","type":"single","prompt":"A colleague's fit reports R-hat 1.004 and bulk ESS 900, but 23 divergences. She wants to publish the rate ratios. What do you advise?","options":[{"key":"A","text":"Not yet: find where the divergences sit and change the model or its form, then refit"},{"key":"B","text":"Publish: R-hat and ESS are fine"},{"key":"C","text":"Run twice as many draws and publish"},{"key":"D","text":"Drop the divergent draws and publish the rest"}],"correct":[0],"explanation":"Divergences mean part of the posterior was not reached; the summaries can be biased whatever R-hat says. Session 3 shows the usual cause and the fix.","misconceptions":["","Lets good mixing numbers excuse a validity warning","Treats divergences as noise that more draws average away","Discards the evidence instead of fixing its cause"],"lo":["LO1"]},{"id":"check-pooling-q1","slide":"check-pooling","type":"single","prompt":"D120 is a rural district of 2 km with no burst recorded in five years. What does each model say about its rate?","options":[{"key":"A","text":"No pooling and complete pooling both give it a rate near zero"},{"key":"B","text":"Partial pooling gives it exactly the common rate"},{"key":"C","text":"No pooling: near zero; complete: the common rate; partial: between, close to the common rate"},{"key":"D","text":"No model can say anything until it has a burst"}],"correct":[2],"explanation":"With little data, partial pooling leans heavily on the population, but its own zero still pulls it a little below the common rate.","misconceptions":["Thinks complete pooling responds to the district's own record","Confuses shrinkage with ignoring the district's data","","Believes a zero count cannot be modelled"],"lo":["LO2"]},{"id":"check-predictors-q1","slide":"check-predictors","type":"single","prompt":"After adding material and age, τ fell from 0.56 to 0.41. Nouran asks what that means for a rural asbestos-cement district with 3 recorded bursts.","options":[{"key":"A","text":"It is now pulled towards the rate predicted for old asbestos-cement networks, and somewhat more strongly"},{"key":"B","text":"It is pooled less because the model now knows more"},{"key":"C","text":"Its own three bursts no longer matter"},{"key":"D","text":"Its rate has fallen by 0.15"}],"correct":[0],"explanation":"The target of the shrinkage is now a prediction from its pipes; a smaller τ means districts sit closer to their predictions, so a district with little data is pulled more firmly towards a better target.","misconceptions":["","Reads a smaller spread as less pooling, the reverse of what it implies","Thinks predictors replace the district's own data","Confuses a fall in τ with a change in the data"],"lo":["LO2"]},{"id":"check-funnel-q1","slide":"check-funnel","type":"single","prompt":"A hierarchical model of 50 small districts gives 60 divergences, all at small τ. What is the best first step?","options":[{"key":"A","text":"Raise target_accept to 0.99 until the divergences stop"},{"key":"B","text":"Drop the districts with fewer than three bursts"},{"key":"C","text":"Switch to complete pooling, which never diverges"},{"key":"D","text":"Rewrite the district effects in non-centred form and refit"}],"correct":[3],"explanation":"Divergences at small τ are the funnel of the centred form; the non-centred form removes the funnel without changing the model.","misconceptions":["Treats the symptom: fewer divergences, same bias","Removes the districts that need the model most","Changes what the model claims to avoid a computational problem",""],"lo":["LO2"]},{"id":"check-reporting-q1","slide":"check-reporting","type":"single","prompt":"After adding the reporting term, a rural district without sensors moves from 0.18 to 0.26 bursts per km-year. Juhaina asks what the increase rests on.","options":[{"key":"A","text":"On the district's own burst counts, which reveal its reporting rate"},{"key":"B","text":"Mainly on the audit prior: the counts cannot separate rate from reporting"},{"key":"C","text":"On the sampler having more draws"},{"key":"D","text":"On an error in the burst register that the model fixed"}],"correct":[1],"explanation":"Only rate times reporting share reaches the counts; the split between them comes from the audit-based prior.","misconceptions":["Thinks the model measured the district's own reporting","","Attributes the change to the sampler","Reads the change as a fault in the data rather than in the earlier model"],"lo":["LO2"]}],"ai":{"context":{"course":"../context/course.md","courseJs":"../context/course.js","day":"day2.md","llms":"../llms.txt"},"tasks":[],"tools":[]},"bridge":{"allowedOrigins":[]},"features":{},"strings":{}}</script>
+<script src="../_engine/academy.js"></script>
+</body>
+</html>

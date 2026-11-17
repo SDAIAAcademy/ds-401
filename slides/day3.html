@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-ax="deck" data-track="data-science">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 3 · Is the model good enough · Bayesian Modelling and Decisions under Uncertainty</title>
+<meta name="generator" content="SDAIA Academy engine 1.0.0">
+<link rel="icon" href="../_engine/icon.svg">
+<link rel="alternate" type="text/markdown" href="day3.md">
+<link rel="describedby" href="../llms.txt">
+<link rel="stylesheet" href="../_engine/academy.css">
+</head>
+<body>
+<div class="deck" data-course="Bayesian Modelling and Decisions under Uncertainty" data-track="data-science" data-day="Day 3">
+<section class="slide title" id="title" data-auto="title" data-label="Welcome" data-n="1">
+  <div class="kicker">SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty</div>
+  <h1>Is the model good enough</h1>
+  <p class="lead mt">Day 3: Check the model against its own data, compare candidates by prediction, prove the code right and measure what the priors decide</p>
+  <div class="meta"><span class="track">Data Science Track</span><span>4 teaching days + capstone day</span><span>4 sessions · 4 labs</span><span>DS-401</span></div>
+  <aside class="notes"><p>Yesterday ended with a model that pools districts, predicts from pipes and corrects for under-reporting. Today asks whether to believe it: does it reproduce the data, does it beat its rivals on data it has not seen, is its code right, and how much do the priors matter. Lab 3.1 is AI-off.</p></aside>
+</section>
+
+<section class="slide" id="agenda" data-auto="agenda" data-label="Agenda" data-n="2">
+  <div class="kicker">Today</div>
+  <h2>Is the model good enough</h2>
+  <div class="agenda"><div class="item"><div><b>Session 1 · Posterior predictive checks</b><small>Replicated data from the posterior, and the test statistics that expose a misfit</small></div></div><div class="item"><div><b>Session 2 · Comparing models by predictive accuracy</b><small>Expected log predictive density, approximate leave-one-out and its diagnostics</small></div></div><div class="item"><div><b>Session 3 · Is the code right</b><small>Parameter recovery and simulation-based calibration as tests of a model implementation</small></div></div><div class="item"><div><b>Session 4 · How much the priors matter</b><small>Prior sensitivity by refitting and by power-scaling, reported on the quantities the decision uses</small></div></div></div>
+</section>
+
+<section class="slide" id="review-day2" data-lo="LO2" data-n="3">
+  <div class="kicker">Review of Day 2</div>
+  <h2>What a pooled estimate rests on</h2>
+  <div class="quiz" data-type="single" data-lo="LO2" data-id="review-day2-q1">
+    <p class="lead">A rural district of 1.5 km recorded one burst in five years. Its posterior rate under the Lab 2.4 model is 0.21. What contributes most to that number?</p>
+    <div class="opts">
+      <div class="opt" data-why="Overweights a single recorded burst over the population it is pooled with" data-k="A">Its own record: 1 burst over 7.5 km-years</div>
+      <div class="opt" data-ok data-k="B">The rate predicted for its material and age, plus the audit prior on reporting</div>
+      <div class="opt" data-why="Thinks the sampler, not the model, chooses the estimate" data-k="C">The sampler's starting values</div>
+      <div class="opt" data-why="Thinks the common rate is still the pooling target after predictors were added" data-k="D">The common rate of all 140 districts</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> With so little data the district borrows almost everything: from the prediction for its pipes (Lab 2.2) and, without sensors, from the reporting prior (Lab 2.4).</div>
+  </div>
+  <aside class="notes"><p>Answer: B. Its own record alone would say 0.13, which is noise at this size. The question sets up today: if the estimate rests on the model, the model has to be checked.</p></aside>
+</section>
+
+<!-- Session 1 -->
+
+<section class="slide section" id="s1" data-auto="section" data-session="1" data-n="4">
+  <div class="kicker">Session 1</div>
+  <h1>Posterior predictive checks</h1>
+  <ul class="bullets outcomes"><li>Simulate replicated data from a fitted model</li><li>Choose test statistics that target the decision, such as the share of zeros</li><li>Replace a model whose checks fail and check the replacement</li></ul>
+  <div class="sess-no">01</div>
+</section>
+
+<section class="slide" id="ppc-idea" data-label="The idea" data-lo="LO3" data-n="5" data-session="1">
+  <div class="kicker">Posterior predictive checks</div>
+  <h2>A model that fits should be able to produce data like yours</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>1 · Draw</b>parameters from the posterior</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Replicate</b>700 district-years from the model with those parameters</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-teal frag" data-frag="c"><b>3 · Compare</b>a statistic of the replicates with the same statistic of the data</div>
+  </div>
+  <div class="callout tip mt frag"><b>Choose the statistic for the decision.</b> The total number of bursts fits almost any model; the variation from year to year decides how sure Day 4 can be.</div>
+  <aside class="notes"><p>Press once per step. Ask the room which statistic a Poisson model would always get right: the total, because the rate is fitted to it (Lab 3.1: observed 3,894, replicated median 3,889). A check on a statistic the model was fitted to proves nothing.</p><p>Handover from DS-301: its Lab 3.3 simulated the share of zeros from a fitted count model and its Lab 2.4 fitted a negative binomial, both by maximum likelihood. Do not teach either again; what is new here is replicating from the whole posterior and choosing the statistic for the decision.</p></aside>
+</section>
+
+<section class="slide" id="two-statistics" data-label="Two statistics" data-lo="LO3" data-n="6" data-session="1">
+  <div class="kicker">Lab 3.1, task 2</div>
+  <h2>The Poisson model cannot produce the year-to-year variation Yanabi records</h2>
+  <table class="t small">
+    <tr><th>Districts over 10 km</th><th class="num">Observed</th><th class="num">Poisson replicates, 90%</th><th class="num">p</th></tr>
+    <tr class="hl"><td>Dispersion: variance of the five yearly counts over their mean</td><td class="num">2.32</td><td class="num">0.87 to 1.13</td><td class="num">0.000</td></tr>
+    <tr><td>Share of district-years with no burst</td><td class="num">0.048</td><td class="num">0.021 to 0.050</td><td class="num">0.12</td></tr>
+  </table>
+  <p class="small mt">The dispersion fails outright. The quiet years sit at the edge of the Poisson range without leaving it: not every statistic exposes a misfit.</p>
+  <aside class="notes"><p>Numbers from the course's quick run. The p-value is the share of replicates at least as extreme as the data; near 0 or 1 is a warning, not a test with a threshold. Point out that one useful statistic was enough here; in the capstone, participants choose their statistics before they look, so they are not chosen to pass.</p></aside>
+</section>
+
+<section class="slide" id="negbin" data-label="Negative binomial" data-lo="LO3" data-n="7" data-session="1">
+  <div class="kicker">Lab 3.1, task 3</div>
+  <h2>A negative binomial lets each year vary more than a Poisson</h2>
+  <div class="cols cols-2">
+    <pre class="code s" data-file="Lab 3.1"><code class="language-python">phi = numpyro.sample(<span class="hljs-string">&quot;phi&quot;</span>, dist.Gamma(<span class="hljs-number">2.0</span>, <span class="hljs-number">0.2</span>))
+numpyro.sample(<span class="hljs-string">&quot;y&quot;</span>, dist.NegativeBinomial2(mean, phi), obs=y)
+<span class="hljs-comment"># variance = mean + mean**2 / phi</span></code></pre>
+    <ul class="bullets small">
+      <li>φ = 7.0, 90% interval 5.6 to 9.0 (the generating value was 6).</li>
+      <li>Both statistics now sit inside the replicates: p = 0.34 and 0.48.</li>
+      <li>Weather, pressure surges and repair campaigns move a district's year; the Poisson has no room for them.</li>
+    </ul>
+  </div>
+  <aside class="notes"><p>The Gamma(2, 0.2) prior has mean 10: mild extra variation expected, large values (close to Poisson) allowed. A participant who writes NegativeBinomial with (total_count, probs) instead of NegativeBinomial2 gets a different parameterisation: the lab's check catches the wrong mean.</p></aside>
+</section>
+
+<section class="slide" id="rootogram" data-label="Rootogram" data-lo="LO3" data-read="scaled" data-n="8" data-session="1">
+  <div class="kicker">Lab 3.1, stretch</div>
+  <h2>A histogram of all district-years cannot tell the two models apart</h2>
+  <div class="figure">
+    <svg viewBox="0 0 640 280" role="img" aria-label="Rootogram from the course's run: square roots of the observed frequencies of district-years with 0 to 10 bursts as bars; the Poisson and the negative binomial curves lie almost on top of each other and both follow the bars">
+      <title>Observed counts against two models</title>
+      <line x1="50" y1="240" x2="610" y2="240" stroke="currentColor" stroke-width="2"/>
+      <g fill="currentColor" opacity="0.25">
+        <rect x="70" y="68" width="40" height="172"/><rect x="120" y="119" width="40" height="121"/><rect x="170" y="149" width="40" height="91"/><rect x="220" y="166" width="40" height="74"/><rect x="270" y="166" width="40" height="74"/><rect x="320" y="175" width="40" height="65"/><rect x="370" y="186" width="40" height="54"/><rect x="420" y="176" width="40" height="64"/><rect x="470" y="179" width="40" height="61"/><rect x="520" y="188" width="40" height="52"/><rect x="570" y="196" width="40" height="44"/>
+      </g>
+      <polyline points="90,71 140,120 190,152 240,164 290,170 340,173 390,176 440,180 490,184 540,187 590,190" fill="none" stroke="#e4572e" stroke-width="3"/>
+      <polyline points="90,68 140,119 190,150 240,163 290,170 340,174 390,178 440,182 490,185 540,188 590,192" fill="none" stroke="#2a9d8f" stroke-width="3" stroke-dasharray="8 5"/>
+      <text x="430" y="60" font-size="16" fill="#e4572e">Poisson</text>
+      <text x="430" y="85" font-size="16" fill="#2a9d8f">negative binomial</text>
+      <text x="330" y="270" font-size="16" text-anchor="middle" fill="currentColor">bursts in a district-year (0 to 10)</text>
+    </svg>
+    <div class="caption">Square root of the frequencies, from the course's quick run. The dispersion within each district, 2.32 against Poisson replicates of 0.87 to 1.13, separates the same two models at once.</div>
+  </div>
+  <aside class="notes"><p>Ask the room to predict the stretch's picture before showing it: most expect the Poisson to miss. It does not, because the district effects already spread the counts across districts; the extra variation is within each district from year to year, and a histogram of all 700 district-years mixes it with the differences between districts. The lesson is the session's: a check exposes a misfit only if its statistic looks where the misfit is. The quiet years tell the same story (p = 0.12): district effects already give small districts their zeros.</p></aside>
+</section>
+
+<section class="slide" id="check-ppc" data-lo="LO3" data-n="9" data-session="1">
+  <div class="kicker">Checkpoint</div>
+  <h2>Choosing a test statistic</h2>
+  <div class="quiz" data-type="single" data-lo="LO3" data-id="check-ppc-q1">
+    <p class="lead">Shabib proposes checking the Poisson model on the total number of bursts per year across the network. What do you tell him?</p>
+    <div class="opts">
+      <div class="opt" data-ok data-k="A">The model was fitted to reproduce totals; check the variation within districts from year to year instead</div>
+      <div class="opt" data-why="Assumes any check that passes shows the model fits" data-k="B">A good check: if the totals match, the model fits</div>
+      <div class="opt" data-why="Thinks checks must use held-out data, confusing them with cross-validation" data-k="C">Checks are only valid on data the model has not seen</div>
+      <div class="opt" data-why="Treats a p-value near 0.5 as proof rather than as no evidence against" data-k="D">If p is near 0.5 the model is proven correct</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A statistic the fit already matches cannot fail; choose one that the decision depends on and the fit does not force.</div>
+  </div>
+  <aside class="notes"><p>Answer: A. The network total per year also hides the overdispersion within districts because it adds 140 districts together.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-1" data-auto="lab" data-lab="3.1" data-label="Lab 3.1" data-n="10" data-session="1">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.1 · 25 min</div><h2>Zeros and dispersion</h2><p class="lead small">Expose the Poisson model’s misfit on district-years without a burst and on dispersion, then fit a negative binomial and check it the same way.</p><a class="nb" href="../labs/D3_1_expose_poisson_misfit.ipynb">D3_1_expose_poisson_misfit.ipynb</a></div><ul class="checklist"><li>Replicated data from the Poisson model <span class="min">6 min</span></li><li>Share of zeros and dispersion <span class="min">6 min</span></li><li>Fit a negative binomial <span class="min">6 min</span></li><li>The same checks for the negative binomial <span class="min">5 min</span></li><li>A verdict in two sentences <span class="min">2 min</span></li><li class="stretch">✱ Stretch: Draw a rootogram of both models</li></ul></div>
+  <aside class="notes"><p>AI-off lab. Usual problems: computing dispersion over all districts, where small ones with mean near zero give noise; replicating from the prior instead of the posterior; using NegativeBinomial with probs. Fallback: if the negative binomial is not written, the lab uses U.burst_model(family="negbin").</p></aside>
+</section>
+
+<!-- Session 2 -->
+
+<section class="slide section" id="s2" data-auto="section" data-session="2" data-n="11">
+  <div class="kicker">Session 2</div>
+  <h1>Comparing models by predictive accuracy</h1>
+  <ul class="bullets outcomes"><li>Estimate expected log predictive density by Pareto-smoothed importance sampling</li><li>Compare models by the difference and its standard error, not by the ranking alone</li><li>Find influential observations from Pareto k and decide what to do about them</li></ul>
+  <div class="sess-no">02</div>
+</section>
+
+<section class="slide" id="loo-idea" data-label="Leave-one-out" data-lo="LO3" data-n="12" data-session="2">
+  <div class="kicker">Comparing models by predictive accuracy</div>
+  <h2>Score each model on the district-years it did not see</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li><b>elpd</b>: the expected log predictive density of a new district-year; higher is better.</li>
+      <li>Leave-one-out refits 700 times; PSIS-LOO approximates all of them from one fit by importance sampling.</li>
+      <li><b>Pareto k</b> says, for each point, whether the approximation can be trusted (below about 0.7).</li>
+    </ul>
+    <div class="card c-teal flat"><h4>Why not R² or the fit to the data</h4><p class="small mb0">Any model with more parameters fits the data it saw better. Predicting what it did not see is the fair contest.</p></div>
+  </div>
+  <aside class="notes"><p>The consultant's report on Day 4 offers R² of observed against fitted as evidence of fit; this slide is the answer to it. p_loo, the effective number of parameters, is a useful aside: the hierarchical Poisson spends 158 of them because it explains extra variation with district effects.</p><p>Source: Vehtari, Gelman and Gabry (2017), Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.</p></aside>
+</section>
+
+<section class="slide" id="loo-table" data-label="Comparison" data-lo="LO3" data-n="13" data-session="2">
+  <div class="kicker">Lab 3.2, tasks 2 and 3</div>
+  <h2>The negative binomial hierarchy predicts best, by far more than its error</h2>
+  <table class="t small">
+    <tr><th>Model</th><th class="num">elpd</th><th class="num">p_loo</th><th class="num">Difference from best</th><th class="num">SE of difference</th></tr>
+    <tr class="hl"><td>Hierarchical negative binomial</td><td class="num">-1,393</td><td class="num">66</td><td class="num">0</td><td class="num">–</td></tr>
+    <tr><td>Hierarchical Poisson</td><td class="num">-1,503</td><td class="num">158</td><td class="num">-110</td><td class="num">23</td></tr>
+    <tr><td>Complete pooling, Poisson</td><td class="num">-1,710</td><td class="num">22</td><td class="num">-317</td><td class="num">54</td></tr>
+  </table>
+  <p class="small mt">Read the difference against its own standard error, not against the elpd's: about 5 standard errors here.</p>
+  <aside class="notes"><p>Quick-run numbers. The standard error of each model's own elpd (34 to 74) is much larger than that of the difference: the models' errors share most of their noise, so compare the difference with the standard error of the difference. ArviZ 1.x prints a worse model's difference as negative; the lab asks for round_to="none" to get unrounded numbers.</p></aside>
+</section>
+
+<section class="slide" id="pareto-k" data-label="Pareto k" data-lo="LO3" data-n="14" data-session="2">
+  <div class="kicker">Lab 3.2, task 4</div>
+  <h2>D017's 2023 is the year a trunk main failed: keep it, choose a model it does not overturn</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>The Poisson hierarchy flags six district-years above 0.7, D017 in 2023 among them: 54 bursts against 18 to 27 in its other years.</li>
+      <li>The negative binomial expects some unusual years: it flags one, at 0.71.</li>
+      <li>Shabib confirms the failure. The year is real; deleting it would understate risk.</li>
+    </ul>
+    <div class="card c-coral flat"><h4>A flagged point is a question</h4><p class="small mb0">Ask what happened before deciding what to do. An error is corrected; an event is modelled.</p></div>
+  </div>
+  <aside class="notes"><p>Quick-run numbers; the count of flagged points varies a little with the seed, and the lab checks only that D017 2023 is among them and that the negative binomial has fewer. The stretch leaves out whole districts: there 43 to 59 districts exceed 0.7 under the hierarchies, so importance sampling cannot be trusted and K-fold refits are the honest tool. The consultant's raw rate for D017 on Day 4 includes the 2023 year.</p></aside>
+</section>
+
+<section class="slide" id="check-loo" data-lo="LO3" data-n="15" data-session="2">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reading a model comparison</h2>
+  <div class="quiz" data-type="single" data-lo="LO3" data-id="check-loo-q1">
+    <p class="lead">Model A has elpd -1,402 (SE 35) and model B -1,408 (SE 36). The difference is 6 with a standard error of 5. Juhaina asks which to use.</p>
+    <div class="opts">
+      <div class="opt" data-why="Treats any positive difference as a meaningful win" data-k="A">A: it has the higher elpd</div>
+      <div class="opt" data-why="Compares the difference with each model's own SE instead of the SE of the difference" data-k="B">Neither can be told apart because 6 is small next to 35</div>
+      <div class="opt" data-ok data-k="C">No clear winner on prediction: choose by the checks, simplicity and what the decision needs</div>
+      <div class="opt" data-why="Thinks more parameters always means a better model" data-k="D">The one with more parameters</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A difference within about two of its own standard errors is not decisive; other evidence has to choose.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. Option B reaches the right conclusion for the wrong reason, which matters: with a difference of 60 and the same SEs it would still say "too small".</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-2" data-auto="lab" data-lab="3.2" data-label="Lab 3.2" data-n="16" data-session="2">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.2 · 25 min</div><h2>Three models by leave-one-out</h2><p class="lead small">Compare three candidate models by approximate leave-one-out, inspect the influential district-years, and choose one for the decision.</p><a class="nb" href="../labs/D3_2_compare_three_models.ipynb">D3_2_compare_three_models.ipynb</a></div><ul class="checklist"><li>Three candidates and their log likelihoods <span class="min">5 min</span></li><li>Approximate leave-one-out for each <span class="min">5 min</span></li><li>The difference and its standard error <span class="min">5 min</span></li><li>Pareto k: the influential district-years <span class="min">6 min</span></li><li>Choose a model for the decision <span class="min">4 min</span></li><li class="stretch">✱ Stretch: Leave out whole districts instead of district-years</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain the output; the choice is the participant's. Usual problems: fitting without log_likelihood=True (az.loo then fails; U.sample keeps it); reading az.compare's rounded table; deleting D017 2023 to make the warning go away. Three fits take about four minutes on a laptop.</p></aside>
+</section>
+
+<!-- Session 3 -->
+
+<section class="slide section" id="s3" data-auto="section" data-session="3" data-n="17">
+  <div class="kicker">Session 3</div>
+  <h1>Is the code right</h1>
+  <ul class="bullets outcomes"><li>Recover known parameters from data simulated by the model</li><li>Run a short simulation-based calibration and read its rank histograms</li><li>Locate and fix an implementation error from the parameter that fails</li></ul>
+  <div class="sess-no">03</div>
+</section>
+
+<section class="slide" id="one-run-proves-little" data-label="One run" data-lo="LO4" data-n="18" data-session="3">
+  <div class="kicker">Is the code right</div>
+  <h2>One successful recovery proves little</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>A colleague simulated one dataset and recovered both parameters: α and β inside their 90% intervals.</li>
+      <li>The model still has an error. One run passes by luck as easily as by being right.</li>
+      <li>A correct model misses the truth 10% of the time; a wrong one can cover it often.</li>
+    </ul>
+    <div class="card c-purple flat"><h4>Lab 3.3's starting point</h4><p class="small mb0">20 northern districts, 445 km, a Poisson rate with an age effect. The simulator is right; one line of the model is not.</p></div>
+  </div>
+  <aside class="notes"><p>Do not reveal the line. Ask the room how they test their own model code today; most will say "it ran and the numbers looked sensible". That is what the colleague did.</p></aside>
+</section>
+
+<section class="slide" id="sbc-steps" data-label="Calibration" data-lo="LO4" data-n="19" data-session="3">
+  <div class="kicker">Simulation-based calibration</div>
+  <h2>If the code is right, the truth's rank among the draws is uniform</h2>
+  <div class="flow">
+    <div class="step c-navy"><b>1 · Simulate</b>parameters from the prior, then data</div>
+    <div class="arrow frag" data-frag="b">→</div><div class="step c-cyan frag" data-frag="b"><b>2 · Fit</b>the model to those data: 99 draws</div>
+    <div class="arrow frag" data-frag="c">→</div><div class="step c-amber frag" data-frag="c"><b>3 · Rank</b>count draws below the true value: 0 to 99</div>
+    <div class="arrow frag" data-frag="d">→</div><div class="step c-teal frag" data-frag="d"><b>4 · Repeat</b>100 times; plot each parameter's ranks</div>
+  </div>
+  <div class="callout tip mt frag"><b>Shapes to read.</b> Flat: right. U: posterior too narrow. Hump: too wide. Slope: biased.</div>
+  <aside class="notes"><p>The argument in one sentence: averaged over the prior, the posterior is the prior, so a true value drawn from the prior is just another draw from the posterior and its rank is uniform. Any departure is a mismatch between the simulator and the fitted model, in code or in maths.</p><p>Source: Talts, Betancourt, Simpson, Vehtari and Gelman (2018), Validating Bayesian Inference Algorithms with Simulation-Based Calibration.</p></aside>
+</section>
+
+<section class="slide" id="sbc-result" data-label="Found" data-lo="LO4" data-n="20" data-session="3">
+  <div class="kicker">Lab 3.3, tasks 3 to 5</div>
+  <h2>β's ranks pile up at both ends: its prior is five times too narrow</h2>
+  <table class="t small">
+    <tr><th>Share of ranks in the outer fifth (expected 20%)</th><th class="num">α</th><th class="num">β</th></tr>
+    <tr class="hl"><td>Colleague's model</td><td class="num">33% (p = 0.09)</td><td class="num">69% (p &lt; 0.001)</td></tr>
+    <tr><td>Fixed model</td><td class="num">23% (p = 0.44)</td><td class="num">25% (p = 0.66)</td></tr>
+  </table>
+  <pre class="code s mt" data-file="the line"><code class="language-python">beta = numpyro.sample(<span class="hljs-string">&quot;beta&quot;</span>, dist.Normal(<span class="hljs-number">0.3</span>, <span class="hljs-number">0.2</span> ** <span class="hljs-number">2</span>))   <span class="hljs-comment"># a variance where the scale belongs</span></code></pre>
+  <aside class="notes"><p>Quick run, 100 simulations. α is pulled a little too (33%, not significant at 100 simulations) because a wrong β pushes the intercept to compensate: look first at the parameter with the strongest signal. NumPyro, like Stan and SciPy, takes a standard deviation; some textbooks write the normal with a variance. This is one of the most common real errors in hand-written models.</p></aside>
+</section>
+
+<section class="slide" id="sbc-limits" data-label="Limits" data-lo="LO4" data-n="21" data-session="3">
+  <div class="kicker">What calibration does not do</div>
+  <h2>Calibration tests the code against the simulator, not the model against the world</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>It finds</h4><p class="small mb0">Coding errors, wrong parameterisations, a sampler that cannot fit the model.</p></div>
+    <div class="card c-coral"><h4>It misses</h4><p class="small mb0">The same mistake in both the simulator and the model; a model that is wrong about Yanabi.</p></div>
+    <div class="card c-purple"><h4>It costs</h4><p class="small mb0">100 fits per calibration. Small models and short chains make it a few minutes on a laptop.</p></div>
+  </div>
+  <aside class="notes"><p>Session 1's checks test the model against the data; this session tests the code against its own assumptions. The capstone asks for both. The stretch item calibrates a derived quantity, the rate at age 40, which participants report to Nouran.</p></aside>
+</section>
+
+<section class="slide" id="check-sbc" data-lo="LO4" data-n="22" data-session="3">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reading rank histograms</h2>
+  <div class="quiz" data-type="single" data-lo="LO4" data-id="check-sbc-q1">
+    <p class="lead">In a calibration of 200 simulations, a parameter's ranks form a hump: few near 0 or 99, many in the middle. What does it say?</p>
+    <div class="opts">
+      <div class="opt" data-why="Reads the hump as the shape of a posterior, not of a rank histogram" data-k="A">The posterior is approximately normal, as expected</div>
+      <div class="opt" data-why="Confuses the hump with the U shape" data-k="B">The posterior is too narrow</div>
+      <div class="opt" data-ok data-k="C">The posterior is too wide: the truth sits near its middle too often</div>
+      <div class="opt" data-why="Thinks calibration measures the sampler's speed" data-k="D">The sampler needs more warm-up</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> A right posterior puts the truth anywhere among its draws equally often; a too-wide one rarely puts it in the tails.</div>
+  </div>
+  <aside class="notes"><p>Answer: C. A typical cause is a prior in the model wider than the simulator's, the mirror image of today's error.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-3" data-auto="lab" data-lab="3.3" data-label="Lab 3.3" data-n="23" data-session="3">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.3 · 25 min</div><h2>Simulation-based calibration</h2><p class="lead small">Run a short simulation-based calibration of a supplied model, locate its seeded coding error from the ranks, fix it and show the corrected model passes.</p><a class="nb" href="../labs/D3_3_locate_seeded_error.ipynb">D3_3_locate_seeded_error.ipynb</a></div><ul class="checklist"><li>Parameter recovery on one dataset <span class="min">5 min</span></li><li>The calibration loop <span class="min">8 min</span></li><li>Ranks for each parameter <span class="min">5 min</span></li><li>Find and fix the line <span class="min">4 min</span></li><li>Calibrate again <span class="min">3 min</span></li><li class="stretch">✱ Stretch: Calibrate a derived quantity: the rate of a district whose pipes average 40 years</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain ranks; it does not point at the line. The calibration loop takes a few minutes; start it, then read the code while it runs. Usual problems: ranking against the prior instead of the posterior; refitting with a new compiled sampler per simulation (slow; the lab gives make_fitter); fixing alpha's prior too, which changes nothing.</p></aside>
+</section>
+
+<!-- Session 4 -->
+
+<section class="slide section" id="s4" data-auto="section" data-session="4" data-n="24">
+  <div class="kicker">Session 4</div>
+  <h1>How much the priors matter</h1>
+  <ul class="bullets outcomes"><li>Run a power-scaling sensitivity diagnostic</li><li>Refit with alternative priors that someone could defend</li><li>Summarise what changes for the decision and what does not</li></ul>
+  <div class="sess-no">04</div>
+</section>
+
+<section class="slide" id="power-scaling" data-label="Power-scaling" data-lo="LO3" data-n="25" data-session="4">
+  <div class="kicker">How much the priors matter</div>
+  <h2>Make the priors a little weaker and a little stronger, and see what moves</h2>
+  <div class="cols cols-2">
+    <ul class="bullets small">
+      <li>Raise the prior density to a power: 0.8 weakens it, 1.25 strengthens it.</li>
+      <li>Reweight the existing draws by importance sampling: no refit needed.</li>
+      <li>Report the shift of each decision quantity in posterior standard deviations.</li>
+    </ul>
+    <div class="stack">
+      <div class="stat"><div class="big">0.03</div><div class="lbl">largest shift, in posterior sd (rural rate)</div></div>
+    </div>
+  </div>
+  <aside class="notes"><p>Quick-run number. Shifts below about 0.1 sd say the data dominate these priors. Lab 3.4 writes the reweighting by hand in about ten lines, over the priors on α, β, τ and φ; the reporting prior is left out on purpose, because Lab 2.4 already showed it carries its answer. ArviZ 1.x offers the same diagnostic as az.psense_summary, and R users meet it as the priorsense package.</p><p>Source: Kallioinen, Paananen, Bürkner and Vehtari (2024), Detecting and diagnosing prior and likelihood sensitivity with power-scaling.</p></aside>
+</section>
+
+<section class="slide" id="three-priors" data-label="Three priors" data-lo="LO3" data-n="26" data-session="4">
+  <div class="kicker">Lab 3.4, tasks 2 and 3</div>
+  <h2>Three priors on the spread, one list of districts</h2>
+  <table class="t small">
+    <tr><th>Prior on τ</th><th class="num">τ (median)</th><th class="num">Rural, no sensors, rate</th><th class="num">Top 15 shared with base</th></tr>
+    <tr><td>HalfNormal(0.2)</td><td class="num">0.31</td><td class="num">0.235</td><td class="num">15</td></tr>
+    <tr class="hl"><td>HalfNormal(0.5), base</td><td class="num">0.32</td><td class="num">0.232</td><td class="num">15</td></tr>
+    <tr><td>HalfNormal(2.0)</td><td class="num">0.32</td><td class="num">0.229</td><td class="num">15</td></tr>
+  </table>
+  <p class="small mt">With 140 districts, the data pin τ; the prior on the spread does not change the plan.</p>
+  <aside class="notes"><p>Contrast with Lab 2.4: there the counts taught the model almost nothing about reporting, so the audit prior carried the answer. Sensitivity is a property of each prior and each question, not of the model as a whole. The stretch tries a Gamma(2, 1) prior on φ: φ moves from 7.0 to 6.3, the rural rate does not move.</p></aside>
+</section>
+
+<section class="slide" id="which-prior-matters" data-label="What matters" data-lo="LO3" data-n="27" data-session="4">
+  <div class="kicker">The summary for Nouran</div>
+  <h2>The prior that matters is the one on reporting, and it rests on one audit</h2>
+  <ol class="bullets small">
+    <li>The priors on spread and shape barely move the decision quantities.</li>
+    <li>The reporting prior moves the rural no-sensor rates almost one for one (Lab 2.4's stretch).</li>
+    <li>So the money for better information goes to reporting, not to refining the model: Day 4, session 3.</li>
+  </ol>
+  <aside class="notes"><p>This is the three-sentence summary Lab 3.4 asks for, written for a director. A summary that says "the model is robust to the priors" without naming the one prior that matters fails the LO3 standard.</p></aside>
+</section>
+
+<section class="slide" id="check-sensitivity" data-lo="LO3" data-n="28" data-session="4">
+  <div class="kicker">Checkpoint</div>
+  <h2>Reporting sensitivity</h2>
+  <div class="quiz" data-type="single" data-lo="LO3" data-id="check-sensitivity-q1">
+    <p class="lead">Power-scaling shows that no quantity shifts by more than 0.03 posterior sd. Nouran asks whether the priors can now be ignored in the memo.</p>
+    <div class="opts">
+      <div class="opt" data-why="Generalises from the priors that were tested to all of them" data-k="A">Yes: the analysis is insensitive to its priors</div>
+      <div class="opt" data-why="Treats robustness as a reason to drop the Bayesian analysis" data-k="B">Yes, and the analysis could have used maximum likelihood instead</div>
+      <div class="opt" data-why="Assumes sensitivity can only be shown with new data" data-k="C">No: sensitivity cannot be known until new data arrive</div>
+      <div class="opt" data-ok data-k="D">No: state the priors tested, and name the reporting prior, which the data cannot check</div>
+    </div>
+    <div class="callout tip why"><b>Why.</b> Robustness holds for the priors the data inform; a prior the data cannot check carries its answer and must be stated with its source.</div>
+  </div>
+  <aside class="notes"><p>Answer: D. Option B is a fair question from the room: without the reporting prior and the pooling, maximum likelihood would not give the same rural estimates.</p></aside>
+</section>
+
+<section class="slide lab top" id="lab-3-4" data-auto="lab" data-lab="3.4" data-label="Lab 3.4" data-n="29" data-session="4">
+  <div class="cols cols-2 mid"><div><div class="lab-tag">Lab 3.4 · 25 min</div><h2>Prior sensitivity</h2><p class="lead small">Run a power-scaling diagnostic, refit with two other priors on the district spread, and summarise what changes for the rural rates and the ranking of districts.</p><a class="nb" href="../labs/D3_4_run_prior_sensitivity.ipynb">D3_4_run_prior_sensitivity.ipynb</a></div><ul class="checklist"><li>The base fit and the power-scaling diagnostic <span class="min">6 min</span></li><li>Two alternative priors on the spread <span class="min">7 min</span></li><li>What changes: spread, rural rates, top 15 <span class="min">7 min</span></li><li>A summary for the director <span class="min">5 min</span></li><li class="stretch">✱ Stretch: Do the same for the prior on the negative binomial shape</li></ul></div>
+  <aside class="notes"><p>Mirsad may explain power-scaling; the summary is the participant's. Usual problems: forgetting that the log prior of a vector is a sum; dividing weights without subtracting the maximum (overflow); comparing τ across priors without checking each fit. Three fits take about five minutes.</p></aside>
+</section>
+
+<section class="slide" id="wrap-up" data-n="30" data-session="4">
+  <div class="kicker">Day 3 · wrap-up</div>
+  <h2>Three things to keep</h2>
+  <div class="cols cols-3">
+    <div class="card c-teal"><h4>Check what the decision needs</h4><p class="small mb0">Choose statistics the fit does not force; the variation from year to year sank the Poisson.</p></div>
+    <div class="card c-coral"><h4>Test the code, not one run</h4><p class="small mb0">Calibration over many simulations found a line that one recovery missed.</p></div>
+    <div class="card c-purple"><h4>Name the prior that matters</h4><p class="small mb0">Spread and shape priors barely move the plan; the reporting prior does.</p></div>
+  </div>
+  <aside class="notes"><p>Ask each table for the one row of today's comparison table that would change Nouran's decision if it had gone the other way. Usually: the dispersion check, because it widens every district's interval.</p></aside>
+</section>
+
+<section class="slide dark" id="next" data-label="Next" data-n="31" data-session="4">
+  <div class="kicker">Next</div>
+  <h2>Day 4: From posterior to decision</h2>
+  <p class="lead">Tomorrow turns the posterior into a capital plan. Read the consultant's report in labs/data/review before you come: Lab 4.4 reviews it.</p>
+  <aside class="notes"><p>Day 4 uses a supplied posterior, data/posterior/rates.npz, from the model chosen today, so a participant who did not finish Day 3 starts level. Bring a calculator or a notebook for the decision table on the first slide.</p></aside>
+</section>
+</div>
+<script type="application/json" id="academy-data">{"v":1,"engine":"1.0.0","build":{"at":"2026-11-15T23:05:21Z","version":"2027.1.0","commit":"c70a408"},"course":{"id":"ds-401","code":"DS-401","title":"Bayesian Modelling and Decisions under Uncertainty","track":"data-science","lang":"en","dir":"ltr","url":"https://sdaiaacademy.github.io/ds-401/","repo":"SDAIAAcademy/ds-401","home":"../index.html"},"deck":{"id":"day3","kind":"day","day":3,"label":"Day 3","title":"Is the model good enough","prev":"day2.html","next":"day4.html","md":"day3.md","alt":{}},"sessions":[{"n":1,"label":"Session 1","title":"Posterior predictive checks","slide":"s1","outcomes":["Simulate replicated data from a fitted model","Choose test statistics that target the decision, such as the share of zeros","Replace a model whose checks fail and check the replacement"],"minutes":50,"lab":{"id":"3.1","title":"Zeros and dispersion","minutes":25,"href":"../labs/D3_1_expose_poisson_misfit.ipynb"}},{"n":2,"label":"Session 2","title":"Comparing models by predictive accuracy","slide":"s2","outcomes":["Estimate expected log predictive density by Pareto-smoothed importance sampling","Compare models by the difference and its standard error, not by the ranking alone","Find influential observations from Pareto k and decide what to do about them"],"minutes":50,"lab":{"id":"3.2","title":"Three models by leave-one-out","minutes":25,"href":"../labs/D3_2_compare_three_models.ipynb"}},{"n":3,"label":"Session 3","title":"Is the code right","slide":"s3","outcomes":["Recover known parameters from data simulated by the model","Run a short simulation-based calibration and read its rank histograms","Locate and fix an implementation error from the parameter that fails"],"minutes":50,"lab":{"id":"3.3","title":"Simulation-based calibration","minutes":25,"href":"../labs/D3_3_locate_seeded_error.ipynb"}},{"n":4,"label":"Session 4","title":"How much the priors matter","slide":"s4","outcomes":["Run a power-scaling sensitivity diagnostic","Refit with alternative priors that someone could defend","Summarise what changes for the decision and what does not"],"minutes":50,"lab":{"id":"3.4","title":"Prior sensitivity","minutes":25,"href":"../labs/D3_4_run_prior_sensitivity.ipynb"}}],"slides":[{"id":"title","n":1,"title":"Is the model good enough","kind":"title","session":0,"hash":"b37b4ed2","md":"#### [day3#title] Is the model good enough\n\n*SDAIA Academy · Bayesian Modelling and Decisions under Uncertainty*\n\nDay 3: Check the model against its own data, compare candidates by prediction, prove the code right and measure what the priors decide\n\nData Science Track · 4 teaching days + capstone day · 4 sessions · 4 labs · DS-401","notes":"Yesterday ended with a model that pools districts, predicts from pipes and corrects for under-reporting. Today asks whether to believe it: does it reproduce the data, does it beat its rivals on data it has not seen, is its code right, and how much do the priors matter. Lab 3.1 is AI-off.","minutes":null,"lo":[]},{"id":"agenda","n":2,"title":"Is the model good enough","kind":"content","session":0,"hash":"fada73c6","md":"#### [day3#agenda] Is the model good enough\n\n*Today*\n\n- **Session 1 · Posterior predictive checks**: Replicated data from the posterior, and the test statistics that expose a misfit\n- **Session 2 · Comparing models by predictive accuracy**: Expected log predictive density, approximate leave-one-out and its diagnostics\n- **Session 3 · Is the code right**: Parameter recovery and simulation-based calibration as tests of a model implementation\n- **Session 4 · How much the priors matter**: Prior sensitivity by refitting and by power-scaling, reported on the quantities the decision uses","notes":"","minutes":null,"lo":[]},{"id":"review-day2","n":3,"title":"What a pooled estimate rests on","kind":"quiz","session":0,"hash":"4fb76c38","md":"#### [day3#review-day2] What a pooled estimate rests on\n\n*Review of Day 2*\n\n**Question:** A rural district of 1.5 km recorded one burst in five years. Its posterior rate under the Lab 2.4 model is 0.21. What contributes most to that number?\n\n- A. Its own record: 1 burst over 7.5 km-years\n- B. The rate predicted for its material and age, plus the audit prior on reporting\n- C. The sampler's starting values\n- D. The common rate of all 140 districts","notes":"Answer: B. Its own record alone would say 0.13, which is noise at this size. The question sets up today: if the estimate rests on the model, the model has to be checked.","minutes":null,"lo":["LO2"]},{"id":"s1","n":4,"title":"Posterior predictive checks","kind":"section","session":1,"hash":"f35f4020","md":"#### [day3#s1] Posterior predictive checks\n\n*Session 1*\n\n- Simulate replicated data from a fitted model\n- Choose test statistics that target the decision, such as the share of zeros\n- Replace a model whose checks fail and check the replacement","notes":"","minutes":null,"lo":["LO3"]},{"id":"ppc-idea","n":5,"title":"A model that fits should be able to produce data like yours","kind":"content","session":1,"hash":"471ad199","md":"#### [day3#ppc-idea] A model that fits should be able to produce data like yours\n\n*Posterior predictive checks*\n\n1. **1 · Draw** parameters from the posterior\n2. **2 · Replicate** 700 district-years from the model with those parameters\n3. **3 · Compare** a statistic of the replicates with the same statistic of the data\n\n> **Choose the statistic for the decision.** The total number of bursts fits almost any model; the variation from year to year decides how sure Day 4 can be.","notes":"Press once per step. Ask the room which statistic a Poisson model would always get right: the total, because the rate is fitted to it (Lab 3.1: observed 3,894, replicated median 3,889). A check on a statistic the model was fitted to proves nothing.\n\nHandover from DS-301: its Lab 3.3 simulated the share of zeros from a fitted count model and its Lab 2.4 fitted a negative binomial, both by maximum likelihood. Do not teach either again; what is new here is replicating from the whole posterior and choosing the statistic for the decision.","minutes":null,"lo":["LO3"]},{"id":"two-statistics","n":6,"title":"The Poisson model cannot produce the year-to-year variation Yanabi records","kind":"content","session":1,"hash":"1cf2dd08","md":"#### [day3#two-statistics] The Poisson model cannot produce the year-to-year variation Yanabi records\n\n*Lab 3.1, task 2*\n\n| Districts over 10 km | Observed | Poisson replicates, 90% | p |\n| --- | --- | --- | --- |\n| Dispersion: variance of the five yearly counts over their mean | 2.32 | 0.87 to 1.13 | 0.000 |\n| Share of district-years with no burst | 0.048 | 0.021 to 0.050 | 0.12 |\n\nThe dispersion fails outright. The quiet years sit at the edge of the Poisson range without leaving it: not every statistic exposes a misfit.","notes":"Numbers from the course's quick run. The p-value is the share of replicates at least as extreme as the data; near 0 or 1 is a warning, not a test with a threshold. Point out that one useful statistic was enough here; in the capstone, participants choose their statistics before they look, so they are not chosen to pass.","minutes":null,"lo":["LO3"]},{"id":"negbin","n":7,"title":"A negative binomial lets each year vary more than a Poisson","kind":"content","session":1,"hash":"6225f30a","md":"#### [day3#negbin] A negative binomial lets each year vary more than a Poisson\n\n*Lab 3.1, task 3*\n\n```python\n# file: Lab 3.1\nphi = numpyro.sample(\"phi\", dist.Gamma(2.0, 0.2))\nnumpyro.sample(\"y\", dist.NegativeBinomial2(mean, phi), obs=y)\n# variance = mean + mean**2 / phi\n```\n\n- φ = 7.0, 90% interval 5.6 to 9.0 (the generating value was 6).\n- Both statistics now sit inside the replicates: p = 0.34 and 0.48.\n- Weather, pressure surges and repair campaigns move a district's year; the Poisson has no room for them.","notes":"The Gamma(2, 0.2) prior has mean 10: mild extra variation expected, large values (close to Poisson) allowed. A participant who writes NegativeBinomial with (total_count, probs) instead of NegativeBinomial2 gets a different parameterisation: the lab's check catches the wrong mean.","minutes":null,"lo":["LO3"]},{"id":"rootogram","n":8,"title":"A histogram of all district-years cannot tell the two models apart","kind":"content","session":1,"hash":"77e538fa","md":"#### [day3#rootogram] A histogram of all district-years cannot tell the two models apart\n\n*Lab 3.1, stretch*\n\nFigure: Square root of the frequencies, from the course's quick run. The dispersion within each district, 2.32 against Poisson replicates of 0.87 to 1.13, separates the same two models at once.","notes":"Ask the room to predict the stretch's picture before showing it: most expect the Poisson to miss. It does not, because the district effects already spread the counts across districts; the extra variation is within each district from year to year, and a histogram of all 700 district-years mixes it with the differences between districts. The lesson is the session's: a check exposes a misfit only if its statistic looks where the misfit is. The quiet years tell the same story (p = 0.12): district effects already give small districts their zeros.","minutes":null,"lo":["LO3"]},{"id":"check-ppc","n":9,"title":"Choosing a test statistic","kind":"quiz","session":1,"hash":"457bb50d","md":"#### [day3#check-ppc] Choosing a test statistic\n\n*Checkpoint*\n\n**Question:** Shabib proposes checking the Poisson model on the total number of bursts per year across the network. What do you tell him?\n\n- A. The model was fitted to reproduce totals; check the variation within districts from year to year instead\n- B. A good check: if the totals match, the model fits\n- C. Checks are only valid on data the model has not seen\n- D. If p is near 0.5 the model is proven correct","notes":"Answer: A. The network total per year also hides the overdispersion within districts because it adds 140 districts together.","minutes":null,"lo":["LO3"]},{"id":"lab-3-1","n":10,"title":"Zeros and dispersion","kind":"lab","session":1,"hash":"55dc4323","md":"#### [day3#lab-3-1] Zeros and dispersion\n\nLab 3.1 · 25 min\n\nExpose the Poisson model’s misfit on district-years without a burst and on dispersion, then fit a negative binomial and check it the same way.\n\n[D3_1_expose_poisson_misfit.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D3_1_expose_poisson_misfit.ipynb)\n\n- [ ] Replicated data from the Poisson model (6 min)\n- [ ] Share of zeros and dispersion (6 min)\n- [ ] Fit a negative binomial (6 min)\n- [ ] The same checks for the negative binomial (5 min)\n- [ ] A verdict in two sentences (2 min)\n- [ ] ✱ Stretch: Draw a rootogram of both models","notes":"AI-off lab. Usual problems: computing dispersion over all districts, where small ones with mean near zero give noise; replicating from the prior instead of the posterior; using NegativeBinomial with probs. Fallback: if the negative binomial is not written, the lab uses U.burst_model(family=\"negbin\").","minutes":null,"lo":[]},{"id":"s2","n":11,"title":"Comparing models by predictive accuracy","kind":"section","session":2,"hash":"ffcfd0d7","md":"#### [day3#s2] Comparing models by predictive accuracy\n\n*Session 2*\n\n- Estimate expected log predictive density by Pareto-smoothed importance sampling\n- Compare models by the difference and its standard error, not by the ranking alone\n- Find influential observations from Pareto k and decide what to do about them","notes":"","minutes":null,"lo":["LO3"]},{"id":"loo-idea","n":12,"title":"Score each model on the district-years it did not see","kind":"content","session":2,"hash":"7c01ae7e","md":"#### [day3#loo-idea] Score each model on the district-years it did not see\n\n*Comparing models by predictive accuracy*\n\n- **elpd**: the expected log predictive density of a new district-year; higher is better.\n- Leave-one-out refits 700 times; PSIS-LOO approximates all of them from one fit by importance sampling.\n- **Pareto k** says, for each point, whether the approximation can be trusted (below about 0.7).\n\n- **Why not R² or the fit to the data.** Any model with more parameters fits the data it saw better. Predicting what it did not see is the fair contest.","notes":"The consultant's report on Day 4 offers R² of observed against fitted as evidence of fit; this slide is the answer to it. p_loo, the effective number of parameters, is a useful aside: the hierarchical Poisson spends 158 of them because it explains extra variation with district effects.\n\nSource: Vehtari, Gelman and Gabry (2017), Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.","minutes":null,"lo":["LO3"]},{"id":"loo-table","n":13,"title":"The negative binomial hierarchy predicts best, by far more than its error","kind":"content","session":2,"hash":"70688485","md":"#### [day3#loo-table] The negative binomial hierarchy predicts best, by far more than its error\n\n*Lab 3.2, tasks 2 and 3*\n\n| Model | elpd | p_loo | Difference from best | SE of difference |\n| --- | --- | --- | --- | --- |\n| Hierarchical negative binomial | -1,393 | 66 | 0 | – |\n| Hierarchical Poisson | -1,503 | 158 | -110 | 23 |\n| Complete pooling, Poisson | -1,710 | 22 | -317 | 54 |\n\nRead the difference against its own standard error, not against the elpd's: about 5 standard errors here.","notes":"Quick-run numbers. The standard error of each model's own elpd (34 to 74) is much larger than that of the difference: the models' errors share most of their noise, so compare the difference with the standard error of the difference. ArviZ 1.x prints a worse model's difference as negative; the lab asks for round_to=\"none\" to get unrounded numbers.","minutes":null,"lo":["LO3"]},{"id":"pareto-k","n":14,"title":"D017's 2023 is the year a trunk main failed: keep it, choose a model it does not overturn","kind":"content","session":2,"hash":"703463d8","md":"#### [day3#pareto-k] D017's 2023 is the year a trunk main failed: keep it, choose a model it does not overturn\n\n*Lab 3.2, task 4*\n\n- The Poisson hierarchy flags six district-years above 0.7, D017 in 2023 among them: 54 bursts against 18 to 27 in its other years.\n- The negative binomial expects some unusual years: it flags one, at 0.71.\n- Shabib confirms the failure. The year is real; deleting it would understate risk.\n\n- **A flagged point is a question.** Ask what happened before deciding what to do. An error is corrected; an event is modelled.","notes":"Quick-run numbers; the count of flagged points varies a little with the seed, and the lab checks only that D017 2023 is among them and that the negative binomial has fewer. The stretch leaves out whole districts: there 43 to 59 districts exceed 0.7 under the hierarchies, so importance sampling cannot be trusted and K-fold refits are the honest tool. The consultant's raw rate for D017 on Day 4 includes the 2023 year.","minutes":null,"lo":["LO3"]},{"id":"check-loo","n":15,"title":"Reading a model comparison","kind":"quiz","session":2,"hash":"3efaf0f9","md":"#### [day3#check-loo] Reading a model comparison\n\n*Checkpoint*\n\n**Question:** Model A has elpd -1,402 (SE 35) and model B -1,408 (SE 36). The difference is 6 with a standard error of 5. Juhaina asks which to use.\n\n- A. A: it has the higher elpd\n- B. Neither can be told apart because 6 is small next to 35\n- C. No clear winner on prediction: choose by the checks, simplicity and what the decision needs\n- D. The one with more parameters","notes":"Answer: C. Option B reaches the right conclusion for the wrong reason, which matters: with a difference of 60 and the same SEs it would still say \"too small\".","minutes":null,"lo":["LO3"]},{"id":"lab-3-2","n":16,"title":"Three models by leave-one-out","kind":"lab","session":2,"hash":"93888f11","md":"#### [day3#lab-3-2] Three models by leave-one-out\n\nLab 3.2 · 25 min\n\nCompare three candidate models by approximate leave-one-out, inspect the influential district-years, and choose one for the decision.\n\n[D3_2_compare_three_models.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D3_2_compare_three_models.ipynb)\n\n- [ ] Three candidates and their log likelihoods (5 min)\n- [ ] Approximate leave-one-out for each (5 min)\n- [ ] The difference and its standard error (5 min)\n- [ ] Pareto k: the influential district-years (6 min)\n- [ ] Choose a model for the decision (4 min)\n- [ ] ✱ Stretch: Leave out whole districts instead of district-years","notes":"Mirsad may explain the output; the choice is the participant's. Usual problems: fitting without log_likelihood=True (az.loo then fails; U.sample keeps it); reading az.compare's rounded table; deleting D017 2023 to make the warning go away. Three fits take about four minutes on a laptop.","minutes":null,"lo":[]},{"id":"s3","n":17,"title":"Is the code right","kind":"section","session":3,"hash":"d0a59633","md":"#### [day3#s3] Is the code right\n\n*Session 3*\n\n- Recover known parameters from data simulated by the model\n- Run a short simulation-based calibration and read its rank histograms\n- Locate and fix an implementation error from the parameter that fails","notes":"","minutes":null,"lo":["LO4"]},{"id":"one-run-proves-little","n":18,"title":"One successful recovery proves little","kind":"content","session":3,"hash":"f83aea24","md":"#### [day3#one-run-proves-little] One successful recovery proves little\n\n*Is the code right*\n\n- A colleague simulated one dataset and recovered both parameters: α and β inside their 90% intervals.\n- The model still has an error. One run passes by luck as easily as by being right.\n- A correct model misses the truth 10% of the time; a wrong one can cover it often.\n\n- **Lab 3.3's starting point.** 20 northern districts, 445 km, a Poisson rate with an age effect. The simulator is right; one line of the model is not.","notes":"Do not reveal the line. Ask the room how they test their own model code today; most will say \"it ran and the numbers looked sensible\". That is what the colleague did.","minutes":null,"lo":["LO4"]},{"id":"sbc-steps","n":19,"title":"If the code is right, the truth's rank among the draws is uniform","kind":"content","session":3,"hash":"967c49ef","md":"#### [day3#sbc-steps] If the code is right, the truth's rank among the draws is uniform\n\n*Simulation-based calibration*\n\n1. **1 · Simulate** parameters from the prior, then data\n2. **2 · Fit** the model to those data: 99 draws\n3. **3 · Rank** count draws below the true value: 0 to 99\n4. **4 · Repeat** 100 times; plot each parameter's ranks\n\n> **Shapes to read.** Flat: right. U: posterior too narrow. Hump: too wide. Slope: biased.","notes":"The argument in one sentence: averaged over the prior, the posterior is the prior, so a true value drawn from the prior is just another draw from the posterior and its rank is uniform. Any departure is a mismatch between the simulator and the fitted model, in code or in maths.\n\nSource: Talts, Betancourt, Simpson, Vehtari and Gelman (2018), Validating Bayesian Inference Algorithms with Simulation-Based Calibration.","minutes":null,"lo":["LO4"]},{"id":"sbc-result","n":20,"title":"β's ranks pile up at both ends: its prior is five times too narrow","kind":"content","session":3,"hash":"77c5e58d","md":"#### [day3#sbc-result] β's ranks pile up at both ends: its prior is five times too narrow\n\n*Lab 3.3, tasks 3 to 5*\n\n| Share of ranks in the outer fifth (expected 20%) | α | β |\n| --- | --- | --- |\n| Colleague's model | 33% (p = 0.09) | 69% (p \u003c 0.001) |\n| Fixed model | 23% (p = 0.44) | 25% (p = 0.66) |\n\n```python\n# file: the line\nbeta = numpyro.sample(\"beta\", dist.Normal(0.3, 0.2 ** 2))   # a variance where the scale belongs\n```","notes":"Quick run, 100 simulations. α is pulled a little too (33%, not significant at 100 simulations) because a wrong β pushes the intercept to compensate: look first at the parameter with the strongest signal. NumPyro, like Stan and SciPy, takes a standard deviation; some textbooks write the normal with a variance. This is one of the most common real errors in hand-written models.","minutes":null,"lo":["LO4"]},{"id":"sbc-limits","n":21,"title":"Calibration tests the code against the simulator, not the model against the world","kind":"content","session":3,"hash":"9ba1f55a","md":"#### [day3#sbc-limits] Calibration tests the code against the simulator, not the model against the world\n\n*What calibration does not do*\n\n- **It finds.** Coding errors, wrong parameterisations, a sampler that cannot fit the model.\n- **It misses.** The same mistake in both the simulator and the model; a model that is wrong about Yanabi.\n- **It costs.** 100 fits per calibration. Small models and short chains make it a few minutes on a laptop.","notes":"Session 1's checks test the model against the data; this session tests the code against its own assumptions. The capstone asks for both. The stretch item calibrates a derived quantity, the rate at age 40, which participants report to Nouran.","minutes":null,"lo":["LO4"]},{"id":"check-sbc","n":22,"title":"Reading rank histograms","kind":"quiz","session":3,"hash":"71faee34","md":"#### [day3#check-sbc] Reading rank histograms\n\n*Checkpoint*\n\n**Question:** In a calibration of 200 simulations, a parameter's ranks form a hump: few near 0 or 99, many in the middle. What does it say?\n\n- A. The posterior is approximately normal, as expected\n- B. The posterior is too narrow\n- C. The posterior is too wide: the truth sits near its middle too often\n- D. The sampler needs more warm-up","notes":"Answer: C. A typical cause is a prior in the model wider than the simulator's, the mirror image of today's error.","minutes":null,"lo":["LO4"]},{"id":"lab-3-3","n":23,"title":"Simulation-based calibration","kind":"lab","session":3,"hash":"ee7afa36","md":"#### [day3#lab-3-3] Simulation-based calibration\n\nLab 3.3 · 25 min\n\nRun a short simulation-based calibration of a supplied model, locate its seeded coding error from the ranks, fix it and show the corrected model passes.\n\n[D3_3_locate_seeded_error.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D3_3_locate_seeded_error.ipynb)\n\n- [ ] Parameter recovery on one dataset (5 min)\n- [ ] The calibration loop (8 min)\n- [ ] Ranks for each parameter (5 min)\n- [ ] Find and fix the line (4 min)\n- [ ] Calibrate again (3 min)\n- [ ] ✱ Stretch: Calibrate a derived quantity: the rate of a district whose pipes average 40 years","notes":"Mirsad may explain ranks; it does not point at the line. The calibration loop takes a few minutes; start it, then read the code while it runs. Usual problems: ranking against the prior instead of the posterior; refitting with a new compiled sampler per simulation (slow; the lab gives make_fitter); fixing alpha's prior too, which changes nothing.","minutes":null,"lo":[]},{"id":"s4","n":24,"title":"How much the priors matter","kind":"section","session":4,"hash":"a7d62b96","md":"#### [day3#s4] How much the priors matter\n\n*Session 4*\n\n- Run a power-scaling sensitivity diagnostic\n- Refit with alternative priors that someone could defend\n- Summarise what changes for the decision and what does not","notes":"","minutes":null,"lo":["LO3"]},{"id":"power-scaling","n":25,"title":"Make the priors a little weaker and a little stronger, and see what moves","kind":"content","session":4,"hash":"cacc76d4","md":"#### [day3#power-scaling] Make the priors a little weaker and a little stronger, and see what moves\n\n*How much the priors matter*\n\n- Raise the prior density to a power: 0.8 weakens it, 1.25 strengthens it.\n- Reweight the existing draws by importance sampling: no refit needed.\n- Report the shift of each decision quantity in posterior standard deviations.\n\n**0.03** largest shift, in posterior sd (rural rate)","notes":"Quick-run number. Shifts below about 0.1 sd say the data dominate these priors. Lab 3.4 writes the reweighting by hand in about ten lines, over the priors on α, β, τ and φ; the reporting prior is left out on purpose, because Lab 2.4 already showed it carries its answer. ArviZ 1.x offers the same diagnostic as az.psense_summary, and R users meet it as the priorsense package.\n\nSource: Kallioinen, Paananen, Bürkner and Vehtari (2024), Detecting and diagnosing prior and likelihood sensitivity with power-scaling.","minutes":null,"lo":["LO3"]},{"id":"three-priors","n":26,"title":"Three priors on the spread, one list of districts","kind":"content","session":4,"hash":"c400b66c","md":"#### [day3#three-priors] Three priors on the spread, one list of districts\n\n*Lab 3.4, tasks 2 and 3*\n\n| Prior on τ | τ (median) | Rural, no sensors, rate | Top 15 shared with base |\n| --- | --- | --- | --- |\n| HalfNormal(0.2) | 0.31 | 0.235 | 15 |\n| HalfNormal(0.5), base | 0.32 | 0.232 | 15 |\n| HalfNormal(2.0) | 0.32 | 0.229 | 15 |\n\nWith 140 districts, the data pin τ; the prior on the spread does not change the plan.","notes":"Contrast with Lab 2.4: there the counts taught the model almost nothing about reporting, so the audit prior carried the answer. Sensitivity is a property of each prior and each question, not of the model as a whole. The stretch tries a Gamma(2, 1) prior on φ: φ moves from 7.0 to 6.3, the rural rate does not move.","minutes":null,"lo":["LO3"]},{"id":"which-prior-matters","n":27,"title":"The prior that matters is the one on reporting, and it rests on one audit","kind":"content","session":4,"hash":"852a7b4a","md":"#### [day3#which-prior-matters] The prior that matters is the one on reporting, and it rests on one audit\n\n*The summary for Nouran*\n\n1. The priors on spread and shape barely move the decision quantities.\n2. The reporting prior moves the rural no-sensor rates almost one for one (Lab 2.4's stretch).\n3. So the money for better information goes to reporting, not to refining the model: Day 4, session 3.","notes":"This is the three-sentence summary Lab 3.4 asks for, written for a director. A summary that says \"the model is robust to the priors\" without naming the one prior that matters fails the LO3 standard.","minutes":null,"lo":["LO3"]},{"id":"check-sensitivity","n":28,"title":"Reporting sensitivity","kind":"quiz","session":4,"hash":"a7c814d4","md":"#### [day3#check-sensitivity] Reporting sensitivity\n\n*Checkpoint*\n\n**Question:** Power-scaling shows that no quantity shifts by more than 0.03 posterior sd. Nouran asks whether the priors can now be ignored in the memo.\n\n- A. Yes: the analysis is insensitive to its priors\n- B. Yes, and the analysis could have used maximum likelihood instead\n- C. No: sensitivity cannot be known until new data arrive\n- D. No: state the priors tested, and name the reporting prior, which the data cannot check","notes":"Answer: D. Option B is a fair question from the room: without the reporting prior and the pooling, maximum likelihood would not give the same rural estimates.","minutes":null,"lo":["LO3"]},{"id":"lab-3-4","n":29,"title":"Prior sensitivity","kind":"lab","session":4,"hash":"55fe7ea5","md":"#### [day3#lab-3-4] Prior sensitivity\n\nLab 3.4 · 25 min\n\nRun a power-scaling diagnostic, refit with two other priors on the district spread, and summarise what changes for the rural rates and the ranking of districts.\n\n[D3_4_run_prior_sensitivity.ipynb](https://sdaiaacademy.github.io/ds-401/labs/D3_4_run_prior_sensitivity.ipynb)\n\n- [ ] The base fit and the power-scaling diagnostic (6 min)\n- [ ] Two alternative priors on the spread (7 min)\n- [ ] What changes: spread, rural rates, top 15 (7 min)\n- [ ] A summary for the director (5 min)\n- [ ] ✱ Stretch: Do the same for the prior on the negative binomial shape","notes":"Mirsad may explain power-scaling; the summary is the participant's. Usual problems: forgetting that the log prior of a vector is a sum; dividing weights without subtracting the maximum (overflow); comparing τ across priors without checking each fit. Three fits take about five minutes.","minutes":null,"lo":[]},{"id":"wrap-up","n":30,"title":"Three things to keep","kind":"content","session":4,"hash":"7e661661","md":"#### [day3#wrap-up] Three things to keep\n\n*Day 3 · wrap-up*\n\n- **Check what the decision needs.** Choose statistics the fit does not force; the variation from year to year sank the Poisson.\n- **Test the code, not one run.** Calibration over many simulations found a line that one recovery missed.\n- **Name the prior that matters.** Spread and shape priors barely move the plan; the reporting prior does.","notes":"Ask each table for the one row of today's comparison table that would change Nouran's decision if it had gone the other way. Usually: the dispersion check, because it widens every district's interval.","minutes":null,"lo":[]},{"id":"next","n":31,"title":"Day 4: From posterior to decision","kind":"content","session":4,"hash":"18b49b4b","md":"#### [day3#next] Day 4: From posterior to decision\n\n*Next*\n\nTomorrow turns the posterior into a capital plan. Read the consultant's report in labs/data/review before you come: Lab 4.4 reviews it.","notes":"Day 4 uses a supplied posterior, data/posterior/rates.npz, from the model chosen today, so a participant who did not finish Day 3 starts level. Bring a calculator or a notebook for the decision table on the first slide.","minutes":null,"lo":[]}],"activities":[{"id":"review-day2-q1","slide":"review-day2","type":"single","prompt":"A rural district of 1.5 km recorded one burst in five years. Its posterior rate under the Lab 2.4 model is 0.21. What contributes most to that number?","options":[{"key":"A","text":"Its own record: 1 burst over 7.5 km-years"},{"key":"B","text":"The rate predicted for its material and age, plus the audit prior on reporting"},{"key":"C","text":"The sampler's starting values"},{"key":"D","text":"The common rate of all 140 districts"}],"correct":[1],"explanation":"With so little data the district borrows almost everything: from the prediction for its pipes (Lab 2.2) and, without sensors, from the reporting prior (Lab 2.4).","misconceptions":["Overweights a single recorded burst over the population it is pooled with","","Thinks the sampler, not the model, chooses the estimate","Thinks the common rate is still the pooling target after predictors were added"],"lo":["LO2"]},{"id":"check-ppc-q1","slide":"check-ppc","type":"single","prompt":"Shabib proposes checking the Poisson model on the total number of bursts per year across the network. What do you tell him?","options":[{"key":"A","text":"The model was fitted to reproduce totals; check the variation within districts from year to year instead"},{"key":"B","text":"A good check: if the totals match, the model fits"},{"key":"C","text":"Checks are only valid on data the model has not seen"},{"key":"D","text":"If p is near 0.5 the model is proven correct"}],"correct":[0],"explanation":"A statistic the fit already matches cannot fail; choose one that the decision depends on and the fit does not force.","misconceptions":["","Assumes any check that passes shows the model fits","Thinks checks must use held-out data, confusing them with cross-validation","Treats a p-value near 0.5 as proof rather than as no evidence against"],"lo":["LO3"]},{"id":"check-loo-q1","slide":"check-loo","type":"single","prompt":"Model A has elpd -1,402 (SE 35) and model B -1,408 (SE 36). The difference is 6 with a standard error of 5. Juhaina asks which to use.","options":[{"key":"A","text":"A: it has the higher elpd"},{"key":"B","text":"Neither can be told apart because 6 is small next to 35"},{"key":"C","text":"No clear winner on prediction: choose by the checks, simplicity and what the decision needs"},{"key":"D","text":"The one with more parameters"}],"correct":[2],"explanation":"A difference within about two of its own standard errors is not decisive; other evidence has to choose.","misconceptions":["Treats any positive difference as a meaningful win","Compares the difference with each model's own SE instead of the SE of the difference","","Thinks more parameters always means a better model"],"lo":["LO3"]},{"id":"check-sbc-q1","slide":"check-sbc","type":"single","prompt":"In a calibration of 200 simulations, a parameter's ranks form a hump: few near 0 or 99, many in the middle. What does it say?","options":[{"key":"A","text":"The posterior is approximately normal, as expected"},{"key":"B","text":"The posterior is too narrow"},{"key":"C","text":"The posterior is too wide: the truth sits near its middle too often"},{"key":"D","text":"The sampler needs more warm-up"}],"correct":[2],"explanation":"A right posterior puts the truth anywhere among its draws equally often; a too-wide one rarely puts it in the tails.","misconceptions":["Reads the hump as the shape of a posterior, not of a rank histogram","Confuses the hump with the U shape","","Thinks calibration measures the sampler's speed"],"lo":["LO4"]},{"id":"check-sensitivity-q1","slide":"check-sensitivity","type":"single","prompt":"Power-scaling shows that no quantity shifts by more than 0.03 posterior sd. Nouran asks whether the priors can now be ignored in the memo.","options":[{"key":"A","text":"Yes: the analysis is insensitive to its priors"},{"key":"B","text":"Yes, and the analysis could have used maximum likelihood instead"},{"key":"C","text":"No: sensitivity cannot be known until new data arrive"},{"key":"D","text":"No: state the priors tested, and name the reporting prior, which the data cannot check"}],"correct":[3],"explanation":"Robustness holds for the priors the data inform; a prior the data cannot check carries its answer and must be stated with its source.","misconceptions":["Generalises from the priors that were tested to all of them","Treats robustness as a reason to drop the Bayesian analysis","Assumes sensitivity can only be shown with new data",""],"lo":["LO3"]}],"ai":{"context":{"course":"../context/course.md","courseJs":"../context/course.js","day":"day3.md","llms":"../llms.txt"},"tasks":[],"tools":[]},"bridge":{"allowedOrigins":[]},"features":{},"strings":{}}</script>
+<script src="../_engine/academy.js"></script>
+</body>
+</html>

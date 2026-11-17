@@ -1,0 +1,2185 @@
+{
+  "format": "classpulse-bank",
+  "version": 1,
+  "course": {
+    "name": "Bayesian Modelling and Decisions under Uncertainty",
+    "los": [
+      {
+        "code": "LO1",
+        "description": "Implement a Bayesian workflow from prior predictive simulation to sampler diagnosis, given a burst-count model with network length as exposure"
+      },
+      {
+        "code": "LO2",
+        "description": "Design a hierarchical model for districts with very unequal data and defend the pooling it implies, given 140 districts, a third with fewer than five recorded bursts"
+      },
+      {
+        "code": "LO3",
+        "description": "Evaluate competing models by posterior predictive checks and approximate leave-one-out cross-validation and choose one for the decision, given three candidate models of the same data"
+      },
+      {
+        "code": "LO4",
+        "description": "Diagnose an error in a model implementation by parameter recovery and simulation-based calibration, given a model with a seeded coding error"
+      },
+      {
+        "code": "LO5",
+        "description": "Decide a replacement plan by expected utility under the posterior and price further data by its value of information, given costs, a capital budget and an offered acoustic leak survey"
+      },
+      {
+        "code": "LO6",
+        "description": "Review another analyst's Bayesian analysis for priors, computation, checking and reporting, given an analysis with six planted flaws"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "check-grid-q1",
+      "type": "single",
+      "prompt": "Two districts share the prior. District P has 200 km and 90 bursts in five years; district Q has 2 km and 3 bursts. Which statement about their posteriors holds?",
+      "options": [
+        "P's posterior depends more on the prior than Q's",
+        "Q's posterior is wider and closer to the prior's centre",
+        "Both have the same width because the prior is the same",
+        "Q's posterior is narrow because 3 bursts is a small number"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Q's likelihood is flat over a wide range of rates, so the prior shapes its posterior; P's likelihood is sharp and overwhelms the prior.",
+      "misconceptions": [
+        "Thinks the prior dominates when data are plentiful, the reverse of what happens",
+        "",
+        "Reads the interval width as a property of the prior alone, ignoring the data",
+        "Confuses a small count with a known rate: few bursts leave the rate uncertain"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 13
+    },
+    {
+      "id": "check-prior-q1",
+      "type": "single",
+      "prompt": "A colleague sets the prior on the log burst rate by fitting it to the five years of observed counts, then fits the model to the same counts. What is the problem?",
+      "options": [
+        "Priors may never use data of any kind",
+        "Nothing: with 700 counts the prior does not matter",
+        "The data are used twice, so the posterior is too sure",
+        "The sampler cannot handle a prior estimated from data"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The same counts enter through the prior and through the likelihood, so the posterior counts them twice and its intervals are too narrow.",
+      "misconceptions": [
+        "Thinks any data-based prior is invalid, which would also rule out an independent audit",
+        "Believes the prior has no effect once there are 700 counts, which fails for small districts",
+        "",
+        "Mistakes the issue for a computational one"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 22
+    },
+    {
+      "id": "check-offset-q1",
+      "type": "single",
+      "prompt": "Juhaina asks why the model does not estimate a coefficient for log km, as it does for age. What do you answer?",
+      "options": [
+        "Because bursts are assumed proportional to length, so its coefficient is fixed at 1",
+        "Because network length does not affect the number of bursts",
+        "Because the sampler cannot estimate a coefficient on a logarithm",
+        "Because its prior is centred on 1 and the data agree"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Twice the kilometres at the same rate gives twice the expected bursts; the other coefficients then describe a rate per kilometre-year.",
+      "misconceptions": [
+        "",
+        "Believes length has no effect on bursts, which the stretch item disproves",
+        "Mistakes an offset for a computational shortcut",
+        "Confuses a fixed coefficient with a prior centred on 1"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 31
+    },
+    {
+      "id": "check-diagnostics-q1",
+      "type": "single",
+      "prompt": "A fit reports R-hat 1.003, bulk ESS 2,100, no divergences, and 40% of draws at the maximum tree depth. Another reports no divergences and R-hat 1.21. Which do you send back?",
+      "options": [
+        "The first, because 40% of trees are capped",
+        "Neither, because neither has divergences",
+        "Both, because each has a warning",
+        "The second, because its chains disagree"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "An R-hat of 1.21 means the chains explore different distributions; capped trees in the first fit cost time but its chains mixed.",
+      "misconceptions": [
+        "Treats an efficiency warning as a validity failure",
+        "Assumes a fit is sound whenever no divergence is reported",
+        "Lets one warning disqualify a fit whose mixing is sound",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 40
+    },
+    {
+      "id": "review-day1-q1",
+      "type": "single",
+      "prompt": "A colleague's fit reports R-hat 1.004 and bulk ESS 900, but 23 divergences. She wants to publish the rate ratios. What do you advise?",
+      "options": [
+        "Not yet: find where the divergences sit and change the model or its form, then refit",
+        "Publish: R-hat and ESS are fine",
+        "Run twice as many draws and publish",
+        "Drop the divergent draws and publish the rest"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Divergences mean part of the posterior was not reached; the summaries can be biased whatever R-hat says. Session 3 shows the usual cause and the fix.",
+      "misconceptions": [
+        "",
+        "Lets good mixing numbers excuse a validity warning",
+        "Treats divergences as noise that more draws average away",
+        "Discards the evidence instead of fixing its cause"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 3
+    },
+    {
+      "id": "check-pooling-q1",
+      "type": "single",
+      "prompt": "D120 is a rural district of 2 km with no burst recorded in five years. What does each model say about its rate?",
+      "options": [
+        "No pooling and complete pooling both give it a rate near zero",
+        "Partial pooling gives it exactly the common rate",
+        "No pooling: near zero; complete: the common rate; partial: between, close to the common rate",
+        "No model can say anything until it has a burst"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "With little data, partial pooling leans heavily on the population, but its own zero still pulls it a little below the common rate.",
+      "misconceptions": [
+        "Thinks complete pooling responds to the district's own record",
+        "Confuses shrinkage with ignoring the district's data",
+        "",
+        "Believes a zero count cannot be modelled"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 11
+    },
+    {
+      "id": "check-predictors-q1",
+      "type": "single",
+      "prompt": "After adding material and age, τ fell from 0.56 to 0.41. Nouran asks what that means for a rural asbestos-cement district with 3 recorded bursts.",
+      "options": [
+        "It is now pulled towards the rate predicted for old asbestos-cement networks, and somewhat more strongly",
+        "It is pooled less because the model now knows more",
+        "Its own three bursts no longer matter",
+        "Its rate has fallen by 0.15"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The target of the shrinkage is now a prediction from its pipes; a smaller τ means districts sit closer to their predictions, so a district with little data is pulled more firmly towards a better target.",
+      "misconceptions": [
+        "",
+        "Reads a smaller spread as less pooling, the reverse of what it implies",
+        "Thinks predictors replace the district's own data",
+        "Confuses a fall in τ with a change in the data"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 19
+    },
+    {
+      "id": "check-funnel-q1",
+      "type": "single",
+      "prompt": "A hierarchical model of 50 small districts gives 60 divergences, all at small τ. What is the best first step?",
+      "options": [
+        "Raise target_accept to 0.99 until the divergences stop",
+        "Drop the districts with fewer than three bursts",
+        "Switch to complete pooling, which never diverges",
+        "Rewrite the district effects in non-centred form and refit"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Divergences at small τ are the funnel of the centred form; the non-centred form removes the funnel without changing the model.",
+      "misconceptions": [
+        "Treats the symptom: fewer divergences, same bias",
+        "Removes the districts that need the model most",
+        "Changes what the model claims to avoid a computational problem",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 28
+    },
+    {
+      "id": "check-reporting-q1",
+      "type": "single",
+      "prompt": "After adding the reporting term, a rural district without sensors moves from 0.18 to 0.26 bursts per km-year. Juhaina asks what the increase rests on.",
+      "options": [
+        "On the district's own burst counts, which reveal its reporting rate",
+        "Mainly on the audit prior: the counts cannot separate rate from reporting",
+        "On the sampler having more draws",
+        "On an error in the burst register that the model fixed"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Only rate times reporting share reaches the counts; the split between them comes from the audit-based prior.",
+      "misconceptions": [
+        "Thinks the model measured the district's own reporting",
+        "",
+        "Attributes the change to the sampler",
+        "Reads the change as a fault in the data rather than in the earlier model"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 36
+    },
+    {
+      "id": "review-day2-q1",
+      "type": "single",
+      "prompt": "A rural district of 1.5 km recorded one burst in five years. Its posterior rate under the Lab 2.4 model is 0.21. What contributes most to that number?",
+      "options": [
+        "Its own record: 1 burst over 7.5 km-years",
+        "The rate predicted for its material and age, plus the audit prior on reporting",
+        "The sampler's starting values",
+        "The common rate of all 140 districts"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "With so little data the district borrows almost everything: from the prediction for its pipes (Lab 2.2) and, without sensors, from the reporting prior (Lab 2.4).",
+      "misconceptions": [
+        "Overweights a single recorded burst over the population it is pooled with",
+        "",
+        "Thinks the sampler, not the model, chooses the estimate",
+        "Thinks the common rate is still the pooling target after predictors were added"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 3
+    },
+    {
+      "id": "check-ppc-q1",
+      "type": "single",
+      "prompt": "Shabib proposes checking the Poisson model on the total number of bursts per year across the network. What do you tell him?",
+      "options": [
+        "The model was fitted to reproduce totals; check the variation within districts from year to year instead",
+        "A good check: if the totals match, the model fits",
+        "Checks are only valid on data the model has not seen",
+        "If p is near 0.5 the model is proven correct"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A statistic the fit already matches cannot fail; choose one that the decision depends on and the fit does not force.",
+      "misconceptions": [
+        "",
+        "Assumes any check that passes shows the model fits",
+        "Thinks checks must use held-out data, confusing them with cross-validation",
+        "Treats a p-value near 0.5 as proof rather than as no evidence against"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 9
+    },
+    {
+      "id": "check-loo-q1",
+      "type": "single",
+      "prompt": "Model A has elpd -1,402 (SE 35) and model B -1,408 (SE 36). The difference is 6 with a standard error of 5. Juhaina asks which to use.",
+      "options": [
+        "A: it has the higher elpd",
+        "Neither can be told apart because 6 is small next to 35",
+        "No clear winner on prediction: choose by the checks, simplicity and what the decision needs",
+        "The one with more parameters"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A difference within about two of its own standard errors is not decisive; other evidence has to choose.",
+      "misconceptions": [
+        "Treats any positive difference as a meaningful win",
+        "Compares the difference with each model's own SE instead of the SE of the difference",
+        "",
+        "Thinks more parameters always means a better model"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 15
+    },
+    {
+      "id": "check-sbc-q1",
+      "type": "single",
+      "prompt": "In a calibration of 200 simulations, a parameter's ranks form a hump: few near 0 or 99, many in the middle. What does it say?",
+      "options": [
+        "The posterior is approximately normal, as expected",
+        "The posterior is too narrow",
+        "The posterior is too wide: the truth sits near its middle too often",
+        "The sampler needs more warm-up"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO4"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A right posterior puts the truth anywhere among its draws equally often; a too-wide one rarely puts it in the tails.",
+      "misconceptions": [
+        "Reads the hump as the shape of a posterior, not of a rank histogram",
+        "Confuses the hump with the U shape",
+        "",
+        "Thinks calibration measures the sampler's speed"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 22
+    },
+    {
+      "id": "check-sensitivity-q1",
+      "type": "single",
+      "prompt": "Power-scaling shows that no quantity shifts by more than 0.03 posterior sd. Nouran asks whether the priors can now be ignored in the memo.",
+      "options": [
+        "Yes: the analysis is insensitive to its priors",
+        "Yes, and the analysis could have used maximum likelihood instead",
+        "No: sensitivity cannot be known until new data arrive",
+        "No: state the priors tested, and name the reporting prior, which the data cannot check"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Robustness holds for the priors the data inform; a prior the data cannot check carries its answer and must be stated with its source.",
+      "misconceptions": [
+        "Generalises from the priors that were tested to all of them",
+        "Treats robustness as a reason to drop the Bayesian analysis",
+        "Assumes sensitivity can only be shown with new data",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 28
+    },
+    {
+      "id": "review-day3-q1",
+      "type": "single",
+      "prompt": "Day 4 uses the hierarchical negative binomial with the reporting term. Which piece of yesterday's evidence would most change today's plan had it gone the other way?",
+      "options": [
+        "The replicated network total matching 3,894 bursts",
+        "The power-scaling of the prior on τ",
+        "The dispersion check: a Poisson would make every district look more certain than it is",
+        "The calibration of the colleague's model"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The dispersion decides how wide every district's interval is, and today's decisions and the survey's value both depend on that width.",
+      "misconceptions": [
+        "Picks a check the fit forces, which could not have gone the other way",
+        "Picks the prior that the data dominate",
+        "",
+        "Confuses a check of the code with a check of the model against the world"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 3
+    },
+    {
+      "id": "check-eu-q1",
+      "type": "single",
+      "prompt": "An extra cost applies only when a district exceeds 40 bursts in a year: a fine from the regulator. Does deciding on the posterior mean rate still give the expected-utility choice?",
+      "options": [
+        "Yes: the mean plug-in is always the same as expected utility",
+        "Not in general: the fine is not linear in the rate, so its expectation depends on the whole posterior",
+        "No, but the median plug-in would",
+        "No decision can be made with a threshold cost"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The expectation of a straight line is the line at the mean; for a threshold, the probability of crossing it comes from the posterior's tail.",
+      "misconceptions": [
+        "Generalises from linear costs to all costs",
+        "",
+        "Thinks the median fixes non-linearity",
+        "Thinks a threshold cost cannot be computed from draws"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 8
+    },
+    {
+      "id": "check-budget-q1",
+      "type": "single",
+      "prompt": "District A: repair costs 1 million and saves 1.5 million; re-piping costs 10 million and saves 4 million in all. Funds are short. Which step is ranked by which ratio?",
+      "options": [
+        "Re-pipe at 0.4 per riyal, as one step",
+        "Only the repair is ever considered",
+        "Re-pipe first because it saves the most",
+        "Repair at 1.5 per riyal; then the upgrade to re-pipe at 2.5 / 9 ≈ 0.28 per riyal"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The upgrade's value is what it adds over the repair: 2.5 million more saving for 9 million more cost.",
+      "misconceptions": [
+        "Ranks the whole re-pipe by its total ratio, mixing in the repair's cheap saving",
+        "Ignores the second step altogether",
+        "Ranks by total saving, ignoring cost",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 14
+    },
+    {
+      "id": "check-voi-q1",
+      "type": "single",
+      "prompt": "Two districts without sensors. X: rate very uncertain, but re-piping is best in every draw. Y: rate moderately uncertain, and repair or wait each wins in about half the draws. Where is a survey worth more?",
+      "options": [
+        "Y: the survey can change its decision; X's decision is already settled",
+        "X: it is the more uncertain",
+        "Both the same: a survey costs the same in each",
+        "Neither: surveys only confirm a model"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Information is valuable where it can change the action; uncertainty that cannot change the choice is worth nothing to this decision.",
+      "misconceptions": [
+        "",
+        "Equates value of information with uncertainty alone",
+        "Thinks information always has the same value",
+        "Thinks a settled decision needs confirming"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 19
+    },
+    {
+      "id": "check-review-q1",
+      "type": "single",
+      "prompt": "Which sentence is a usable review finding?",
+      "options": [
+        "The priors are not good enough",
+        "The report uses Normal(0, 100)",
+        "Each district is estimated alone, so D073 (a few bursts on a short network) ranks third; pooled, its rate halves and it leaves the list",
+        "The analysis should have used NumPyro"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO6"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A finding quotes what the report did, shows the evidence, and says how it changes the decision.",
+      "misconceptions": [
+        "States an opinion without the evidence or the consequence",
+        "Names the evidence but not what it does to the decision",
+        "",
+        "Prescribes a tool instead of identifying a flaw"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 25
+    },
+    {
+      "id": "q-grid-width",
+      "type": "single",
+      "prompt": "Shabib asks why the posterior of a 2 km rural district spans rates from 0.06 to 0.5 bursts per km-year, while a 180 km urban district's spans 0.07 to 0.10, although both used the same prior and five years of data. What is the reason?",
+      "options": [
+        "Its few bursts give a flat likelihood, so the prior shapes much of its posterior",
+        "The rural district's prior was set wider, because rural rates are known to vary more",
+        "The sampler mixed worse for the rural district, which widens its interval",
+        "Rural rates vary more from year to year by nature, whatever the data say"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Exposure of 10 km-years holds a handful of bursts, which constrains the rate weakly; 900 km-years constrain it sharply.",
+      "misconceptions": [
+        "",
+        "Thinks different widths require different priors, when the same prior was used",
+        "Blames the computation for what is a property of the data",
+        "Confuses uncertainty about a rate with variability of the process"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 10
+    },
+    {
+      "id": "q-generative-exposure",
+      "type": "single",
+      "prompt": "You simulate a year of bursts for a district with a rate of 0.2 bursts per km-year and 15 km of mains. Which line simulates one year?",
+      "options": [
+        "rng.poisson(0.2)",
+        "rng.poisson(0.2 * 15)",
+        "rng.poisson(0.2) * 15",
+        "rng.normal(0.2 * 15, 1)"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The expected count is the rate times the exposure, 3 bursts, and the count is a Poisson draw with that mean.",
+      "misconceptions": [
+        "Forgets the exposure: the rate is per kilometre",
+        "",
+        "Scales a count drawn for one kilometre, which gives only multiples of 15",
+        "Uses a continuous distribution for a count that cannot be negative or fractional"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 8
+    },
+    {
+      "id": "q-flat-prior",
+      "type": "single",
+      "prompt": "A contractor uses Normal(0, 10) on the log burst rate \"to let the data speak\". Its prior predictive simulation puts 37% of district-years above 500 bursts. What do you conclude?",
+      "options": [
+        "It is harmless: with 700 counts the data will overwhelm any prior",
+        "It should be widened further, so that the data alone decide the rates",
+        "It puts weight on absurd rates; replace it with one that rules them out",
+        "The simulation is wrong, because a prior cannot predict any data"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A prior that predicts impossible data carries strong, wrong information; with little data, as in small districts, it moves the posterior.",
+      "misconceptions": [
+        "Assumes data always dominate, which fails for districts with few bursts",
+        "Believes wider is always more neutral",
+        "",
+        "Does not know that a prior and a likelihood together imply a distribution of data"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 17
+    },
+    {
+      "id": "q-prior-reason",
+      "type": "single",
+      "prompt": "Which reason for the prior α ~ Normal(log 0.1, 1) on the log burst rate meets the course's standard?",
+      "options": [
+        "It is weakly informative, so the data rather than the analyst decide the posterior",
+        "It is the library's default prior, which its authors have tested on many count models",
+        "It matches the engineers' one burst per 10 km a year, and 73% of its simulated network totals fall in their range",
+        "It gave the best fit to the five years of observed counts, so the data themselves support it"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A reason quotes the knowledge the prior encodes and a check of what it predicts.",
+      "misconceptions": [
+        "Gives a label in place of a reason",
+        "Defers to software defaults that know nothing of pipes",
+        "",
+        "Tunes the prior to the same data the model will fit, using the data twice"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 20
+    },
+    {
+      "id": "q-hmc-gradient",
+      "type": "single",
+      "prompt": "Why can Hamiltonian Monte Carlo explore a posterior with 150 parameters where a random-walk sampler stalls?",
+      "options": [
+        "It evaluates the posterior on a fine grid, so no region of high density is missed",
+        "It assumes the posterior is normal, which makes 150 parameters as easy as one",
+        "It discards most of its draws, so that the remaining ones are independent of each other",
+        "It uses the gradient of the log posterior to make long moves that stay in regions of high density"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Momentum and the gradient carry the sampler far in one iteration along the shape of the posterior, so proposals are accepted often even in many dimensions.",
+      "misconceptions": [
+        "Confuses sampling with grid evaluation, which is impossible in 150 dimensions",
+        "Confuses HMC with a normal approximation",
+        "Mistakes thinning for what makes a sampler efficient",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 26
+    },
+    {
+      "id": "q-offset-meaning",
+      "type": "tf",
+      "prompt": "In log E[bursts] = log km + α + Xβ, the coefficient of log km is fixed at 1, so exp(β) for asbestos cement is a ratio of burst rates per kilometre-year.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "With the offset, the other terms model the rate per unit of exposure.",
+      "misconceptions": [
+        "",
+        "Thinks the material coefficient compares total counts, which would mix material with network length"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 31
+    },
+    {
+      "id": "q-rhat-no-divergence",
+      "type": "single",
+      "prompt": "A fit of four chains shows no divergences, bulk ESS of 7 for α and R-hat of 1.60. Three chains have a mean α near -2.41 and the fourth near -1.23. What do you do?",
+      "options": [
+        "Report the pooled mean of the four chains, since averaging cancels the odd chain out",
+        "Drop the fourth chain as a failed run and report the other three, which agree",
+        "Treat it as untrustworthy: rerun four chains with full warm-up from dispersed starts, then check again",
+        "Accept it: with no divergences, the sampler reached every part of the posterior"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Chains that disagree have not converged to one distribution; only a fresh run that passes the checks can be read.",
+      "misconceptions": [
+        "Averages over chains that sample different things",
+        "Discards evidence of a problem without knowing which chains are right",
+        "",
+        "Treats the absence of divergences as proof of convergence"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 35
+    },
+    {
+      "id": "q-capped-trees",
+      "type": "single",
+      "prompt": "Zaina's fit hit the maximum tree depth in a third of its draws, with R-hat 1.002, bulk ESS above 1,400 and no divergences. Juhaina asks whether the numbers can be used. What do you answer?",
+      "options": [
+        "Yes: capped trees cost sampling time, and the mixing diagnostics show the draws are sound",
+        "No: any warning from the sampler invalidates the fit until it is rerun without one",
+        "No: capping the tree depth biases the draws, so the fit must be rerun uncapped",
+        "Only after checking it against a variational approximation of the same model"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Tree depth is an efficiency diagnostic; validity is judged by R-hat, ESS, divergences and E-BFMI, which all pass.",
+      "misconceptions": [
+        "",
+        "Treats every warning as a validity failure",
+        "Confuses a slow setting with a wrong one",
+        "Thinks an approximation is more reliable than a sound sampler"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 37
+    },
+    {
+      "id": "q-pooling-choice",
+      "type": "single",
+      "prompt": "An inspectorate has 200 schools; 70 have been inspected once. You must estimate each school's rate of serious findings. Which model lets the data decide how much the schools inspected once borrow from the others?",
+      "options": [
+        "A separate rate for each school",
+        "One rate for all schools",
+        "School rates drawn from a common distribution whose spread is estimated",
+        "A separate rate for each school, with the once-inspected schools removed"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Partial pooling estimates the spread between schools, and each school's estimate borrows in proportion to how little data it has.",
+      "misconceptions": [
+        "Trusts one inspection as much as five, so once-inspected schools get extreme estimates",
+        "Assumes all schools are alike, which the analyst decides rather than the data",
+        "",
+        "Throws away the schools that most need an estimate"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 6
+    },
+    {
+      "id": "q-shrinkage-who",
+      "type": "single",
+      "prompt": "In a partial-pooling model of 140 districts, which district's estimate moves furthest towards the common rate?",
+      "options": [
+        "A 200 km urban district with 90 bursts in five years",
+        "All move by the same amount, set by τ",
+        "A 50 km suburban district with 20 bursts",
+        "A 2 km rural district with 2 bursts in five years"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Shrinkage depends on how much information a district's own data carry; 2 bursts carry little, so the population dominates.",
+      "misconceptions": [
+        "Thinks large districts are pulled most because they dominate the average",
+        "Believes τ shrinks every district equally regardless of its data",
+        "Picks a middle case without reasoning about information",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 8
+    },
+    {
+      "id": "q-rural-pull",
+      "type": "single",
+      "prompt": "Your partial-pooling model has no predictors. Rural districts, with old asbestos-cement mains, have few bursts each; most of the network is urban. What should worry you before the estimates feed a re-piping plan?",
+      "options": [
+        "Nothing: partial pooling is the recommended model for unequal groups",
+        "That rural estimates are shrunk towards a mostly urban rate, which may understate their risk",
+        "That urban districts are shrunk too much",
+        "That the sampler will diverge on the rural districts"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Shrinkage pulls small districts towards the population mean; if that mean is dominated by a different kind of district, their risk is understated systematically.",
+      "misconceptions": [
+        "Treats a method's standard status as a defence of its effect on a specific group",
+        "",
+        "Reverses who is shrunk: large districts keep their own estimates",
+        "Confuses a statistical bias with a computational problem"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 9
+    },
+    {
+      "id": "q-group-predictor",
+      "type": "single",
+      "prompt": "Adding pipe material and age to the mean of the district effects reduced τ from 0.56 to 0.41. Which statement follows?",
+      "options": [
+        "They explain about half the between-district variance; districts now shrink towards what their pipes predict",
+        "The districts are now pooled less, because the model knows more about each of them",
+        "Material and age are now shown to be causes of bursts, since they reduced the spread",
+        "The model fits worse, because a smaller τ leaves less room for the districts to differ"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "1 - 0.41²/0.56² is about 0.47; with predictors the shrinkage target is the predicted rate for each district.",
+      "misconceptions": [
+        "",
+        "Reads a smaller spread as weaker pooling",
+        "Reads an association in observational data as a proven cause",
+        "Thinks a smaller unexplained spread is a worse fit"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 14
+    },
+    {
+      "id": "q-proxy-predictor",
+      "type": "tf",
+      "prompt": "Adding an indicator for rural districts to the model of reported bursts will move the rural estimates towards their true burst rates, because it lets rural districts have their own level.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The indicator learns the low reported counts of rural districts, most without sensors, so it moves the estimates of true rates further down.",
+      "misconceptions": [
+        "Assumes a predictor fitted to recorded data corrects a recording problem",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 17
+    },
+    {
+      "id": "q-funnel-cause",
+      "type": "single",
+      "prompt": "A centred hierarchical model of 49 small districts reports 59 divergences, all at small values of τ. Why there?",
+      "options": [
+        "Small τ squeezes every district effect into a narrow region, where the tuned step size is far too large",
+        "The burst records of the districts with small τ contain errors that the sampler cannot fit",
+        "Small τ shows the prior on τ is too narrow; widening it would remove the divergences",
+        "The sampler ran out of draws before it could explore the small values of τ"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO1",
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "In the centred form the posterior has a funnel: its width shrinks with τ, so a step size suited to the mouth diverges in the neck.",
+      "misconceptions": [
+        "",
+        "Blames the data for a geometry of the parameterisation",
+        "Confuses a property of the posterior's shape with a prior that is too narrow",
+        "Thinks divergences come from too few draws"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 22
+    },
+    {
+      "id": "q-target-accept",
+      "type": "single",
+      "prompt": "Raising target_accept to 0.99 removed all divergences of a centred hierarchical model, but R-hat is 1.14. What do you conclude?",
+      "options": [
+        "The fit is now trustworthy",
+        "Report the fit with a note about R-hat",
+        "Run more chains until R-hat falls below 1.01 by chance",
+        "The chains still disagree; rewrite the model in non-centred form"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO1"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "No divergences is necessary, not sufficient; disagreeing chains show the posterior is still not explored, and the cause is the geometry.",
+      "misconceptions": [
+        "Treats the absence of divergences as proof of a sound fit",
+        "Publishes numbers from chains that have not converged",
+        "Hopes more chains fix a geometry problem",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 26
+    },
+    {
+      "id": "q-noncentred-same",
+      "type": "tf",
+      "prompt": "The centred and non-centred forms of a hierarchical model describe the same joint distribution of the data and the parameters.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Only the variables the sampler moves in change: η = μ + τ z with z standard normal has the distribution Normal(μ, τ).",
+      "misconceptions": [
+        "",
+        "Thinks non-centring changes the model's assumptions rather than its coordinates"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 23
+    },
+    {
+      "id": "q-identification",
+      "type": "single",
+      "prompt": "In the model with a reporting share for districts without sensors, the posterior of the reporting share is almost identical to its Beta(14, 6) prior. What does that mean?",
+      "options": [
+        "The model failed to converge for the reporting share and must be refitted with more draws",
+        "The prior was too wide for the data to move it, and a narrower prior would fix this",
+        "The reporting share is now known to be exactly 0.70 in every district without sensors",
+        "The counts cannot separate rate from reporting share, so the audit behind the prior carries the correction"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Only the product of rate and reporting share reaches the counts; the split comes from the prior, so its source must be stated.",
+      "misconceptions": [
+        "Takes a posterior equal to the prior as a computational failure",
+        "Thinks a narrower prior would make the data informative",
+        "Confuses the prior's mean with a known value",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 35
+    },
+    {
+      "id": "q-measurement-model",
+      "type": "single",
+      "prompt": "Bursts in districts without sensors are reported with probability p. Which likelihood for the reported count y of district j in a year follows?",
+      "options": [
+        "y ~ Poisson(km_j × rate_j)",
+        "y ~ Poisson(km_j × rate_j × p_j)",
+        "y ~ Poisson(km_j × rate_j) × p_j",
+        "y ~ Poisson(km_j × rate_j / p_j)"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Thinning each burst with probability p keeps a Poisson count with its mean multiplied by p.",
+      "misconceptions": [
+        "Ignores the recording process",
+        "",
+        "Multiplies a count by a probability, which gives non-integer counts",
+        "Inverts the thinning"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 32
+    },
+    {
+      "id": "q-ppc-statistic",
+      "type": "single",
+      "prompt": "A Poisson model of daily ambulance calls per station is fitted. Which posterior predictive check is most likely to reveal a problem the fit itself could hide?",
+      "options": [
+        "The total number of calls over the year, across all stations together",
+        "The mean number of calls per station, compared station by station",
+        "The variance of each station's daily calls divided by their mean",
+        "The number of stations that received at least one call in the year"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The rates are fitted to reproduce totals and means; the ratio of variance to mean is not forced by the fit, and a Poisson fixes it at 1.",
+      "misconceptions": [
+        "Checks a statistic the fitted rates reproduce by construction",
+        "Checks a statistic the fitted rates reproduce by construction",
+        "",
+        "Confuses a property of the design with a property of the data"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 5
+    },
+    {
+      "id": "q-ppc-pvalue",
+      "type": "single",
+      "prompt": "A posterior predictive check of the share of zero counts gives p = 0.12. What does this say?",
+      "options": [
+        "The model is wrong with 88% probability, so it should be replaced",
+        "The check failed and must be repeated with more posterior draws",
+        "The model is right with 12% probability, which is too low to use it",
+        "The observed share sits within the range the model produces, towards its edge"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The p-value is the share of replicates at least as extreme as the data; 0.12 means the data are not unusual under the model, though near the edge of what it produces.",
+      "misconceptions": [
+        "Reads a predictive p-value as the probability that the model is wrong",
+        "Treats a moderate p-value as a computational failure",
+        "Reads a predictive p-value as the probability that the model is right",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 6
+    },
+    {
+      "id": "q-negbin-variance",
+      "type": "single",
+      "prompt": "A negative binomial with mean 4 and shape φ = 8 replaces a Poisson with mean 4. What is the variance of each?",
+      "options": [
+        "Poisson 4, negative binomial 6",
+        "Both 4",
+        "Poisson 4, negative binomial 32",
+        "Poisson 16, negative binomial 6"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A Poisson's variance equals its mean; the negative binomial's is mean + mean²/φ = 4 + 16/8 = 6.",
+      "misconceptions": [
+        "",
+        "Thinks the same mean implies the same variance",
+        "Multiplies the mean by the shape instead of dividing its square",
+        "Squares the Poisson's mean"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 7
+    },
+    {
+      "id": "q-loo-difference",
+      "type": "single",
+      "prompt": "Two models of clinic waiting times: elpd -2,150 (SE 40) and -2,180 (SE 42); the difference is 30 with a standard error of 8. Which reading is right?",
+      "options": [
+        "No clear difference, because 30 is smaller than either model's own SE",
+        "The comparison is invalid unless both models have the same number of parameters",
+        "The second predicts better, because its larger SE means it captures more variation",
+        "The first predicts held-out patients better: the difference is almost four of its own standard errors"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The models share most of their noise, so the difference is judged against the standard error of the difference, not against each model's own SE.",
+      "misconceptions": [
+        "Compares the difference with each model's own SE",
+        "Thinks leave-one-out needs models of equal size; it already accounts for complexity",
+        "Reads a larger SE as better",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 13
+    },
+    {
+      "id": "q-pareto-k",
+      "type": "single",
+      "prompt": "Leave-one-out flags one school-year with Pareto k = 1.1: a fire closed the school for a term and inspections found many problems. What should the analyst do first?",
+      "options": [
+        "Delete the school-year: an event that rare should not drive the model's choice",
+        "Confirm what happened, keep the real event, and prefer a model that such years do not overturn",
+        "Ignore it: one school-year cannot matter much among 800 observations",
+        "Raise the number of posterior draws until the Pareto k falls below 0.7"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A high k says one point moves the posterior a lot; a real event is kept and modelled, while an error would be corrected.",
+      "misconceptions": [
+        "Removes inconvenient real data and understates risk",
+        "",
+        "Thinks one influential point cannot change the conclusions",
+        "Treats k as a sampling problem that more draws fix"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 14
+    },
+    {
+      "id": "q-why-not-r2",
+      "type": "single",
+      "prompt": "A report justifies a model by an R² of 0.91 between observed and fitted counts. Why is this weak evidence?",
+      "options": [
+        "R² cannot be computed for counts",
+        "It rewards fitting the data already seen; a model with more parameters always scores higher",
+        "0.91 is too low for count data",
+        "R² is a frequentist measure and cannot be used with a Bayesian model"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Agreement with the data used to fit says little about prediction; leave-one-out scores each point by a model that did not see it.",
+      "misconceptions": [
+        "Thinks R² is undefined for counts",
+        "",
+        "Thinks a higher threshold would make in-sample fit convincing",
+        "Rejects a measure because of its school rather than what it measures"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 12
+    },
+    {
+      "id": "q-sbc-shape",
+      "type": "single",
+      "prompt": "In a simulation-based calibration, a parameter's rank histogram rises steadily from left to right. What does it indicate?",
+      "options": [
+        "The posterior is too wide, so the truth sits near its middle too often",
+        "The code is correct, since the ranks cover the whole range from 0 to 99",
+        "The sampler needs more chains, because the ranks have not yet mixed",
+        "The posterior sits below the truth: the truth's rank is usually high"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO4"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A rank counts the draws below the truth; many high ranks mean most draws are below it, so the posterior is biased downwards.",
+      "misconceptions": [
+        "Confuses a slope with a hump",
+        "Reads any smooth histogram as uniform",
+        "Treats a bias in the model as a sampler setting",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 19
+    },
+    {
+      "id": "q-sbc-single-run",
+      "type": "single",
+      "prompt": "A colleague simulated one dataset from known parameters, fitted her model and recovered both inside their 90% intervals. She says the code is verified. What is the best reply?",
+      "options": [
+        "Agreed: recovering both parameters from known values is the standard test",
+        "Not yet: repeat it with a larger dataset, and then the code is verified",
+        "One run can pass by luck; rank the truth over many simulated datasets and check the ranks are uniform",
+        "Verification is impossible for Bayesian models, so a plausible fit must do"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO4"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A wrong model can cover the truth on one dataset and a right one misses 10% of the time; only the distribution of ranks over many runs tests the code.",
+      "misconceptions": [
+        "Treats one recovery as proof",
+        "Thinks more data per run replaces more runs",
+        "",
+        "Believes Bayesian code cannot be tested"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 18
+    },
+    {
+      "id": "q-sbc-limit",
+      "type": "single",
+      "prompt": "A model passes simulation-based calibration. Which error could it still contain?",
+      "options": [
+        "A prior written with a variance where the scale belongs, in the model only",
+        "A likelihood that assumes Poisson counts when the real data are overdispersed",
+        "A wrong parameterisation of the negative binomial in the model only",
+        "A sampler that cannot reach part of the posterior"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO4"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Calibration tests the model against its own simulator; a wrong assumption about the world, made in both, passes. Predictive checks against real data find it.",
+      "misconceptions": [
+        "Misses that a mismatch between model and simulator is exactly what calibration finds",
+        "",
+        "Misses that a mismatch between model and simulator is exactly what calibration finds",
+        "Misses that a sampler failing to explore distorts the ranks"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 21
+    },
+    {
+      "id": "q-power-scaling",
+      "type": "single",
+      "prompt": "Power-scaling the priors by 0.8 and 1.25 moves the posterior mean of a district's rate by 0.6 posterior standard deviations. What does that suggest?",
+      "options": [
+        "The prior does much of the work for this quantity: report it and test alternative priors",
+        "The data dominate the priors for this quantity, since the shift is below one sd",
+        "The sampler has not converged, because the mean moves when the prior changes",
+        "The rate is unreliable and must be removed from the report to Nouran"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A shift of more than a fraction of a posterior sd when the prior is slightly weakened or strengthened means the answer depends on the prior.",
+      "misconceptions": [
+        "",
+        "Reads a large shift as a small one",
+        "Confuses prior sensitivity with a convergence problem",
+        "Thinks a prior-sensitive quantity cannot be reported"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 25
+    },
+    {
+      "id": "q-which-prior",
+      "type": "single",
+      "prompt": "Three priors on the spread between districts give the same 15 riskiest districts, but the reporting share of districts without sensors comes only from an audit-based prior. What belongs in the memo?",
+      "options": [
+        "That the results are robust to the priors, as the three spread priors showed",
+        "Nothing about priors: the director needs the plan, not the modelling choices",
+        "The spread prior does not change the plan; the reporting prior carries the rural estimates and rests on one audit",
+        "Replace the reporting prior with a flat one, so that the memo is objective"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO3"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Sensitivity is a property of each prior and question; the prior the data cannot check must be named with its source.",
+      "misconceptions": [
+        "Generalises from the priors tested to all of them",
+        "Hides the assumption that drives part of the answer",
+        "",
+        "Thinks a flat prior is neutral when the data cannot identify the quantity"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 27
+    },
+    {
+      "id": "q-eu-order",
+      "type": "single",
+      "prompt": "You have 2,000 posterior draws of each clinic's demand and a cost for each of three staffing options in each draw. How do you choose an option for a clinic by expected utility?",
+      "options": [
+        "Average each option's cost over the draws, then choose the option with the lowest average",
+        "Choose the best option in each draw, then take the option chosen most often",
+        "Compute the cost at the posterior median demand and choose",
+        "Choose the option whose cost varies least across draws"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Expected utility averages the consequence of each action over the posterior, then chooses; a vote over draws ignores how large the losses are.",
+      "misconceptions": [
+        "",
+        "Counts how often an option wins instead of by how much",
+        "Uses a plug-in estimate, which differs when the posterior is skewed or the cost is not linear",
+        "Minimises variability instead of expected cost"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 6
+    },
+    {
+      "id": "q-plugin-linear",
+      "type": "single",
+      "prompt": "Every cost in a decision is a straight line in an uncertain rate. Which plug-in estimate gives the same choice as expected utility?",
+      "options": [
+        "The posterior median",
+        "The posterior mode",
+        "The posterior mean",
+        "The upper end of the 90% interval"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The expectation of a linear function is the function at the mean, so deciding at the mean rate is exact for linear costs.",
+      "misconceptions": [
+        "Thinks the median is the natural summary for every decision",
+        "Thinks the most probable value gives the expected cost",
+        "",
+        "Confuses a cautious rule with expected utility"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 7
+    },
+    {
+      "id": "q-cost-formula",
+      "type": "single",
+      "prompt": "A 5 km district has a rate of 0.2 bursts per km-year. A burst costs SAR 80,000; over 20 years, repair costs SAR 40,000 per km and removes 30% of bursts for 10 years. What is the expected cost of repairing?",
+      "options": [
+        "SAR 1.36 million",
+        "SAR 1.60 million",
+        "SAR 1.32 million",
+        "SAR 1.56 million"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Investment 5 × 40,000 = 0.2 million; bursts 0.2 × 5 × (20 − 10 × 0.3) = 17, costing 1.36 million; total 1.56 million.",
+      "misconceptions": [
+        "Forgets the investment",
+        "Uses the cost of waiting (20 bursts) and forgets the reduction",
+        "Applies the reduction for all 20 years",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 5
+    },
+    {
+      "id": "q-budget-increment",
+      "type": "single",
+      "prompt": "A school can get a short visit (SAR 9,000, value 20,000) or a full audit (SAR 30,000, value 35,000 in all). Under a tight budget, how should the audit be ranked against other schools' options?",
+      "options": [
+        "By its whole ratio, 35,000 / 30,000 ≈ 1.17 per riyal, like any other option",
+        "By its total value of 35,000, since the audit gives the most value of the two",
+        "By the extra 15,000 for the extra 21,000: about 0.71 per riyal, after the visit",
+        "It should never be considered, because a tight budget allows only short visits"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The audit upgrades the visit; its ranking uses what it adds over the visit, not its total.",
+      "misconceptions": [
+        "Ranks the whole option, mixing in the cheaper option's value",
+        "Ranks by value and ignores cost",
+        "",
+        "Excludes expensive options without comparing them"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 11
+    },
+    {
+      "id": "q-plan-interval",
+      "type": "single",
+      "prompt": "How is the 90% interval of bursts avoided by a fixed plan obtained from the posterior?",
+      "options": [
+        "By applying the same plan in every posterior draw and taking quantiles of the avoided bursts",
+        "From the standard error of the mean rate times the network length",
+        "By refitting the model with the plan's districts removed",
+        "By adding the intervals of the funded districts"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The plan's outcome is a function of the uncertain rates; evaluating it in each draw gives its distribution.",
+      "misconceptions": [
+        "",
+        "Uses a frequentist approximation that ignores the joint posterior",
+        "Confuses evaluating a plan with cross-validation",
+        "Adds interval ends, which overstates the width"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 12
+    },
+    {
+      "id": "q-remaining-risk",
+      "type": "single",
+      "prompt": "A capital plan funds 43 districts. What else should the decision memo state about the districts it does not fund?",
+      "options": [
+        "Nothing: districts outside the plan are outside the memo's question",
+        "Their names only, listed in an annex for completeness",
+        "Their expected bursts, who bears them, and which districts the model knows least about",
+        "That they are safe until the next budget, as their expected costs are lower"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A plan is also a choice about who waits; the memo names the remaining risk and the districts whose estimates rest mainly on assumptions.",
+      "misconceptions": [
+        "Treats the unfunded list as no decision",
+        "Lists without the risk carried",
+        "",
+        "Reads not funded as not at risk"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 13
+    },
+    {
+      "id": "q-evpi-bound",
+      "type": "single",
+      "prompt": "Perfect information on all 76 districts is worth SAR 2.4 million. A survey of all 76 costs SAR 3.4 million. What follows before simulating the survey?",
+      "options": [
+        "The survey might still be worth buying if its error is small",
+        "The full survey is not worth its price: no real survey is worth more than perfect information",
+        "The survey must be bought to know its value",
+        "Perfect information is impossible, so the comparison is meaningless"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The expected value of perfect information is an upper bound on the value of any survey; if it is below the price, the offer fails.",
+      "misconceptions": [
+        "Thinks a survey can be worth more than perfect knowledge",
+        "",
+        "Thinks value can only be known after buying",
+        "Misses that an unreachable bound is still a valid bound"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 18
+    },
+    {
+      "id": "q-evsi-where",
+      "type": "single",
+      "prompt": "For which district is a survey of its true burst rate worth most to a re-piping decision?",
+      "options": [
+        "One with a very uncertain rate whose best action is the same in every draw",
+        "One with a rate known precisely",
+        "One near the threshold between two actions, with a moderately uncertain rate",
+        "The largest district, whatever its rate"
+      ],
+      "key": {
+        "indices": [
+          2
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "Information has value only where it can change the action; that is where the posterior straddles a threshold.",
+      "misconceptions": [
+        "Equates value of information with uncertainty alone",
+        "Has no uncertainty left to resolve",
+        "",
+        "Equates size with value of information"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 17
+    },
+    {
+      "id": "q-preposterior",
+      "type": "single",
+      "prompt": "In a preposterior analysis of a survey with 15% error, what is simulated for each posterior draw?",
+      "options": [
+        "A new model fit with more chains, to see how the posterior would move",
+        "The survey's price under different budgets, to find the affordable size",
+        "A replicated dataset of past bursts, as in a posterior predictive check",
+        "The survey's report if that draw's rate were true, the updated choice, and its cost under that truth"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO5"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "The survey's value is the expected cost saved by deciding after its result, averaged over what the result could be.",
+      "misconceptions": [
+        "Confuses valuing data with improving computation",
+        "Confuses the price with the value",
+        "Confuses it with a posterior predictive check",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 17
+    },
+    {
+      "id": "q-review-finding",
+      "type": "single",
+      "prompt": "Which is the most useful finding in a review of a Bayesian analysis?",
+      "options": [
+        "Two chains and R-hat judged against 1.1: the fit is not shown trustworthy, so its ranking cannot be used yet",
+        "The model is too simple for a network of 140 districts and should be extended",
+        "The author should have used Stan or NumPyro instead of the package they chose",
+        "The priors look arbitrary and are not explained anywhere in the report"
+      ],
+      "key": {
+        "indices": [
+          0
+        ]
+      },
+      "lo": [
+        "LO6"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A finding quotes what was done, gives the evidence and says what it does to the conclusions.",
+      "misconceptions": [
+        "",
+        "Gives an opinion without evidence or consequence",
+        "Prescribes a tool instead of identifying a flaw",
+        "Gives an opinion without evidence or consequence"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 25
+    },
+    {
+      "id": "q-review-rank",
+      "type": "single",
+      "prompt": "A report estimates each district alone and also ran two chains with 37 divergences. Which flaw is likely to change the list of districts most, and why?",
+      "options": [
+        "The divergences: any computational warning invalidates everything equally",
+        "Estimating districts alone: small districts reach the top on noise even if the computation were perfect",
+        "Both equally: flaws cannot be ranked",
+        "Neither: the list is what the data say"
+      ],
+      "key": {
+        "indices": [
+          1
+        ]
+      },
+      "lo": [
+        "LO6"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "A correct computation of the wrong structure still ranks noisy small districts high; ranking flaws by effect on the decision puts structure first here.",
+      "misconceptions": [
+        "Ranks by how alarming a flaw looks rather than its effect",
+        "",
+        "Refuses to prioritise",
+        "Thinks no structure was imposed by estimating alone"
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 24
+    },
+    {
+      "id": "q-review-zero",
+      "type": "single",
+      "prompt": "A consultant declares 13 districts with no recorded burst in five years safe. Which two checklist items does the reviewer cite?",
+      "options": [
+        "Priors and computation: a flat prior and too few chains",
+        "Checking and decision: no predictive check and no costs",
+        "Computation and checking: divergences and R² taken as fit",
+        "Structure (no pooling) and measurement (unrecorded bursts)"
+      ],
+      "key": {
+        "indices": [
+          3
+        ]
+      },
+      "lo": [
+        "LO6",
+        "LO2"
+      ],
+      "weight": 1,
+      "scored": true,
+      "timer": 30,
+      "displayMode": "full",
+      "explanation": "No pooling gives a zero count a rate near zero, and without sensors a zero may mean bursts that were never recorded.",
+      "misconceptions": [
+        "Looks for the cause in the prior and the sampler",
+        "Cites downstream items instead of the cause",
+        "Looks for the cause in the sampler and the checks",
+        ""
+      ],
+      "liveContext": false,
+      "basis": "best",
+      "confidence": true,
+      "createdAt": 1794783921000,
+      "updatedAt": 1794783921000,
+      "slide": 22
+    }
+  ]
+}

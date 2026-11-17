@@ -1,0 +1,92 @@
+{
+ "review": {
+  "priors": "Normal(0, 100) on a log rate is called uninformative but puts its weight on absurd rates, and no prior predictive check was run.",
+  "computation": "Two short chains, R-hat judged against 1.1 instead of 1.01, and 37 divergences dismissed as a nuisance: the fit is not shown to be trustworthy.",
+  "structure": "Each district is estimated separately: districts with 2 to 7 bursts on 1.5 to 4.7 km top the list on noise, and 13 districts with no recorded burst are declared safe.",
+  "measurement": "Districts with and without sensors are treated alike, so unrecorded bursts in the 76 districts without sensors are read as low risk.",
+  "checking": "R\u00b2 between observed and fitted counts is offered as fit; no posterior predictive check of zeros or dispersion and no comparison with a pooled or negative binomial model.",
+  "decision": "The ranking of posterior means is taken as the decision: no costs, no intervals, no remaining risk, and the survey dismissed because the model 'has converged'."
+ },
+ "ranking": [
+  "structure",
+  "measurement",
+  "decision",
+  "computation",
+  "priors",
+  "checking"
+ ],
+ "evidence": {
+  "__frame__": {
+   "columns": [
+    "kind",
+    "sensors",
+    "raw_rate",
+    "posterior_median",
+    "low",
+    "high"
+   ],
+   "index": [
+    "D010",
+    "D017",
+    "D073",
+    "D113",
+    "D067",
+    "D118"
+   ],
+   "data": [
+    [
+     "rural",
+     false,
+     0.511,
+     0.394039765,
+     0.2582718581,
+     0.5977472365
+    ],
+    [
+     "suburban",
+     true,
+     0.502,
+     0.4018004388,
+     0.3048097804,
+     0.5362835944
+    ],
+    [
+     "rural",
+     true,
+     0.5,
+     0.2455407083,
+     0.1548064418,
+     0.3929031253
+    ],
+    [
+     "rural",
+     false,
+     0.421,
+     0.3210585415,
+     0.1921648219,
+     0.5279006898
+    ],
+    [
+     "rural",
+     false,
+     0.414,
+     0.3803050369,
+     0.2343198188,
+     0.5970785946
+    ],
+    [
+     "rural",
+     false,
+     0.4,
+     0.4084189981,
+     0.248153615,
+     0.6680783331
+    ]
+   ]
+  }
+ },
+ "choice": [
+  "school_inspections",
+  "Schools with one visit on record are the small districts of this brief: the pooling across schools and regions decides who gets a follow-up."
+ ]
+}
